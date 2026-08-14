@@ -9,7 +9,7 @@
 
 | Phase | Name | Status | Completion |
 |-------|------|--------|-----------|
-| 1 | Stabilise the existing repo | ⬜ Not Started | 0 / 7 |
+| 1 | Stabilise the existing repo | 🔄 In Progress | 1 / 7 |
 | 2 | Turborepo, TypeScript and test infrastructure | ⬜ Not Started | 0 / 9 |
 | 3 | Domain model and migrations | ⬜ Not Started | 0 / 7 |
 | 4 | Event-centred API | ⬜ Not Started | 0 / 10 |
@@ -24,9 +24,9 @@
 
 | Phase | # | Task | Status | Notes |
 |-------|---|------|--------|-------|
-| 1 – Stabilise | 1.1 | Establish a baseline of the current repo and defects | ⬜ Not Started | Record findings here, including any listed defect that is not actually present |
-| 1 – Stabilise | 1.2 | 🔒 Remove tracked `.env` files, add `.env.example`, rotate DB password | ⬜ Not Started | Git history still contains old values — note the mitigation |
-| 1 – Stabilise | 1.3 | Fix DB naming inconsistency (`USE atlasdb` vs `DB_NAME`) | ⬜ Not Started | |
+| 1 – Stabilise | 1.1 | Establish a baseline of the current repo and defects | ✅ Complete | Verified on 2026-08-14. Repo layout: root Vite frontend in `src/`, Express API in `api/`, SQL init scripts `api/setup-atlasdb.sql` and `api/add-required-items.sql`, root `docker-compose.yml` and `docker-compose.dev.yml`. `src/App.jsx` is 892 lines; `api/server.js` is 63 lines. Current API routes in `api/server.js`: `/api/people`, `/api/items`, `/api/categories`, `/api/required-items`, duplicate `/api/health` handlers, and `*` 404. All listed Phase 1 defects are present: tracked `.env` files at root and `api/`; SQL scripts hardcode `USE atlasdb;`; duplicate health route exists; `src/App.jsx` loads mock required-items data; `src/services/api.js` sends `person_id` for required-item assignment while `api/routes/items.js` update ignores unknown fields and only updates `name` and `category_id`. Prerequisites: Docker/Compose and Node 22 are present; workspace initially opened on `main`, so a local `listcollab` branch was created from current HEAD to satisfy the phase prerequisite without moving to stale `origin/listcollab`. Baseline Compose result: `docker compose up --build -d` builds images but does not start the full stack because MariaDB init runs `api/setup-atlasdb.sql`, which fails with `Unknown database 'atlasdb'` while the container created the database from `DB_NAME` (`partylist` in the current local env), leaving only the DB container up. |
+| 1 – Stabilise | 1.2 | 🔒 Remove tracked `.env` files, add `.env.example`, rotate DB password | 🔄 In Progress | Removing tracked `.env*`, adding examples, and rotating the MariaDB password; git history retention will be recorded as a mitigation note |
+| 1 – Stabilise | 1.3 | Fix DB naming inconsistency (`USE atlasdb` vs `DB_NAME`) | 🔄 In Progress | Verified baseline failure: MariaDB init aborts because SQL scripts hardcode `USE atlasdb;` while Compose creates the database named by `DB_NAME` |
 | 1 – Stabilise | 1.4 | Remove duplicate `/api/health`, add DB connectivity check | ⬜ Not Started | |
 | 1 – Stabilise | 1.5 | Remove mock required-items data, wire the real API | ⬜ Not Started | |
 | 1 – Stabilise | 1.6 | Fix the item update contract mismatch (`person_id`) | ⬜ Not Started | Unknown fields must 400, not be ignored |
