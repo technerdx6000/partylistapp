@@ -3,7 +3,7 @@ import { spawn, spawnSync } from 'node:child_process'
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 async function waitForDatabaseHealth() {
-  for (let attempt = 0; attempt < 30; attempt += 1) {
+  for (let attempt = 0; attempt < 90; attempt += 1) {
     const inspectResult = spawnSync(
       'docker',
       ['inspect', '-f', '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}', 'partylist-db'],
