@@ -1,9 +1,9 @@
-import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import type { Request, Response } from "express";
-import express from "express";
-import type { Item, ItemCreateInput, ItemUpdateInput } from "@listcollab/shared";
+import type { Item, ItemCreateInput, ItemUpdateInput } from '@listcollab/shared'
+import express, { type Request, type Response } from 'express'
+import type { ResultSetHeader, RowDataPacket } from 'mysql2'
 
-import db = require("../config/database");
+import db from '../config/database.js'
+import logger from '../logger.js'
 
 type ItemRow = RowDataPacket & Item;
 
@@ -30,7 +30,7 @@ router.get("/", async (_req: Request, res: Response) => {
     `);
     res.json(rows);
   } catch (error) {
-    console.error("Error fetching items:", error);
+    logger.error({ err: error }, 'Error fetching items')
     res.status(500).json({ error: "Failed to fetch items" });
   }
 });
@@ -50,7 +50,7 @@ router.get("/person/:personId", async (req: Request<{ personId: string }>, res: 
     );
     res.json(rows);
   } catch (error) {
-    console.error("Error fetching items for person:", error);
+    logger.error({ err: error }, 'Error fetching items for person')
     res.status(500).json({ error: "Failed to fetch items for person" });
   }
 });
@@ -84,7 +84,7 @@ router.post("/", async (req: Request<Record<string, never>, ItemRow, ItemCreateI
 
     res.status(201).json(rows[0]);
   } catch (error) {
-    console.error("Error creating item:", error);
+    logger.error({ err: error }, 'Error creating item')
     res.status(500).json({ error: "Failed to create item" });
   }
 });
@@ -124,7 +124,7 @@ router.put("/:id", async (req: Request<{ id: string }, ItemRow, ItemUpdateInput>
 
     res.json(rows[0]);
   } catch (error) {
-    console.error("Error updating item:", error);
+    logger.error({ err: error }, 'Error updating item')
     res.status(500).json({ error: "Failed to update item" });
   }
 });
@@ -142,9 +142,9 @@ router.delete("/:id", async (req: Request<{ id: string }>, res: Response) => {
 
     res.json({ message: "Item deleted successfully" });
   } catch (error) {
-    console.error("Error deleting item:", error);
+    logger.error({ err: error }, 'Error deleting item')
     res.status(500).json({ error: "Failed to delete item" });
   }
 });
 
-export = router;
+export default router

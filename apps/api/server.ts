@@ -1,16 +1,14 @@
-// filepath: c:\Users\techn\Documents\apps\partylistapp\backend\server.js
 import cors from "cors";
-import type { NextFunction, Request, Response } from "express";
-import express from "express";
-import helmet from "helmet";
 import dotenv from "dotenv";
+import express, { type NextFunction, type Request, type Response } from "express";
+import helmet from "helmet";
 
-import db = require("./config/database");
-
-const peopleRoutes = require("./routes/people");
-const itemsRoutes = require("./routes/items");
-const categoriesRoutes = require("./routes/categories");
-const requiredItemsRoutes = require("./routes/required-items");
+import db from './config/database.js'
+import logger from './logger.js'
+import categoriesRoutes from './routes/categories.js'
+import itemsRoutes from './routes/items.js'
+import peopleRoutes from './routes/people.js'
+import requiredItemsRoutes from './routes/required-items.js'
 
 dotenv.config();
 
@@ -33,33 +31,34 @@ app.use("/api/items", itemsRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/required-items", requiredItemsRoutes);
 
-app.get("/api/health", async (_req: Request, res: Response) => {
+app.get('/api/health', async (_req: Request, res: Response) => {
   try {
-    await db.execute("SELECT 1");
+    await db.execute('SELECT 1')
 
-    res.status(200).json({ status: "ok", db: true });
-  } catch (_error) {
-    res.status(503).json({ status: "degraded", db: false });
+    res.status(200).json({ status: 'ok', db: true })
+  } catch {
+    res.status(503).json({ status: 'degraded', db: false })
   }
-});
+})
 
 // Error handling middleware
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error(err.stack);
+app.use((err: Error, _req: Request, res: Response, next: NextFunction) => {
+  void next
+  logger.error({ err }, 'Unhandled API error')
   res.status(500).json({
-    error: "Something went wrong!",
+    error: 'Something went wrong!',
     message:
-      process.env.NODE_ENV === "development"
+      process.env.NODE_ENV === 'development'
         ? err.message
-        : "Internal Server Error",
-  });
-});
+        : 'Internal Server Error',
+  })
+})
 
 // 404 handler
-app.use("*", (_req: Request, res: Response) => {
-  res.status(404).json({ error: "Route not found" });
-});
+app.use('*', (_req: Request, res: Response) => {
+  res.status(404).json({ error: 'Route not found' })
+})
 
 app.listen(PORT, () => {
-  console.log(`Party List API server running on port ${PORT}`);
-});
+  logger.info({ port: PORT }, 'Party List API server running')
+})

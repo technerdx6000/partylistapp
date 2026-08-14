@@ -1,9 +1,9 @@
-import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import type { Request, Response } from "express";
-import express from "express";
-import type { Person, PersonInput } from "@listcollab/shared";
+import type { Person, PersonInput } from '@listcollab/shared'
+import express, { type Request, type Response } from 'express'
+import type { ResultSetHeader, RowDataPacket } from 'mysql2'
 
-import db = require("../config/database");
+import db from '../config/database.js'
+import logger from '../logger.js'
 
 type PersonRow = RowDataPacket & Person;
 
@@ -15,7 +15,7 @@ router.get('/', async (_req: Request, res: Response) => {
     const [rows] = await db.execute<PersonRow[]>('SELECT * FROM people ORDER BY name');
     res.json(rows);
   } catch (error) {
-    console.error('Error fetching people:', error);
+    logger.error({ err: error }, 'Error fetching people')
     res.status(500).json({ error: 'Failed to fetch people' });
   }
 });
@@ -29,7 +29,7 @@ router.get('/:id', async (req: Request<{ id: string }>, res: Response) => {
     }
     res.json(rows[0]);
   } catch (error) {
-    console.error('Error fetching person:', error);
+    logger.error({ err: error }, 'Error fetching person')
     res.status(500).json({ error: 'Failed to fetch person' });
   }
 });
@@ -51,7 +51,7 @@ router.post('/', async (req: Request<Record<string, never>, PersonRow, PersonInp
     const [rows] = await db.execute<PersonRow[]>('SELECT * FROM people WHERE id = ?', [result.insertId]);
     res.status(201).json(rows[0]);
   } catch (error) {
-    console.error('Error creating person:', error);
+    logger.error({ err: error }, 'Error creating person')
     res.status(500).json({ error: 'Failed to create person' });
   }
 });
@@ -77,7 +77,7 @@ router.put('/:id', async (req: Request<{ id: string }, PersonRow, PersonInput>, 
     const [rows] = await db.execute<PersonRow[]>('SELECT * FROM people WHERE id = ?', [req.params.id]);
     res.json(rows[0]);
   } catch (error) {
-    console.error('Error updating person:', error);
+    logger.error({ err: error }, 'Error updating person')
     res.status(500).json({ error: 'Failed to update person' });
   }
 });
@@ -93,9 +93,9 @@ router.delete('/:id', async (req: Request<{ id: string }>, res: Response) => {
     
     res.json({ message: 'Person deleted successfully' });
   } catch (error) {
-    console.error('Error deleting person:', error);
+    logger.error({ err: error }, 'Error deleting person')
     res.status(500).json({ error: 'Failed to delete person' });
   }
 });
 
-export = router;
+export default router

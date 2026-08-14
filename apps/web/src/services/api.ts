@@ -19,50 +19,50 @@ import {
   type RequiredItem,
   type RequiredItemAssignInput,
   type RequiredItemInput,
-} from "@listcollab/shared";
-import { z } from "zod";
+} from '@listcollab/shared'
+import { z } from 'zod'
 
-const API_BASE_URL = "/api";
+const API_BASE_URL = '/api'
 
 const errorSchema = z.object({
   error: z.string(),
-});
+})
 
 const deleteResponseSchema = z.object({
   message: z.string(),
-});
+})
 
-const peopleSchema = z.array(PersonSchema);
-const categoriesSchema = z.array(CategorySchema);
-const itemsSchema = z.array(ItemSchema);
-const requiredItemsSchema = z.array(RequiredItemSchema);
+const peopleSchema = z.array(PersonSchema)
+const categoriesSchema = z.array(CategorySchema)
+const itemsSchema = z.array(ItemSchema)
+const requiredItemsSchema = z.array(RequiredItemSchema)
 
 async function apiRequest<T>(
   endpoint: string,
   schema: z.ZodType<T>,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
+  const url = `${API_BASE_URL}${endpoint}`
   const config: RequestInit = {
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     ...options,
-  };
+  }
 
   try {
-    const response = await fetch(url, config);
-    const json = await response.json().catch(() => ({ error: "Unknown error" }));
+    const response = await fetch(url, config)
+    const json: unknown = await response.json().catch(() => ({ error: 'Unknown error' }))
 
     if (!response.ok) {
-      const errorData = errorSchema.safeParse(json);
-      throw new Error(errorData.success ? errorData.data.error : `HTTP ${response.status}`);
+      const errorData = errorSchema.safeParse(json)
+      throw new Error(errorData.success ? errorData.data.error : `HTTP ${response.status}`)
     }
 
-    return schema.parse(json);
+    return schema.parse(json)
   } catch (error) {
     console.error(`API request failed: ${endpoint}`, error);
-    throw error;
+    throw error
   }
 }
 

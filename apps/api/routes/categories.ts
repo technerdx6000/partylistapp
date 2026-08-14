@@ -1,9 +1,9 @@
-import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import type { Request, Response } from "express";
-import express from "express";
-import type { Category, CategoryInput } from "@listcollab/shared";
+import type { Category, CategoryInput } from '@listcollab/shared'
+import express, { type Request, type Response } from 'express'
+import type { ResultSetHeader, RowDataPacket } from 'mysql2'
 
-import db = require("../config/database");
+import db from '../config/database.js'
+import logger from '../logger.js'
 
 type CategoryRow = RowDataPacket & Category;
 
@@ -15,7 +15,7 @@ router.get("/", async (_req: Request, res: Response) => {
     const [rows] = await db.execute<CategoryRow[]>("SELECT * FROM categories ORDER BY name");
     res.json(rows);
   } catch (error) {
-    console.error("Error fetching categories:", error);
+    logger.error({ err: error }, 'Error fetching categories')
     res.status(500).json({ error: "Failed to fetch categories" });
   }
 });
@@ -47,9 +47,9 @@ router.post("/", async (req: Request<Record<string, never>, CategoryRow, Categor
     ) {
       return res.status(400).json({ error: "Category name already exists" });
     }
-    console.error("Error creating category:", error);
+    logger.error({ err: error }, 'Error creating category')
     res.status(500).json({ error: "Failed to create category" });
   }
 });
 
-export = router;
+export default router

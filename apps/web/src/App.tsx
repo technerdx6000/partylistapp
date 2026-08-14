@@ -1,40 +1,42 @@
-import { useState, useMemo, useEffect } from 'react'
-import {
-  Container,
-  Typography,
-  TextField,
-  Grid,
-  Paper,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemButton,
-  Chip,
-  IconButton,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  Box,
-  Divider,
-  Badge,
-  CircularProgress,
-  Alert
-} from '@mui/material'
+import type { Category, Item, Person, RequiredItem } from '@listcollab/shared'
 import {
   Add as AddIcon,
-  Edit as EditIcon,
   Delete as DeleteIcon,
+  Edit as EditIcon,
   Person as PersonIcon,
-  Restaurant as RestaurantIcon
+  Restaurant as RestaurantIcon,
 } from '@mui/icons-material'
-import type { Category, Item, Person, RequiredItem } from '@listcollab/shared'
-import { peopleAPI, categoriesAPI, itemsAPI, requiredItemsAPI } from './services/api'
+import {
+  Alert,
+  Badge,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  IconButton,
+  InputLabel,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  MenuItem,
+  Select,
+  TextField,
+  Typography,
+} from '@mui/material'
+import { useEffect, useMemo, useState } from 'react'
+
+import {
+  categoriesAPI,
+  itemsAPI,
+  peopleAPI,
+  requiredItemsAPI,
+} from './services/api'
 import './App.css'
 
 function App(): React.JSX.Element {
@@ -101,15 +103,14 @@ function App(): React.JSX.Element {
         if (firstPerson && !selectedPersonId) {
           setSelectedPersonId(firstPerson.id)
         }
-      } catch (error) {
-        console.error('Failed to load data:', error)
+      } catch {
         setError('Failed to load data. Please check your connection.')
       } finally {
         setLoading(false)
       }
     }
 
-    loadData()
+    void loadData()
   }, [selectedPersonId])
 
   // Computed values
@@ -182,7 +183,7 @@ function App(): React.JSX.Element {
       setPeople([...people, newPerson])
       setPersonName('')
       setOpenPersonDialog(false)
-    } catch (error) {
+    } catch {
       setError('Failed to add person')
     }
   }
@@ -195,7 +196,7 @@ function App(): React.JSX.Element {
       if (selectedPersonId === personId) {
         setSelectedPersonId(people.find(p => p.id !== personId)?.id || null)
       }
-    } catch (error) {
+    } catch {
       setError('Failed to delete person')
     }
   }
@@ -213,7 +214,7 @@ function App(): React.JSX.Element {
       setItemName('')
       setItemCategory(1)
       setOpenItemDialog(false)
-    } catch (error) {
+    } catch {
       setError('Failed to add item')
     }
   }
@@ -222,7 +223,7 @@ function App(): React.JSX.Element {
     try {
       await itemsAPI.delete(itemId)
       setItems(items.filter(item => item.id !== itemId))
-    } catch (error) {
+    } catch {
       setError('Failed to delete item')
     }
   }
@@ -233,7 +234,7 @@ function App(): React.JSX.Element {
       setCategories([...categories, newCategory])
       setCategoryName('')
       setOpenCategoryDialog(false)
-    } catch (error) {
+    } catch {
       setError('Failed to add category')
     }
   }
@@ -253,8 +254,7 @@ function App(): React.JSX.Element {
       setRequiredItemName('')
       setRequiredItemCategory(1)
       setOpenRequiredItemDialog(false)
-    } catch (error) {
-      console.error('Error adding required item:', error)
+    } catch {
       setError('Failed to add required item')
     }
   }
@@ -276,17 +276,16 @@ function App(): React.JSX.Element {
       setRequiredItemCategory(1)
       setEditingRequiredItem(null)
       setOpenRequiredItemDialog(false)
-    } catch (error) {
-      console.error('Error updating required item:', error)
+    } catch {
       setError('Failed to update required item')
     }
   }
 
   const handleRequiredItemSave = (): void => {
     if (editingRequiredItem) {
-      updateRequiredItem()
+      void updateRequiredItem()
     } else {
-      addRequiredItem()
+      void addRequiredItem()
     }
   }
 
@@ -301,8 +300,7 @@ function App(): React.JSX.Element {
       setAssignedPersonId('')
       setAssigningRequiredItem(null)
       setOpenAssignmentDialog(false)
-    } catch (error) {
-      console.error('Error assigning required item:', error)
+    } catch {
       setError('Failed to assign required item')
     }
   }
@@ -316,7 +314,7 @@ function App(): React.JSX.Element {
       setPersonName('')
       setEditingPerson(null)
       setOpenPersonDialog(false)
-    } catch (error) {
+    } catch {
       setError('Failed to update person')
     }
   }
@@ -334,7 +332,7 @@ function App(): React.JSX.Element {
       setItemCategory(1)
       setEditingItem(null)
       setOpenItemDialog(false)
-    } catch (error) {
+    } catch {
       setError('Failed to update item')
     }
   }
@@ -469,7 +467,7 @@ function App(): React.JSX.Element {
                           size="small" 
                           onClick={(e) => {
                             e.stopPropagation()
-                            deletePerson(person.id)
+                            void deletePerson(person.id)
                           }}
                         >
                           <DeleteIcon />
@@ -559,7 +557,9 @@ function App(): React.JSX.Element {
                       </IconButton>
                       <IconButton 
                         size="small" 
-                        onClick={() => deleteItem(item.id)}
+                        onClick={() => {
+                          void deleteItem(item.id)
+                        }}
                       >
                         <DeleteIcon />
                       </IconButton>
@@ -710,7 +710,9 @@ function App(): React.JSX.Element {
             <DialogActions>
               <Button onClick={() => setOpenPersonDialog(false)}>Cancel</Button>
               <Button 
-                onClick={editingPerson ? updatePerson : addPerson}
+                onClick={() => {
+                  void (editingPerson ? updatePerson() : addPerson())
+                }}
                 disabled={!personName.trim()}
               >
                 {editingPerson ? 'Update' : 'Add'}
@@ -752,7 +754,9 @@ function App(): React.JSX.Element {
             <DialogActions>
               <Button onClick={() => setOpenItemDialog(false)}>Cancel</Button>
               <Button 
-                onClick={editingItem ? updateItem : addItem}
+                onClick={() => {
+                  void (editingItem ? updateItem() : addItem())
+                }}
                 disabled={!itemName.trim()}
               >
                 {editingItem ? 'Update' : 'Add'}
@@ -777,7 +781,9 @@ function App(): React.JSX.Element {
             <DialogActions>
               <Button onClick={() => setOpenCategoryDialog(false)}>Cancel</Button>
               <Button 
-                onClick={addCategory}
+                onClick={() => {
+                  void addCategory()
+                }}
                 disabled={!categoryName.trim()}
               >
                 Add
@@ -880,7 +886,9 @@ function App(): React.JSX.Element {
                 Cancel
               </Button>
               <Button 
-                onClick={assignRequiredItem}
+                onClick={() => {
+                  void assignRequiredItem()
+                }}
                 variant="contained"
               >
                 {assignedPersonId ? 'Assign' : 'Unassign'}

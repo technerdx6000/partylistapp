@@ -10,7 +10,7 @@
 | Phase | Name | Status | Completion |
 |-------|------|--------|-----------|
 | 1 | Stabilise the existing repo | ✅ Complete | 7 / 7 |
-| 2 | Turborepo, TypeScript and test infrastructure | 🔄 In Progress | 4 / 9 |
+| 2 | Turborepo, TypeScript and test infrastructure | 🔄 In Progress | 5 / 9 |
 | 3 | Domain model and migrations | ⬜ Not Started | 0 / 7 |
 | 4 | Event-centred API | ⬜ Not Started | 0 / 10 |
 | 5 | Frontend restructure | ⬜ Not Started | 0 / 8 |
@@ -37,7 +37,7 @@
 | 2 – Foundation | 2.4 | Create `packages/shared` with Zod + `calculateCoverage` | 🔄 In Progress | `packages/shared` now exposes current Zod schemas, inferred types, and `calculateCoverage`; both `apps/api` and `apps/web` depend on it and compile against it. Remaining work for this task is the `calculateCoverage` unit tests once the Phase 2 test runner is in place |
 | 2 – Foundation | 2.5 | Convert the API to TypeScript (no restructuring) | ✅ Complete | `apps/api` now builds from `server.ts`, `config/database.ts`, and typed route modules with `tsc`, dev uses `tsx watch`, Docker runs compiled output from `dist/`, and the containerized app still serves `/api/health` and `/api/required-items` |
 | 2 – Foundation | 2.6 | Convert the web app to TypeScript (minimum typing only) | ✅ Complete | Renamed `vite.config.ts`, `src/main.tsx`, `src/services/api.ts`, and `src/App.tsx`; wired shared-schema response validation into the web API client; added minimum explicit typing in `App.tsx`; verified `npm run --workspace @listcollab/web type-check`, `npm run --workspace @listcollab/web build`, and the Dockerized app still serves the frontend and proxied API health endpoints |
-| 2 – Foundation | 2.7 | ESLint flat config + Prettier across all workspaces | ⬜ Not Started | |
+| 2 – Foundation | 2.7 | ESLint flat config + Prettier across all workspaces | ✅ Complete | Added a monorepo-aware flat ESLint config with typed TypeScript support, import ordering, cross-app import restrictions, and Prettier deferral; added workspace lint scripts and root tooling deps; `npm run lint` now exits zero across `@listcollab/api`, `@listcollab/shared`, and `@listcollab/web` |
 | 2 – Foundation | 2.8 | Vitest, Supertest, RTL, Playwright, test DB compose file | ⬜ Not Started | Each runner needs one real passing test |
 | 2 – Foundation | 2.9 | Verify the full toolchain from a clean clone | ⬜ Not Started | |
 | 3 – Domain Model | 3.1 | Migration runner (umzug) + `db:migrate` / `db:rollback` | ⬜ Not Started | |

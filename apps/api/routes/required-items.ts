@@ -1,13 +1,13 @@
-import type { ResultSetHeader, RowDataPacket } from "mysql2";
-import type { Request, Response } from "express";
-import express from "express";
 import type {
   RequiredItem,
   RequiredItemAssignInput,
   RequiredItemInput,
-} from "@listcollab/shared";
+} from '@listcollab/shared'
+import express, { type Request, type Response } from 'express'
+import type { ResultSetHeader, RowDataPacket } from 'mysql2'
 
-import pool = require("../config/database");
+import pool from '../config/database.js'
+import logger from '../logger.js'
 
 type RequiredItemRow = RowDataPacket & RequiredItem;
 type RequiredItemAssignBody = RequiredItemAssignInput | { person_id?: "" };
@@ -26,7 +26,7 @@ router.get("/", async (_req: Request, res: Response) => {
     `);
     res.json(rows);
   } catch (error) {
-    console.error("Error fetching required items:", error);
+    logger.error({ err: error }, 'Error fetching required items')
     res.status(500).json({ error: "Failed to fetch required items" });
   }
 });
@@ -51,7 +51,7 @@ router.get("/:id", async (req: Request<{ id: string }>, res: Response) => {
 
     res.json(rows[0]);
   } catch (error) {
-    console.error("Error fetching required item:", error);
+    logger.error({ err: error }, 'Error fetching required item')
     res.status(500).json({ error: "Failed to fetch required item" });
   }
 });
@@ -91,7 +91,7 @@ router.post("/", async (req: Request<Record<string, never>, RequiredItemRow, Req
 
     res.status(201).json(rows[0]);
   } catch (error) {
-    console.error("Error creating required item:", error);
+    logger.error({ err: error }, 'Error creating required item')
     res.status(500).json({ error: "Failed to create required item" });
   }
 });
@@ -133,7 +133,7 @@ router.put("/:id", async (req: Request<{ id: string }, RequiredItemRow, Required
 
     res.json(rows[0]);
   } catch (error) {
-    console.error("Error updating required item:", error);
+    logger.error({ err: error }, 'Error updating required item')
     res.status(500).json({ error: "Failed to update required item" });
   }
 });
@@ -168,7 +168,7 @@ router.patch("/:id/assign", async (req: Request<{ id: string }, RequiredItemRow,
 
     res.json(rows[0]);
   } catch (error) {
-    console.error("Error assigning required item:", error);
+    logger.error({ err: error }, 'Error assigning required item')
     res.status(500).json({ error: "Failed to assign required item" });
   }
 });
@@ -187,9 +187,9 @@ router.delete("/:id", async (req: Request<{ id: string }>, res: Response) => {
 
     res.json({ message: "Required item deleted successfully" });
   } catch (error) {
-    console.error("Error deleting required item:", error);
+    logger.error({ err: error }, 'Error deleting required item')
     res.status(500).json({ error: "Failed to delete required item" });
   }
 });
 
-export = router;
+export default router
