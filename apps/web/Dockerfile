@@ -7,6 +7,7 @@ WORKDIR /app
 # Copy workspace manifests
 COPY package.json package-lock.json turbo.json ./
 COPY apps/web/package.json apps/web/package.json
+COPY packages/shared/package.json packages/shared/package.json
 COPY packages/tsconfig packages/tsconfig
 
 # Install dependencies needed for the web workspace build
@@ -14,6 +15,7 @@ RUN npm ci
 
 # Copy web workspace source
 COPY apps/web apps/web
+COPY packages/shared packages/shared
 
 # Build the application
 RUN npm run --workspace @listcollab/web build

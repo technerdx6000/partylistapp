@@ -11,3 +11,4 @@
 > Keep entries brief, specific, and actionable. Record repository-specific lessons, not generic advice.
 
 - 2026-08-14 | Treated immediate post-start frontend HTTP probes as definitive after `docker compose up -d` | The frontend container starts only after the API is healthy, so the first host probe can race nginx and return `000` even when the stack is fine | After cold-start validation in this repo, rerun live HTTP checks against the already-running stack before diagnosing a frontend failure
+- 2026-08-15 | Renamed the web entry files to `.ts` and `.tsx` without updating `apps/web/tsconfig.json` include globs | The first web type-check passed while skipping the renamed files, which hid the real conversion errors | After any JS→TS rename in this repo, update the workspace `tsconfig.json` include patterns before trusting a type-check result

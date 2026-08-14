@@ -1,31 +1,11 @@
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import type { Request, Response } from "express";
 import express from "express";
+import type { Item, ItemCreateInput, ItemUpdateInput } from "@listcollab/shared";
 
 import db = require("../config/database");
 
-type ItemRow = RowDataPacket & {
-  id: number;
-  name: string;
-  category_id: number;
-  person_id: number;
-  created_at: string;
-  updated_at: string;
-  category_name: string;
-  category_icon: string;
-  person_name: string;
-};
-
-type ItemCreateBody = {
-  name?: string;
-  category_id?: number;
-  person_id?: number;
-};
-
-type ItemUpdateBody = {
-  name?: string;
-  category_id?: number;
-};
+type ItemRow = RowDataPacket & Item;
 
 const router = express.Router();
 
@@ -76,7 +56,7 @@ router.get("/person/:personId", async (req: Request<{ personId: string }>, res: 
 });
 
 // POST /api/items - Create new item
-router.post("/", async (req: Request<Record<string, never>, ItemRow, ItemCreateBody>, res: Response) => {
+router.post("/", async (req: Request<Record<string, never>, ItemRow, ItemCreateInput>, res: Response) => {
   const { name, category_id, person_id } = req.body;
 
   if (!name || !name.trim() || !category_id || !person_id) {
@@ -110,7 +90,7 @@ router.post("/", async (req: Request<Record<string, never>, ItemRow, ItemCreateB
 });
 
 // PUT /api/items/:id - Update item
-router.put("/:id", async (req: Request<{ id: string }, ItemRow, ItemUpdateBody>, res: Response) => {
+router.put("/:id", async (req: Request<{ id: string }, ItemRow, ItemUpdateInput>, res: Response) => {
   const { name, category_id } = req.body;
 
   if (!hasOnlyAllowedFields(req.body, ["name", "category_id"])) {

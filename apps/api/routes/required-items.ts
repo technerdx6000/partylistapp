@@ -1,31 +1,16 @@
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import type { Request, Response } from "express";
 import express from "express";
+import type {
+  RequiredItem,
+  RequiredItemAssignInput,
+  RequiredItemInput,
+} from "@listcollab/shared";
 
 import pool = require("../config/database");
 
-type RequiredItemRow = RowDataPacket & {
-  id: number;
-  name: string;
-  category_id: number;
-  person_id: number | null;
-  is_fulfilled: number | boolean;
-  created_at: string;
-  updated_at: string;
-  category_name: string | null;
-  person_name: string | null;
-};
-
-type RequiredItemBody = {
-  name?: string;
-  category_id?: number;
-  person_id?: number | null;
-  is_fulfilled?: boolean;
-};
-
-type RequiredItemAssignBody = {
-  person_id?: number | null | "";
-};
+type RequiredItemRow = RowDataPacket & RequiredItem;
+type RequiredItemAssignBody = RequiredItemAssignInput | { person_id?: "" };
 
 const router = express.Router();
 
@@ -72,7 +57,7 @@ router.get("/:id", async (req: Request<{ id: string }>, res: Response) => {
 });
 
 // Create a new required item
-router.post("/", async (req: Request<Record<string, never>, RequiredItemRow, RequiredItemBody>, res: Response) => {
+router.post("/", async (req: Request<Record<string, never>, RequiredItemRow, RequiredItemInput>, res: Response) => {
   try {
     const {
       name,
@@ -112,7 +97,7 @@ router.post("/", async (req: Request<Record<string, never>, RequiredItemRow, Req
 });
 
 // Update a required item
-router.put("/:id", async (req: Request<{ id: string }, RequiredItemRow, RequiredItemBody>, res: Response) => {
+router.put("/:id", async (req: Request<{ id: string }, RequiredItemRow, RequiredItemInput>, res: Response) => {
   try {
     const { name, category_id, person_id, is_fulfilled } = req.body;
 

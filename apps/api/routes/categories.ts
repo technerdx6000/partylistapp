@@ -1,21 +1,11 @@
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import type { Request, Response } from "express";
 import express from "express";
+import type { Category, CategoryInput } from "@listcollab/shared";
 
 import db = require("../config/database");
 
-type CategoryRow = RowDataPacket & {
-  id: number;
-  name: string;
-  icon: string;
-  created_at: string;
-  updated_at: string;
-};
-
-type CategoryBody = {
-  name?: string;
-  icon?: string;
-};
+type CategoryRow = RowDataPacket & Category;
 
 const router = express.Router();
 
@@ -31,7 +21,7 @@ router.get("/", async (_req: Request, res: Response) => {
 });
 
 // POST /api/categories - Create new category
-router.post("/", async (req: Request<Record<string, never>, CategoryRow, CategoryBody>, res: Response) => {
+router.post("/", async (req: Request<Record<string, never>, CategoryRow, CategoryInput>, res: Response) => {
   const { name, icon = "📦" } = req.body;
 
   if (!name || !name.trim()) {

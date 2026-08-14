@@ -6,8 +6,8 @@
     "noEmit": true
   },
   "include": [
-    "./src/**/*.js",
-    "./src/**/*.jsx",
-    "./vite.config.js"
+    "./src/**/*.ts",
+    "./src/**/*.tsx",
+    "./vite.config.ts"
   ]
 }

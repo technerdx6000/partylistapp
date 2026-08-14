@@ -1,19 +1,11 @@
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import type { Request, Response } from "express";
 import express from "express";
+import type { Person, PersonInput } from "@listcollab/shared";
 
 import db = require("../config/database");
 
-type PersonRow = RowDataPacket & {
-  id: number;
-  name: string;
-  created_at: string;
-  updated_at: string;
-};
-
-type PersonBody = {
-  name?: string;
-};
+type PersonRow = RowDataPacket & Person;
 
 const router = express.Router();
 
@@ -43,7 +35,7 @@ router.get('/:id', async (req: Request<{ id: string }>, res: Response) => {
 });
 
 // POST /api/people - Create new person
-router.post('/', async (req: Request<Record<string, never>, PersonRow, PersonBody>, res: Response) => {
+router.post('/', async (req: Request<Record<string, never>, PersonRow, PersonInput>, res: Response) => {
   const { name } = req.body;
   
   if (!name || !name.trim()) {
@@ -65,7 +57,7 @@ router.post('/', async (req: Request<Record<string, never>, PersonRow, PersonBod
 });
 
 // PUT /api/people/:id - Update person
-router.put('/:id', async (req: Request<{ id: string }, PersonRow, PersonBody>, res: Response) => {
+router.put('/:id', async (req: Request<{ id: string }, PersonRow, PersonInput>, res: Response) => {
   const { name } = req.body;
   
   if (!name || !name.trim()) {

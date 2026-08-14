@@ -33,24 +33,25 @@ import {
   Person as PersonIcon,
   Restaurant as RestaurantIcon
 } from '@mui/icons-material'
+import type { Category, Item, Person, RequiredItem } from '@listcollab/shared'
 import { peopleAPI, categoriesAPI, itemsAPI, requiredItemsAPI } from './services/api'
 import './App.css'
 
-function App() {
+function App(): React.JSX.Element {
   // API data state
-  const [people, setPeople] = useState([])
-  const [categories, setCategories] = useState([])
-  const [items, setItems] = useState([])
-  const [requiredItems, setRequiredItems] = useState([])
+  const [people, setPeople] = useState<Person[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [items, setItems] = useState<Item[]>([])
+  const [requiredItems, setRequiredItems] = useState<RequiredItem[]>([])
   
   // Loading and error states
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
   // UI state
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedPersonId, setSelectedPersonId] = useState(null)
-  const [highlightedItems, setHighlightedItems] = useState([])
+  const [selectedPersonId, setSelectedPersonId] = useState<number | null>(null)
+  const [highlightedItems, setHighlightedItems] = useState<number[]>([])
   const [hideAssignedRequired, setHideAssignedRequired] = useState(false)
 
   // Dialog states
@@ -61,19 +62,19 @@ function App() {
 
   // Form states
   const [personName, setPersonName] = useState('')
-  const [editingPerson, setEditingPerson] = useState(null)
+  const [editingPerson, setEditingPerson] = useState<Person | null>(null)
   const [itemName, setItemName] = useState('')
   const [itemCategory, setItemCategory] = useState(1)
-  const [editingItem, setEditingItem] = useState(null)
+  const [editingItem, setEditingItem] = useState<Item | null>(null)
   const [categoryName, setCategoryName] = useState('')
   const [requiredItemName, setRequiredItemName] = useState('')
   const [requiredItemCategory, setRequiredItemCategory] = useState(1)
-  const [editingRequiredItem, setEditingRequiredItem] = useState(null)
+  const [editingRequiredItem, setEditingRequiredItem] = useState<RequiredItem | null>(null)
   
   // Assignment dialog state
   const [openAssignmentDialog, setOpenAssignmentDialog] = useState(false)
-  const [assigningRequiredItem, setAssigningRequiredItem] = useState(null)
-  const [assignedPersonId, setAssignedPersonId] = useState('')
+  const [assigningRequiredItem, setAssigningRequiredItem] = useState<RequiredItem | null>(null)
+  const [assignedPersonId, setAssignedPersonId] = useState<number | ''>('')
 
   // Load data on component mount
   useEffect(() => {
@@ -95,8 +96,10 @@ function App() {
         setRequiredItems(requiredItemsData)
         
         // Select first person if available
-        if (peopleData.length > 0 && !selectedPersonId) {
-          setSelectedPersonId(peopleData[0].id)
+        const firstPerson = peopleData[0]
+
+        if (firstPerson && !selectedPersonId) {
+          setSelectedPersonId(firstPerson.id)
         }
       } catch (error) {
         console.error('Failed to load data:', error)
@@ -137,12 +140,12 @@ function App() {
     return filtered
   }, [requiredItems, hideAssignedRequired, searchTerm])
 
-  const getCategoryName = (categoryId) => {
+  const getCategoryName = (categoryId: number): string => {
     const category = categories.find(cat => cat.id === categoryId)
     return category ? category.name : 'Unknown'
   }
 
-  const getPersonItemCount = (personId) => {
+  const getPersonItemCount = (personId: number): number => {
     return items.filter(item => item.person_id === personId).length
   }
 
@@ -173,7 +176,7 @@ function App() {
   }, [searchResults, searchTerm])
 
   // CRUD operations
-  const addPerson = async () => {
+  const addPerson = async (): Promise<void> => {
     try {
       const newPerson = await peopleAPI.create({ name: personName })
       setPeople([...people, newPerson])
@@ -184,7 +187,7 @@ function App() {
     }
   }
 
-  const deletePerson = async (personId) => {
+  const deletePerson = async (personId: number): Promise<void> => {
     try {
       await peopleAPI.delete(personId)
       setPeople(people.filter(p => p.id !== personId))
@@ -197,7 +200,9 @@ function App() {
     }
   }
 
-  const addItem = async () => {
+  const addItem = async (): Promise<void> => {
+    if (selectedPersonId === null) return
+
     try {
       const newItem = await itemsAPI.create({
         name: itemName,
@@ -213,7 +218,7 @@ function App() {
     }
   }
 
-  const deleteItem = async (itemId) => {
+  const deleteItem = async (itemId: number): Promise<void> => {
     try {
       await itemsAPI.delete(itemId)
       setItems(items.filter(item => item.id !== itemId))
@@ -222,7 +227,7 @@ function App() {
     }
   }
 
-  const addCategory = async () => {
+  const addCategory = async (): Promise<void> => {
     try {
       const newCategory = await categoriesAPI.create({ name: categoryName })
       setCategories([...categories, newCategory])
@@ -234,7 +239,7 @@ function App() {
   }
 
   // Required Items Functions
-  const addRequiredItem = async () => {
+  const addRequiredItem = async (): Promise<void> => {
     if (!requiredItemName.trim()) return
     
     try {
@@ -254,7 +259,7 @@ function App() {
     }
   }
 
-  const updateRequiredItem = async () => {
+  const updateRequiredItem = async (): Promise<void> => {
     if (!requiredItemName.trim() || !editingRequiredItem) return
     
     try {
@@ -277,7 +282,7 @@ function App() {
     }
   }
 
-  const handleRequiredItemSave = () => {
+  const handleRequiredItemSave = (): void => {
     if (editingRequiredItem) {
       updateRequiredItem()
     } else {
@@ -285,7 +290,7 @@ function App() {
     }
   }
 
-  const assignRequiredItem = async () => {
+  const assignRequiredItem = async (): Promise<void> => {
     if (!assigningRequiredItem || !assignedPersonId) return
     
     try {
@@ -302,7 +307,9 @@ function App() {
     }
   }
 
-  const updatePerson = async () => {
+  const updatePerson = async (): Promise<void> => {
+    if (!editingPerson) return
+
     try {
       const updatedPerson = await peopleAPI.update(editingPerson.id, { name: personName })
       setPeople(people.map(p => p.id === editingPerson.id ? updatedPerson : p))
@@ -314,7 +321,9 @@ function App() {
     }
   }
 
-  const updateItem = async () => {
+  const updateItem = async (): Promise<void> => {
+    if (!editingItem) return
+
     try {
       const updatedItem = await itemsAPI.update(editingItem.id, {
         name: itemName,
@@ -330,13 +339,13 @@ function App() {
     }
   }
 
-  const openEditPerson = (person) => {
+  const openEditPerson = (person: Person): void => {
     setEditingPerson(person)
     setPersonName(person.name)
     setOpenPersonDialog(true)
   }
 
-  const openEditItem = (item) => {
+  const openEditItem = (item: Item): void => {
     setEditingItem(item)
     setItemName(item.name)
     setItemCategory(item.category_id)
@@ -649,7 +658,7 @@ function App() {
                         size="small" 
                         onClick={() => {
                           setAssigningRequiredItem(item)
-                          setAssignedPersonId(item.person_id || '')
+                          setAssignedPersonId(item.person_id ?? '')
                           setOpenAssignmentDialog(true)
                         }}
                         title={item.person_name ? 'Reassign' : 'Assign to someone'}
@@ -730,7 +739,7 @@ function App() {
                 <Select
                   value={itemCategory}
                   label="Category"
-                  onChange={(e) => setItemCategory(e.target.value)}
+                  onChange={(e) => setItemCategory(Number(e.target.value))}
                 >
                   {categories.map((category) => (
                     <MenuItem key={category.id} value={category.id}>
@@ -799,7 +808,7 @@ function App() {
                 <InputLabel>Category</InputLabel>
                 <Select
                   value={requiredItemCategory}
-                  onChange={(e) => setRequiredItemCategory(e.target.value)}
+                  onChange={(e) => setRequiredItemCategory(Number(e.target.value))}
                   label="Category"
                 >
                   {categories.map((category) => (
@@ -849,7 +858,10 @@ function App() {
                 <InputLabel>Assign to Person</InputLabel>
                 <Select
                   value={assignedPersonId}
-                  onChange={(e) => setAssignedPersonId(e.target.value)}
+                  onChange={(e) => {
+                    const nextValue = String(e.target.value)
+                    setAssignedPersonId(nextValue === '' ? '' : Number(nextValue))
+                  }}
                   label="Assign to Person"
                 >
                   <MenuItem value="">
