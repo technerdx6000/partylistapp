@@ -1,0 +1,15 @@
+services:
+  test-db:
+    image: mariadb:11
+    environment:
+      MYSQL_ROOT_PASSWORD: test_root_password_only
+      MYSQL_DATABASE: listcollab_test
+      MYSQL_USER: listcollab_test_user
+      MYSQL_PASSWORD: listcollab_test_password_only
+    ports:
+      - '3307:3306'
+    volumes:
+      - test_db_data:/var/lib/mysql
+
+volumes:
+  test_db_data:

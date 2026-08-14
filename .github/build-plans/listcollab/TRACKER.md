@@ -10,7 +10,7 @@
 | Phase | Name | Status | Completion |
 |-------|------|--------|-----------|
 | 1 | Stabilise the existing repo | ✅ Complete | 7 / 7 |
-| 2 | Turborepo, TypeScript and test infrastructure | 🔄 In Progress | 5 / 9 |
+| 2 | Turborepo, TypeScript and test infrastructure | 🔄 In Progress | 6 / 9 |
 | 3 | Domain model and migrations | ⬜ Not Started | 0 / 7 |
 | 4 | Event-centred API | ⬜ Not Started | 0 / 10 |
 | 5 | Frontend restructure | ⬜ Not Started | 0 / 8 |
@@ -34,11 +34,11 @@
 | 2 – Foundation | 2.1 | npm workspaces + Turborepo pipelines and root scripts | 🔄 In Progress | Root workspace `package.json` and `turbo.json` are in place, `npm install` now produces a single root lockfile, and root `db:migrate` / `db:rollback` are wired to validated workspace scripts. Final completion depends on the remaining phase tasks making every root script executable end to end |
 | 2 – Foundation | 2.2 | Relocate apps to `apps/web` and `apps/api` with `git mv` | ✅ Complete | Moved the API to `apps/api` and the frontend sources/build files to `apps/web` with `git mv`, updated Dockerfiles and Compose paths for the monorepo layout, and verified `docker compose up --build -d` still builds and starts the relocated stack |
 | 2 – Foundation | 2.3 | `packages/tsconfig` — base, node, react configs | ✅ Complete | Added `@listcollab/tsconfig` with strict base, node, and react configs, plus starter workspace `tsconfig.json` files for `apps/api` and `apps/web`; validated all new config files parse as JSON |
-| 2 – Foundation | 2.4 | Create `packages/shared` with Zod + `calculateCoverage` | 🔄 In Progress | `packages/shared` now exposes current Zod schemas, inferred types, and `calculateCoverage`; both `apps/api` and `apps/web` depend on it and compile against it. Remaining work for this task is the `calculateCoverage` unit tests once the Phase 2 test runner is in place |
+| 2 – Foundation | 2.4 | Create `packages/shared` with Zod + `calculateCoverage` | ✅ Complete | `packages/shared` now exposes current Zod schemas, inferred types, and `calculateCoverage`; both `apps/api` and `apps/web` depend on it and compile against it, and the shared coverage helper has a passing Vitest suite |
 | 2 – Foundation | 2.5 | Convert the API to TypeScript (no restructuring) | ✅ Complete | `apps/api` now builds from `server.ts`, `config/database.ts`, and typed route modules with `tsc`, dev uses `tsx watch`, Docker runs compiled output from `dist/`, and the containerized app still serves `/api/health` and `/api/required-items` |
 | 2 – Foundation | 2.6 | Convert the web app to TypeScript (minimum typing only) | ✅ Complete | Renamed `vite.config.ts`, `src/main.tsx`, `src/services/api.ts`, and `src/App.tsx`; wired shared-schema response validation into the web API client; added minimum explicit typing in `App.tsx`; verified `npm run --workspace @listcollab/web type-check`, `npm run --workspace @listcollab/web build`, and the Dockerized app still serves the frontend and proxied API health endpoints |
 | 2 – Foundation | 2.7 | ESLint flat config + Prettier across all workspaces | ✅ Complete | Added a monorepo-aware flat ESLint config with typed TypeScript support, import ordering, cross-app import restrictions, and Prettier deferral; added workspace lint scripts and root tooling deps; `npm run lint` now exits zero across `@listcollab/api`, `@listcollab/shared`, and `@listcollab/web` |
-| 2 – Foundation | 2.8 | Vitest, Supertest, RTL, Playwright, test DB compose file | ⬜ Not Started | Each runner needs one real passing test |
+| 2 – Foundation | 2.8 | Vitest, Supertest, RTL, Playwright, test DB compose file | ✅ Complete | Added root Vitest, Playwright, and disposable `docker-compose.test.yml` scaffolding plus one real passing test for shared coverage logic, API `/api/health` 503 behavior, web loading render, and desktop/mobile Playwright smoke coverage |
 | 2 – Foundation | 2.9 | Verify the full toolchain from a clean clone | ⬜ Not Started | |
 | 3 – Domain Model | 3.1 | Migration runner (umzug) + `db:migrate` / `db:rollback` | ⬜ Not Started | |
 | 3 – Domain Model | 3.2 | Migration 001 — baseline the current schema | ⬜ Not Started | Diff against existing schema before deleting old scripts |

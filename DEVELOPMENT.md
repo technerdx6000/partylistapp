@@ -35,6 +35,18 @@ Services:
 - API health endpoint: http://localhost/api/health
 - MariaDB: localhost:3306
 
+## Run The Local Monorepo Dev Servers
+
+```bash
+npm install
+npm run dev
+```
+
+Local development endpoints:
+
+- Frontend dev server: http://127.0.0.1:4273
+- API dev server: http://127.0.0.1:4301/api/health
+
 ## Run In The Background
 
 ```bash

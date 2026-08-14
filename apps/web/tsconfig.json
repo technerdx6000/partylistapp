@@ -3,7 +3,11 @@
   "compilerOptions": {
     "allowJs": true,
     "checkJs": false,
-    "noEmit": true
+    "noEmit": true,
+    "types": [
+      "vitest/globals",
+      "@testing-library/jest-dom"
+    ]
   },
   "include": [
     "./src/**/*.ts",

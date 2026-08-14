@@ -59,6 +59,10 @@ app.use('*', (_req: Request, res: Response) => {
   res.status(404).json({ error: 'Route not found' })
 })
 
-app.listen(PORT, () => {
-  logger.info({ port: PORT }, 'Party List API server running')
-})
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    logger.info({ port: PORT }, 'Party List API server running')
+  })
+}
+
+export { app }
