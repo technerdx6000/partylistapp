@@ -17,7 +17,7 @@
 
 ## Environment Setup
 
-- [ ] Copied `.env.production` to `.env`
+- [ ] Copied `.env.example` to `.env`
 - [ ] Updated environment variables for production
 - [ ] Verified database connection settings
 - [ ] Set `NODE_ENV=production`
@@ -27,7 +27,7 @@
 - [ ] Cloned repository to server
 - [ ] Made deployment scripts executable (`chmod +x *.sh`)
 - [ ] Run deployment: `./deploy.sh` or `deploy.bat`
-- [ ] Verified all containers are healthy: `docker-compose ps`
+- [ ] Verified all containers are healthy: `docker compose ps`
 - [ ] Tested application access: `http://server-ip`
 - [ ] Tested API health: `http://server-ip/api/health`
 

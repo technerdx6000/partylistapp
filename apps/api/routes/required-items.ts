@@ -1,11 +1,38 @@
-const express = require("express");
+import type { ResultSetHeader, RowDataPacket } from "mysql2";
+import type { Request, Response } from "express";
+import express from "express";
+
+import pool = require("../config/database");
+
+type RequiredItemRow = RowDataPacket & {
+  id: number;
+  name: string;
+  category_id: number;
+  person_id: number | null;
+  is_fulfilled: number | boolean;
+  created_at: string;
+  updated_at: string;
+  category_name: string | null;
+  person_name: string | null;
+};
+
+type RequiredItemBody = {
+  name?: string;
+  category_id?: number;
+  person_id?: number | null;
+  is_fulfilled?: boolean;
+};
+
+type RequiredItemAssignBody = {
+  person_id?: number | null | "";
+};
+
 const router = express.Router();
-const pool = require("../config/database");
 
 // Get all required items
-router.get("/", async (req, res) => {
+router.get("/", async (_req: Request, res: Response) => {
   try {
-    const [rows] = await pool.execute(`
+    const [rows] = await pool.execute<RequiredItemRow[]>(`
       SELECT ri.*, c.name as category_name, p.name as person_name 
       FROM required_items ri
       LEFT JOIN categories c ON ri.category_id = c.id
@@ -20,9 +47,9 @@ router.get("/", async (req, res) => {
 });
 
 // Get required item by ID
-router.get("/:id", async (req, res) => {
+router.get("/:id", async (req: Request<{ id: string }>, res: Response) => {
   try {
-    const [rows] = await pool.execute(
+    const [rows] = await pool.execute<RequiredItemRow[]>(
       `
       SELECT ri.*, c.name as category_name, p.name as person_name 
       FROM required_items ri
@@ -45,7 +72,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // Create a new required item
-router.post("/", async (req, res) => {
+router.post("/", async (req: Request<Record<string, never>, RequiredItemRow, RequiredItemBody>, res: Response) => {
   try {
     const {
       name,
@@ -60,13 +87,13 @@ router.post("/", async (req, res) => {
         .json({ error: "Name and category_id are required" });
     }
 
-    const [result] = await pool.execute(
+    const [result] = await pool.execute<ResultSetHeader>(
       "INSERT INTO required_items (name, category_id, person_id, is_fulfilled) VALUES (?, ?, ?, ?)",
       [name, category_id, person_id, is_fulfilled]
     );
 
     // Fetch the created item with joins
-    const [rows] = await pool.execute(
+    const [rows] = await pool.execute<RequiredItemRow[]>(
       `
       SELECT ri.*, c.name as category_name, p.name as person_name 
       FROM required_items ri
@@ -85,7 +112,7 @@ router.post("/", async (req, res) => {
 });
 
 // Update a required item
-router.put("/:id", async (req, res) => {
+router.put("/:id", async (req: Request<{ id: string }, RequiredItemRow, RequiredItemBody>, res: Response) => {
   try {
     const { name, category_id, person_id, is_fulfilled } = req.body;
 
@@ -95,9 +122,12 @@ router.put("/:id", async (req, res) => {
         .json({ error: "Name and category_id are required" });
     }
 
-    const [result] = await pool.execute(
+    const normalizedPersonId = person_id ?? null;
+    const normalizedFulfilled = is_fulfilled ?? normalizedPersonId !== null;
+
+    const [result] = await pool.execute<ResultSetHeader>(
       "UPDATE required_items SET name = ?, category_id = ?, person_id = ?, is_fulfilled = ? WHERE id = ?",
-      [name, category_id, person_id, is_fulfilled, req.params.id]
+      [name.trim(), category_id, normalizedPersonId, normalizedFulfilled, req.params.id]
     );
 
     if (result.affectedRows === 0) {
@@ -105,7 +135,7 @@ router.put("/:id", async (req, res) => {
     }
 
     // Fetch the updated item with joins
-    const [rows] = await pool.execute(
+    const [rows] = await pool.execute<RequiredItemRow[]>(
       `
       SELECT ri.*, c.name as category_name, p.name as person_name 
       FROM required_items ri
@@ -124,13 +154,15 @@ router.put("/:id", async (req, res) => {
 });
 
 // Assign/unassign person to required item
-router.patch("/:id/assign", async (req, res) => {
+router.patch("/:id/assign", async (req: Request<{ id: string }, RequiredItemRow, RequiredItemAssignBody>, res: Response) => {
   try {
     const { person_id } = req.body;
 
-    const [result] = await pool.execute(
+    const normalizedPersonId = person_id === "" ? null : person_id ?? null;
+
+    const [result] = await pool.execute<ResultSetHeader>(
       "UPDATE required_items SET person_id = ?, is_fulfilled = ? WHERE id = ?",
-      [person_id, person_id !== null, req.params.id]
+      [normalizedPersonId, normalizedPersonId !== null, req.params.id]
     );
 
     if (result.affectedRows === 0) {
@@ -138,7 +170,7 @@ router.patch("/:id/assign", async (req, res) => {
     }
 
     // Fetch the updated item with joins
-    const [rows] = await pool.execute(
+    const [rows] = await pool.execute<RequiredItemRow[]>(
       `
       SELECT ri.*, c.name as category_name, p.name as person_name 
       FROM required_items ri
@@ -157,9 +189,9 @@ router.patch("/:id/assign", async (req, res) => {
 });
 
 // Delete a required item
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", async (req: Request<{ id: string }>, res: Response) => {
   try {
-    const [result] = await pool.execute(
+    const [result] = await pool.execute<ResultSetHeader>(
       "DELETE FROM required_items WHERE id = ?",
       [req.params.id]
     );
@@ -175,4 +207,4 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-module.exports = router;
+export = router;

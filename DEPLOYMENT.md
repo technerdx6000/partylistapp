@@ -19,15 +19,15 @@ This guide will help you deploy the Party List application using Docker and Dock
 Copy the production environment template:
 
 ```bash
-cp .env.production .env
+cp .env.example .env
 ```
 
 Edit `.env` file and update the passwords:
 
 ```bash
 # Database Configuration
-DB_NAME=partylistdb
-DB_USER=partyuser
+DB_NAME=listcollab
+DB_USER=listcollab_user
 DB_PASSWORD=your_secure_password_here
 DB_ROOT_PASSWORD=your_secure_root_password_here
 ```
@@ -51,13 +51,13 @@ deploy.bat
 
 ```bash
 # Build and start services
-docker-compose up -d --build
+docker compose up -d --build
 
 # Check status
-docker-compose ps
+docker compose ps
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ## Services
@@ -78,19 +78,19 @@ The application consists of three services:
 ### View logs
 
 ```bash
-docker-compose logs -f [service_name]
+docker compose logs -f [service_name]
 ```
 
 ### Restart a service
 
 ```bash
-docker-compose restart [service_name]
+docker compose restart [service_name]
 ```
 
 ### Stop all services
 
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ### Update application
@@ -100,19 +100,19 @@ docker-compose down
 git pull
 
 # Rebuild and restart
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 ### Backup database
 
 ```bash
-docker-compose exec db mysqldump -u root -p partylistdb > backup.sql
+docker compose exec db mysqldump -u root -p listcollab > backup.sql
 ```
 
 ### Restore database
 
 ```bash
-docker-compose exec -T db mysql -u root -p partylistdb < backup.sql
+docker compose exec -T db mysql -u root -p listcollab < backup.sql
 ```
 
 ## Troubleshooting
@@ -120,21 +120,21 @@ docker-compose exec -T db mysql -u root -p partylistdb < backup.sql
 ### Check service health
 
 ```bash
-docker-compose ps
+docker compose ps
 ```
 
 ### View service logs
 
 ```bash
-docker-compose logs api
-docker-compose logs frontend
-docker-compose logs db
+docker compose logs api
+docker compose logs frontend
+docker compose logs db
 ```
 
 ### Access database directly
 
 ```bash
-docker-compose exec db mysql -u root -p partylistdb
+docker compose exec db mysql -u root -p listcollab
 ```
 
 ### Reset everything

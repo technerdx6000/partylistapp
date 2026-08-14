@@ -1,5 +1,4 @@
--- Use your existing atlasdb database
-USE atlasdb;
+-- Docker init creates and selects the database named by DB_NAME.
 
 -- Categories table
 CREATE TABLE IF NOT EXISTS categories (

@@ -7,7 +7,7 @@ echo "====================================="
 
 # Check if containers are running
 echo "📦 Container Status:"
-docker-compose ps
+docker compose ps
 
 echo ""
 
@@ -33,7 +33,7 @@ fi
 # Check database connectivity
 echo ""
 echo "🗄️  Database Health:"
-if docker-compose exec -T db mysqladmin ping -h localhost --silent; then
+if docker compose exec -T db mariadb-admin ping -h localhost --silent; then
     echo "✅ Database: Healthy"
 else
     echo "❌ Database: Unhealthy"
@@ -42,4 +42,4 @@ fi
 echo ""
 echo "📝 Recent logs:"
 echo "---------------"
-docker-compose logs --tail=10
+docker compose logs --tail=10

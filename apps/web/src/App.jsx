@@ -82,24 +82,17 @@ function App() {
         setLoading(true)
         setError(null)
         
-        const [peopleData, categoriesData, itemsData] = await Promise.all([
+        const [peopleData, categoriesData, itemsData, requiredItemsData] = await Promise.all([
           peopleAPI.getAll(),
           categoriesAPI.getAll(),
-          itemsAPI.getAll()
+          itemsAPI.getAll(),
+          requiredItemsAPI.getAll()
         ])
         
         setPeople(peopleData)
         setCategories(categoriesData)
         setItems(itemsData)
-        
-        // For now, use mock data for required items since API route needs debugging
-        setRequiredItems([
-          { id: 1, name: 'Main Course', category_id: 1, category_name: 'Food', person_id: null, person_name: null, is_fulfilled: false },
-          { id: 2, name: 'Appetizers', category_id: 1, category_name: 'Food', person_id: 1, person_name: 'Alice Johnson', is_fulfilled: true },
-          { id: 3, name: 'Dessert', category_id: 1, category_name: 'Food', person_id: null, person_name: null, is_fulfilled: false },
-          { id: 4, name: 'Beverages', category_id: 1, category_name: 'Food', person_id: 2, person_name: 'Bob Smith', is_fulfilled: true },
-          { id: 5, name: 'Paper Plates', category_id: 1, category_name: 'Food', person_id: null, person_name: null, is_fulfilled: false }
-        ])
+        setRequiredItems(requiredItemsData)
         
         // Select first person if available
         if (peopleData.length > 0 && !selectedPersonId) {
@@ -325,8 +318,7 @@ function App() {
     try {
       const updatedItem = await itemsAPI.update(editingItem.id, {
         name: itemName,
-        category_id: itemCategory,
-        person_id: selectedPersonId
+        category_id: itemCategory
       })
       setItems(items.map(item => item.id === editingItem.id ? updatedItem : item))
       setItemName('')

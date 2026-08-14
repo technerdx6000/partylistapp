@@ -1,11 +1,26 @@
-const express = require('express');
+import type { ResultSetHeader, RowDataPacket } from "mysql2";
+import type { Request, Response } from "express";
+import express from "express";
+
+import db = require("../config/database");
+
+type PersonRow = RowDataPacket & {
+  id: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type PersonBody = {
+  name?: string;
+};
+
 const router = express.Router();
-const db = require('../config/database');
 
 // GET /api/people - Get all people
-router.get('/', async (req, res) => {
+router.get('/', async (_req: Request, res: Response) => {
   try {
-    const [rows] = await db.execute('SELECT * FROM people ORDER BY name');
+    const [rows] = await db.execute<PersonRow[]>('SELECT * FROM people ORDER BY name');
     res.json(rows);
   } catch (error) {
     console.error('Error fetching people:', error);
@@ -14,9 +29,9 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/people/:id - Get person by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request<{ id: string }>, res: Response) => {
   try {
-    const [rows] = await db.execute('SELECT * FROM people WHERE id = ?', [req.params.id]);
+    const [rows] = await db.execute<PersonRow[]>('SELECT * FROM people WHERE id = ?', [req.params.id]);
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Person not found' });
     }
@@ -28,7 +43,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/people - Create new person
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request<Record<string, never>, PersonRow, PersonBody>, res: Response) => {
   const { name } = req.body;
   
   if (!name || !name.trim()) {
@@ -36,12 +51,12 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const [result] = await db.execute(
+    const [result] = await db.execute<ResultSetHeader>(
       'INSERT INTO people (name) VALUES (?)',
       [name.trim()]
     );
     
-    const [rows] = await db.execute('SELECT * FROM people WHERE id = ?', [result.insertId]);
+    const [rows] = await db.execute<PersonRow[]>('SELECT * FROM people WHERE id = ?', [result.insertId]);
     res.status(201).json(rows[0]);
   } catch (error) {
     console.error('Error creating person:', error);
@@ -50,7 +65,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/people/:id - Update person
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request<{ id: string }, PersonRow, PersonBody>, res: Response) => {
   const { name } = req.body;
   
   if (!name || !name.trim()) {
@@ -58,7 +73,7 @@ router.put('/:id', async (req, res) => {
   }
 
   try {
-    const [result] = await db.execute(
+    const [result] = await db.execute<ResultSetHeader>(
       'UPDATE people SET name = ? WHERE id = ?',
       [name.trim(), req.params.id]
     );
@@ -67,7 +82,7 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Person not found' });
     }
     
-    const [rows] = await db.execute('SELECT * FROM people WHERE id = ?', [req.params.id]);
+    const [rows] = await db.execute<PersonRow[]>('SELECT * FROM people WHERE id = ?', [req.params.id]);
     res.json(rows[0]);
   } catch (error) {
     console.error('Error updating person:', error);
@@ -76,9 +91,9 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/people/:id - Delete person (and their items)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request<{ id: string }>, res: Response) => {
   try {
-    const [result] = await db.execute('DELETE FROM people WHERE id = ?', [req.params.id]);
+    const [result] = await db.execute<ResultSetHeader>('DELETE FROM people WHERE id = ?', [req.params.id]);
     
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Person not found' });
@@ -91,4 +106,4 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-module.exports = router;
+export = router;

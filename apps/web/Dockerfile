@@ -1,29 +1,31 @@
 # Multi-stage build for React frontend
-FROM node:18-alpine AS build
+FROM node:22-alpine AS build
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy workspace manifests
+COPY package.json package-lock.json turbo.json ./
+COPY apps/web/package.json apps/web/package.json
+COPY packages/tsconfig packages/tsconfig
 
-# Install ALL dependencies (including dev dependencies needed for build)
+# Install dependencies needed for the web workspace build
 RUN npm ci
 
-# Copy source code
-COPY . .
+# Copy web workspace source
+COPY apps/web apps/web
 
 # Build the application
-RUN npm run build
+RUN npm run --workspace @listcollab/web build
 
 # Production stage
 FROM nginx:alpine AS production
 
 # Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY apps/web/nginx.conf /etc/nginx/nginx.conf
 
 # Copy built application from build stage
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /app/apps/web/dist /usr/share/nginx/html
 
 # Ensure dirs exist and are writable
 RUN mkdir -p /var/cache/nginx /var/run && \
@@ -34,7 +36,7 @@ EXPOSE 80
 
 # Healthcheck that TrueNAS will use
 HEALTHCHECK --interval=60s --timeout=10s --start-period=20s --retries=5 \
-    CMD wget -qO- http://localhost/health || exit 1
+    CMD wget -qO- http://127.0.0.1/health || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]

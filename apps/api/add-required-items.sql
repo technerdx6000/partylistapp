@@ -1,5 +1,4 @@
--- Add required_items table to the existing atlasdb database
-USE atlasdb;
+-- Docker init creates and selects the database named by DB_NAME.
 
 -- Required Items table
 CREATE TABLE IF NOT EXISTS required_items (

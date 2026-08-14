@@ -1,13 +1,18 @@
 // filepath: c:\Users\techn\Documents\apps\partylistapp\backend\server.js
-const express = require("express");
-const cors = require("cors");
-const helmet = require("helmet");
-require("dotenv").config();
+import cors from "cors";
+import type { NextFunction, Request, Response } from "express";
+import express from "express";
+import helmet from "helmet";
+import dotenv from "dotenv";
+
+import db = require("./config/database");
 
 const peopleRoutes = require("./routes/people");
 const itemsRoutes = require("./routes/items");
 const categoriesRoutes = require("./routes/categories");
 const requiredItemsRoutes = require("./routes/required-items");
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -28,13 +33,18 @@ app.use("/api/items", itemsRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/required-items", requiredItemsRoutes);
 
-// Health check endpoint
-app.get("/api/health", (req, res) => {
-  res.json({ status: "OK", message: "Party List API is running" });
+app.get("/api/health", async (_req: Request, res: Response) => {
+  try {
+    await db.execute("SELECT 1");
+
+    res.status(200).json({ status: "ok", db: true });
+  } catch (_error) {
+    res.status(503).json({ status: "degraded", db: false });
+  }
 });
 
 // Error handling middleware
-app.use((err, req, res, next) => {
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err.stack);
   res.status(500).json({
     error: "Something went wrong!",
@@ -45,16 +55,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Health check endpoint
-app.get("/api/health", (req, res) => {
-  res.status(200).json({
-    status: "healthy",
-    timestamp: new Date().toISOString(),
-  });
-});
-
 // 404 handler
-app.use("*", (req, res) => {
+app.use("*", (_req: Request, res: Response) => {
   res.status(404).json({ error: "Route not found" });
 });
 

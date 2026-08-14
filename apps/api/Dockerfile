@@ -1,17 +1,23 @@
-# Use Node.js 20 LTS as base image
-FROM node:20-alpine
+# Use Node.js 22 as base image
+FROM node:22-alpine
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy workspace manifests
+COPY package.json package-lock.json turbo.json ./
+COPY apps/api/package.json apps/api/package.json
+COPY packages/tsconfig packages/tsconfig
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies needed to build the API workspace
+RUN npm ci
 
-# Copy application code
-COPY . .
+# Copy API workspace source
+COPY apps/api apps/api
+
+WORKDIR /app/apps/api
+
+RUN npm run build
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs
@@ -36,4 +42,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     req.end();"
 
 # Start the application
-CMD ["node", "server.js"]
+CMD ["node", "dist/server.js"]
