@@ -1,0 +1,21 @@
+version: '3.8'
+
+# Development overrides for docker-compose.yml
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  api:
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./api:/app
+      - /app/node_modules
+    command: npm run dev
+
+  frontend:
+    ports:
+      - "3000:80"
+    
+  db:
+    ports:
+      - "3307:3306"
