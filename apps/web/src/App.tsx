@@ -45,7 +45,7 @@ function App(): React.JSX.Element {
   const [categories, setCategories] = useState<Category[]>([])
   const [items, setItems] = useState<Item[]>([])
   const [requiredItems, setRequiredItems] = useState<RequiredItem[]>([])
-  
+
   // Loading and error states
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -72,7 +72,7 @@ function App(): React.JSX.Element {
   const [requiredItemName, setRequiredItemName] = useState('')
   const [requiredItemCategory, setRequiredItemCategory] = useState(1)
   const [editingRequiredItem, setEditingRequiredItem] = useState<RequiredItem | null>(null)
-  
+
   // Assignment dialog state
   const [openAssignmentDialog, setOpenAssignmentDialog] = useState(false)
   const [assigningRequiredItem, setAssigningRequiredItem] = useState<RequiredItem | null>(null)
@@ -84,19 +84,19 @@ function App(): React.JSX.Element {
       try {
         setLoading(true)
         setError(null)
-        
+
         const [peopleData, categoriesData, itemsData, requiredItemsData] = await Promise.all([
           peopleAPI.getAll(),
           categoriesAPI.getAll(),
           itemsAPI.getAll(),
           requiredItemsAPI.getAll()
         ])
-        
+
         setPeople(peopleData)
         setCategories(categoriesData)
         setItems(itemsData)
         setRequiredItems(requiredItemsData)
-        
+
         // Select first person if available
         const firstPerson = peopleData[0]
 
@@ -116,7 +116,7 @@ function App(): React.JSX.Element {
   // Computed values
   const filteredPeople = useMemo(() => {
     if (!searchTerm) return people
-    return people.filter(person => 
+    return people.filter(person =>
       person.name.toLowerCase().includes(searchTerm.toLowerCase())
     )
   }, [people, searchTerm])
@@ -125,11 +125,11 @@ function App(): React.JSX.Element {
 
   const filteredRequiredItems = useMemo(() => {
     let filtered = requiredItems
-    
+
     if (hideAssignedRequired) {
       filtered = filtered.filter(item => !item.person_id)
     }
-    
+
     if (searchTerm) {
       filtered = filtered.filter(item =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -137,7 +137,7 @@ function App(): React.JSX.Element {
         item.person_name?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
-    
+
     return filtered
   }, [requiredItems, hideAssignedRequired, searchTerm])
 
@@ -153,11 +153,11 @@ function App(): React.JSX.Element {
   // Search functionality
   const searchResults = useMemo(() => {
     if (!searchTerm) return []
-    
+
     const matchingItems = items.filter(item =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase())
     )
-    
+
     return matchingItems
   }, [items, searchTerm])
 
@@ -165,11 +165,11 @@ function App(): React.JSX.Element {
     if (searchTerm && searchResults.length > 0) {
       const itemIds = searchResults.map(item => item.id)
       setHighlightedItems(itemIds)
-      
+
       const timeout = setTimeout(() => {
         setHighlightedItems([])
       }, 3000)
-      
+
       return () => clearTimeout(timeout)
     } else {
       setHighlightedItems([])
@@ -208,7 +208,7 @@ function App(): React.JSX.Element {
       const newItem = await itemsAPI.create({
         name: itemName,
         category_id: itemCategory,
-        person_id: selectedPersonId 
+        person_id: selectedPersonId
       })
       setItems([...items, newItem])
       setItemName('')
@@ -242,13 +242,13 @@ function App(): React.JSX.Element {
   // Required Items Functions
   const addRequiredItem = async (): Promise<void> => {
     if (!requiredItemName.trim()) return
-    
+
     try {
       const requiredItemData = {
         name: requiredItemName.trim(),
         category_id: requiredItemCategory
       }
-      
+
       const response = await requiredItemsAPI.create(requiredItemData)
       setRequiredItems([...requiredItems, response])
       setRequiredItemName('')
@@ -261,15 +261,15 @@ function App(): React.JSX.Element {
 
   const updateRequiredItem = async (): Promise<void> => {
     if (!requiredItemName.trim() || !editingRequiredItem) return
-    
+
     try {
       const requiredItemData = {
         name: requiredItemName.trim(),
         category_id: requiredItemCategory
       }
-      
+
       const response = await requiredItemsAPI.update(editingRequiredItem.id, requiredItemData)
-      setRequiredItems(requiredItems.map(item => 
+      setRequiredItems(requiredItems.map(item =>
         item.id === editingRequiredItem.id ? response : item
       ))
       setRequiredItemName('')
@@ -291,10 +291,10 @@ function App(): React.JSX.Element {
 
   const assignRequiredItem = async (): Promise<void> => {
     if (!assigningRequiredItem || !assignedPersonId) return
-    
+
     try {
       const response = await requiredItemsAPI.assign(assigningRequiredItem.id, assignedPersonId)
-      setRequiredItems(requiredItems.map(item => 
+      setRequiredItems(requiredItems.map(item =>
         item.id === assigningRequiredItem.id ? response : item
       ))
       setAssignedPersonId('')
@@ -351,9 +351,9 @@ function App(): React.JSX.Element {
   }
 
   return (
-    <Box sx={{ 
-      height: '100vh', 
-      display: 'flex', 
+    <Box sx={{
+      height: '100vh',
+      display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
       width: '100%'
@@ -378,11 +378,11 @@ function App(): React.JSX.Element {
         <>
           {/* Header */}
           <Box sx={{ p: 2, flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}>
-            <Typography variant="h4" component="h1" gutterBottom align="center" 
+            <Typography variant="h4" component="h1" gutterBottom align="center"
               sx={{ fontWeight: 'bold', color: 'primary.main', mb: 2 }}>
               Party List Manager
             </Typography>
-            
+
             <TextField
               fullWidth
               variant="outlined"
@@ -394,17 +394,17 @@ function App(): React.JSX.Element {
           </Box>
 
           {/* Main Content */}
-          <Box sx={{ 
-            flex: 1, 
-            display: 'flex', 
+          <Box sx={{
+            flex: 1,
+            display: 'flex',
             overflow: 'hidden',
             flexDirection: { xs: 'column', lg: 'row' },
             width: '100%'
           }}>
             {/* People Panel */}
-            <Box sx={{ 
+            <Box sx={{
               flex: 1,
-              display: 'flex', 
+              display: 'flex',
               flexDirection: 'column',
               borderRight: { lg: 1, xs: 0 },
               borderBottom: { xs: 1, lg: 0 },
@@ -430,7 +430,7 @@ function App(): React.JSX.Element {
                   </Button>
                 </Box>
               </Box>
-              
+
               <Box sx={{ flex: 1, overflow: 'auto' }}>
                 <List sx={{ p: 0 }}>
                   {filteredPeople.map((person) => (
@@ -438,24 +438,24 @@ function App(): React.JSX.Element {
                       <ListItemButton
                         selected={person.id === selectedPersonId}
                         onClick={() => setSelectedPersonId(person.id)}
-                        sx={{ 
-                          '&.Mui-selected': { 
+                        sx={{
+                          '&.Mui-selected': {
                             backgroundColor: 'primary.light',
                             '&:hover': { backgroundColor: 'primary.light' }
                           }
                         }}
                       >
-                        <ListItemText 
+                        <ListItemText
                           primary={person.name}
                           secondary={`${getPersonItemCount(person.id)} items`}
                         />
-                        <Badge 
-                          badgeContent={getPersonItemCount(person.id)} 
-                          color="primary" 
+                        <Badge
+                          badgeContent={getPersonItemCount(person.id)}
+                          color="primary"
                           sx={{ mr: 1 }}
                         />
-                        <IconButton 
-                          size="small" 
+                        <IconButton
+                          size="small"
                           onClick={(e) => {
                             e.stopPropagation()
                             openEditPerson(person)
@@ -463,8 +463,8 @@ function App(): React.JSX.Element {
                         >
                           <EditIcon />
                         </IconButton>
-                        <IconButton 
-                          size="small" 
+                        <IconButton
+                          size="small"
                           onClick={(e) => {
                             e.stopPropagation()
                             void deletePerson(person.id)
@@ -480,9 +480,9 @@ function App(): React.JSX.Element {
             </Box>
 
             {/* Items Panel */}
-            <Box sx={{ 
+            <Box sx={{
               flex: 1,
-              display: 'flex', 
+              display: 'flex',
               flexDirection: 'column',
               borderRight: { lg: 1, xs: 0 },
               borderBottom: { xs: 1, lg: 0 },
@@ -492,8 +492,8 @@ function App(): React.JSX.Element {
               <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <RestaurantIcon /> 
-                    {selectedPersonId 
+                    <RestaurantIcon />
+                    {selectedPersonId
                       ? `${people.find(p => p.id === selectedPersonId)?.name}'s Items`
                       : 'Items'
                     }
@@ -531,32 +531,32 @@ function App(): React.JSX.Element {
                       <ListItemText
                         primary={
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography 
+                            <Typography
                               variant="body1"
-                              sx={{ 
-                                backgroundColor: highlightedItems.includes(item.id) 
+                              sx={{
+                                backgroundColor: highlightedItems.includes(item.id)
                                   ? 'yellow' : 'transparent',
                                 padding: highlightedItems.includes(item.id) ? '2px 4px' : 0
                               }}
                             >
                               {item.name}
                             </Typography>
-                            <Chip 
-                              label={getCategoryName(item.category_id)} 
-                              size="small" 
+                            <Chip
+                              label={getCategoryName(item.category_id)}
+                              size="small"
                               variant="outlined"
                             />
                           </Box>
                         }
                       />
-                      <IconButton 
-                        size="small" 
+                      <IconButton
+                        size="small"
                         onClick={() => openEditItem(item)}
                       >
                         <EditIcon />
                       </IconButton>
-                      <IconButton 
-                        size="small" 
+                      <IconButton
+                        size="small"
                         onClick={() => {
                           void deleteItem(item.id)
                         }}
@@ -567,7 +567,7 @@ function App(): React.JSX.Element {
                   ))}
                   {selectedPersonItems.length === 0 && (
                     <ListItem>
-                      <ListItemText 
+                      <ListItemText
                         primary="No items assigned"
                         sx={{ textAlign: 'center', color: 'text.secondary' }}
                       />
@@ -578,9 +578,9 @@ function App(): React.JSX.Element {
             </Box>
 
             {/* Required Items Panel */}
-            <Box sx={{ 
+            <Box sx={{
               flex: 1,
-              display: 'flex', 
+              display: 'flex',
               flexDirection: 'column',
               minHeight: { xs: '33%', lg: 'auto' }
             }}>
@@ -625,9 +625,9 @@ function App(): React.JSX.Element {
                       <ListItemText
                         primary={
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography 
+                            <Typography
                               variant="body1"
-                              sx={{ 
+                              sx={{
                                 textDecoration: item.is_fulfilled ? 'line-through' : 'none',
                                 opacity: item.is_fulfilled ? 0.7 : 1,
                                 fontWeight: item.is_fulfilled ? 'normal' : 'medium'
@@ -635,9 +635,9 @@ function App(): React.JSX.Element {
                             >
                               {item.name}
                             </Typography>
-                            <Chip 
-                              label={item.category_name} 
-                              size="small" 
+                            <Chip
+                              label={item.category_name}
+                              size="small"
                               variant="outlined"
                             />
                           </Box>
@@ -654,8 +654,8 @@ function App(): React.JSX.Element {
                           )
                         }
                       />
-                      <IconButton 
-                        size="small" 
+                      <IconButton
+                        size="small"
                         onClick={() => {
                           setAssigningRequiredItem(item)
                           setAssignedPersonId(item.person_id ?? '')
@@ -665,8 +665,8 @@ function App(): React.JSX.Element {
                       >
                         <PersonIcon />
                       </IconButton>
-                      <IconButton 
-                        size="small" 
+                      <IconButton
+                        size="small"
                         onClick={() => {
                           setEditingRequiredItem(item)
                           setRequiredItemName(item.name)
@@ -680,7 +680,7 @@ function App(): React.JSX.Element {
                   ))}
                   {filteredRequiredItems.length === 0 && (
                     <ListItem>
-                      <ListItemText 
+                      <ListItemText
                         primary="No required items"
                         sx={{ textAlign: 'center', color: 'text.secondary' }}
                       />
@@ -709,7 +709,7 @@ function App(): React.JSX.Element {
             </DialogContent>
             <DialogActions>
               <Button onClick={() => setOpenPersonDialog(false)}>Cancel</Button>
-              <Button 
+              <Button
                 onClick={() => {
                   void (editingPerson ? updatePerson() : addPerson())
                 }}
@@ -753,7 +753,7 @@ function App(): React.JSX.Element {
             </DialogContent>
             <DialogActions>
               <Button onClick={() => setOpenItemDialog(false)}>Cancel</Button>
-              <Button 
+              <Button
                 onClick={() => {
                   void (editingItem ? updateItem() : addItem())
                 }}
@@ -780,7 +780,7 @@ function App(): React.JSX.Element {
             </DialogContent>
             <DialogActions>
               <Button onClick={() => setOpenCategoryDialog(false)}>Cancel</Button>
-              <Button 
+              <Button
                 onClick={() => {
                   void addCategory()
                 }}
@@ -792,8 +792,8 @@ function App(): React.JSX.Element {
           </Dialog>
 
           {/* Required Item Dialog */}
-          <Dialog 
-            open={openRequiredItemDialog} 
+          <Dialog
+            open={openRequiredItemDialog}
             onClose={() => setOpenRequiredItemDialog(false)}
             maxWidth="sm"
             fullWidth
@@ -829,7 +829,7 @@ function App(): React.JSX.Element {
               <Button onClick={() => setOpenRequiredItemDialog(false)}>
                 Cancel
               </Button>
-              <Button 
+              <Button
                 onClick={handleRequiredItemSave}
                 variant="contained"
                 disabled={!requiredItemName.trim()}
@@ -885,7 +885,7 @@ function App(): React.JSX.Element {
               <Button onClick={() => setOpenAssignmentDialog(false)}>
                 Cancel
               </Button>
-              <Button 
+              <Button
                 onClick={() => {
                   void assignRequiredItem()
                 }}

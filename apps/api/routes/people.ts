@@ -37,7 +37,7 @@ router.get('/:id', async (req: Request<{ id: string }>, res: Response) => {
 // POST /api/people - Create new person
 router.post('/', async (req: Request<Record<string, never>, PersonRow, PersonInput>, res: Response) => {
   const { name } = req.body;
-  
+
   if (!name || !name.trim()) {
     return res.status(400).json({ error: 'Name is required' });
   }
@@ -47,7 +47,7 @@ router.post('/', async (req: Request<Record<string, never>, PersonRow, PersonInp
       'INSERT INTO people (name) VALUES (?)',
       [name.trim()]
     );
-    
+
     const [rows] = await db.execute<PersonRow[]>('SELECT * FROM people WHERE id = ?', [result.insertId]);
     res.status(201).json(rows[0]);
   } catch (error) {
@@ -59,7 +59,7 @@ router.post('/', async (req: Request<Record<string, never>, PersonRow, PersonInp
 // PUT /api/people/:id - Update person
 router.put('/:id', async (req: Request<{ id: string }, PersonRow, PersonInput>, res: Response) => {
   const { name } = req.body;
-  
+
   if (!name || !name.trim()) {
     return res.status(400).json({ error: 'Name is required' });
   }
@@ -69,11 +69,11 @@ router.put('/:id', async (req: Request<{ id: string }, PersonRow, PersonInput>, 
       'UPDATE people SET name = ? WHERE id = ?',
       [name.trim(), req.params.id]
     );
-    
+
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Person not found' });
     }
-    
+
     const [rows] = await db.execute<PersonRow[]>('SELECT * FROM people WHERE id = ?', [req.params.id]);
     res.json(rows[0]);
   } catch (error) {
@@ -86,11 +86,11 @@ router.put('/:id', async (req: Request<{ id: string }, PersonRow, PersonInput>, 
 router.delete('/:id', async (req: Request<{ id: string }>, res: Response) => {
   try {
     const [result] = await db.execute<ResultSetHeader>('DELETE FROM people WHERE id = ?', [req.params.id]);
-    
+
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Person not found' });
     }
-    
+
     res.json({ message: 'Person deleted successfully' });
   } catch (error) {
     logger.error({ err: error }, 'Error deleting person')

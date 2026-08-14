@@ -3,19 +3,19 @@ import { describe, expect, it, vi } from 'vitest'
 
 import App from './App'
 
-const pendingRequest = new Promise(() => {})
+const pendingRequest = new Promise(() => { })
 
 vi.mock('./services/api', () => ({
-  peopleAPI: { getAll: () => pendingRequest },
-  categoriesAPI: { getAll: () => pendingRequest },
-  itemsAPI: { getAll: () => pendingRequest },
-  requiredItemsAPI: { getAll: () => pendingRequest },
+    peopleAPI: { getAll: () => pendingRequest },
+    categoriesAPI: { getAll: () => pendingRequest },
+    itemsAPI: { getAll: () => pendingRequest },
+    requiredItemsAPI: { getAll: () => pendingRequest },
 }))
 
 describe('App', () => {
-  it('renders the loading state while startup data is still pending', () => {
-    render(<App />)
+    it('renders the loading state while startup data is still pending', () => {
+        render(<App />)
 
-    expect(screen.getByText('Loading data...')).toBeInTheDocument()
-  })
+        expect(screen.getByText('Loading data...')).toBeInTheDocument()
+    })
 })

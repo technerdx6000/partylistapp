@@ -61,7 +61,6 @@ async function apiRequest<T>(
 
     return schema.parse(json)
   } catch (error) {
-    console.error(`API request failed: ${endpoint}`, error);
     throw error
   }
 }
