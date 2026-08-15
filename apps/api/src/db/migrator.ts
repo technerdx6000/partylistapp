@@ -161,9 +161,9 @@ export async function createMigrator() {
         const replacements =
           migrationName === '004_migrate_legacy_party'
             ? {
-                IMPORT_SHARE_TOKEN: createShareToken(),
-                IMPORT_ADMIN_TOKEN: createAdminToken(),
-              }
+              IMPORT_SHARE_TOKEN: createShareToken(),
+              IMPORT_ADMIN_TOKEN: createAdminToken(),
+            }
             : {}
 
         return {
