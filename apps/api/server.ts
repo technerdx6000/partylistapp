@@ -4,7 +4,6 @@ import helmet from "helmet";
 
 import db from './config/database.js'
 import logger, { configureLogger } from './logger.js'
-import itemsRoutes from './routes/items.js'
 import peopleRoutes from './routes/people.js'
 import requiredItemsRoutes from './routes/required-items.js'
 import { getEnv } from './src/config/env.js'
@@ -13,6 +12,7 @@ import { errorHandler } from './src/middleware/errorHandler.js'
 import { requestLogger } from './src/middleware/requestLogger.js'
 import eventCategoriesRoutes from './src/routes/categories.js'
 import eventsRoutes from './src/routes/events.js'
+import eventItemsRoutes from './src/routes/items.js'
 import participantsRoutes from './src/routes/participants.js'
 import { asyncHandler } from './src/utils/asyncHandler.js'
 
@@ -38,7 +38,7 @@ app.use(requestLogger)
 app.use('/api/events', eventsRoutes)
 app.use('/api/participants', participantsRoutes)
 app.use("/api/people", peopleRoutes);
-app.use("/api/items", itemsRoutes);
+app.use('/api/items', eventItemsRoutes)
 app.use("/api/categories", eventCategoriesRoutes);
 app.use("/api/required-items", requiredItemsRoutes);
 

@@ -38,6 +38,7 @@ export const CreateItemRequestSchema = z.object({
 }).strict();
 
 export const UpdateItemRequestSchema = z.object({
+    participantId: z.number().int().positive().optional(),
     name: z.string().trim().min(1).max(120).optional(),
     description: z.string().trim().max(500).nullable().optional(),
     categoryId: z.number().int().positive().nullable().optional(),

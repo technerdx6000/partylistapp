@@ -21,7 +21,7 @@
     "cors": "2.8.5",
     "dotenv": "16.6.1",
     "express": "4.22.2",
-    "express-rate-limit": "^8.6.2",
+    "express-rate-limit": "8.6.2",
     "helmet": "7.2.0",
     "mysql2": "3.14.5",
     "nanoid": "5.1.6",

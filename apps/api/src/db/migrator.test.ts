@@ -778,4 +778,134 @@ describe('migration runner', () => {
         expect(emptyCategoriesResponse.status).toBe(200)
         expect(emptyCategoriesResponse.body).toEqual([])
     })
+
+    it('creates guest-owned items, allows own guest edits, and rejects share-token deletes', async () => {
+        const { migrator, close } = await createMigrator()
+
+        try {
+            await migrator.up()
+        } finally {
+            await close()
+        }
+
+        const { app } = await import('../../server.js')
+
+        const createEventResponse = await request(app).post('/api/events').send({
+            name: 'Item Flow',
+            categories: [{ name: 'Food', sortOrder: 0 }],
+        })
+        const event = createEventResponse.body as {
+            categories: Array<{ id: number }>
+            event: { shareToken: string; adminToken: string }
+        }
+
+        const createParticipantResponse = await request(app)
+            .post('/api/participants')
+            .set('X-Event-Token', event.event.shareToken)
+            .send({ name: 'Taylor' })
+        const participant = createParticipantResponse.body as { id: number }
+
+        const createItemResponse = await request(app)
+            .post('/api/items')
+            .set('X-Event-Token', event.event.shareToken)
+            .send({
+                name: 'Extra Chips',
+                description: 'Salted',
+                quantityRequired: null,
+                categoryId: event.categories[0]?.id ?? null,
+                createdBy: participant.id,
+            })
+        const item = createItemResponse.body as {
+            id: number
+            createdBy: number | null
+            quantityRequired: number | null
+            assignments: unknown[]
+            coverage: { required: number | null; claimed: number; remaining: number | null; status: string }
+        }
+
+        expect(createItemResponse.status).toBe(201)
+        expect(item.createdBy).toBe(participant.id)
+        expect(item.quantityRequired).toBeNull()
+        expect(item.assignments).toEqual([])
+        expect(item.coverage).toEqual({ required: null, claimed: 0, remaining: null, status: 'open' })
+
+        const updateItemResponse = await request(app)
+            .patch(`/api/items/${item.id}`)
+            .set('X-Event-Token', event.event.shareToken)
+            .send({ participantId: participant.id, name: 'Extra Tortilla Chips', description: 'Lightly salted' })
+
+        expect(updateItemResponse.status).toBe(200)
+        expect(updateItemResponse.body).toMatchObject({
+            id: item.id,
+            name: 'Extra Tortilla Chips',
+            description: 'Lightly salted',
+            createdBy: participant.id,
+        })
+
+        const deleteWithShareTokenResponse = await request(app)
+            .delete(`/api/items/${item.id}`)
+            .set('X-Event-Token', event.event.shareToken)
+
+        expect(deleteWithShareTokenResponse.status).toBe(403)
+        expect(deleteWithShareTokenResponse.body).toMatchObject({
+            error: { code: 'ADMIN_REQUIRED' },
+        })
+    })
+
+    it('rejects guest structural item edits and cross-event item access', async () => {
+        const { migrator, close } = await createMigrator()
+
+        try {
+            await migrator.up()
+        } finally {
+            await close()
+        }
+
+        const { app } = await import('../../server.js')
+
+        const firstEventResponse = await request(app).post('/api/events').send({
+            name: 'First Event',
+        })
+        const secondEventResponse = await request(app).post('/api/events').send({
+            name: 'Second Event',
+        })
+
+        const firstEvent = firstEventResponse.body as {
+            event: { shareToken: string; adminToken: string }
+        }
+        const secondEvent = secondEventResponse.body as {
+            event: { shareToken: string; adminToken: string }
+        }
+
+        const createParticipantResponse = await request(app)
+            .post('/api/participants')
+            .set('X-Event-Token', secondEvent.event.shareToken)
+            .send({ name: 'Jordan' })
+        const participant = createParticipantResponse.body as { id: number }
+
+        const createItemResponse = await request(app)
+            .post('/api/items')
+            .set('X-Event-Token', secondEvent.event.shareToken)
+            .send({ name: 'Sodas', quantityRequired: 4, createdBy: participant.id })
+        const item = createItemResponse.body as { id: number }
+
+        const guestStructuralUpdateResponse = await request(app)
+            .patch(`/api/items/${item.id}`)
+            .set('X-Event-Token', secondEvent.event.shareToken)
+            .send({ participantId: participant.id, quantityRequired: 5 })
+
+        expect(guestStructuralUpdateResponse.status).toBe(403)
+        expect(guestStructuralUpdateResponse.body).toMatchObject({
+            error: { code: 'ADMIN_REQUIRED' },
+        })
+
+        const crossEventDeleteResponse = await request(app)
+            .delete(`/api/items/${item.id}`)
+            .set('X-Event-Token', firstEvent.event.adminToken)
+
+        expect(crossEventDeleteResponse.status).toBe(404)
+        expect(crossEventDeleteResponse.body).toMatchObject({
+            error: { code: 'ITEM_NOT_IN_EVENT' },
+        })
+    })
 })

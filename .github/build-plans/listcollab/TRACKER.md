@@ -12,7 +12,7 @@
 | 1 | Stabilise the existing repo | ✅ Complete | 7 / 7 |
 | 2 | Turborepo, TypeScript and test infrastructure | ✅ Complete | 9 / 9 |
 | 3 | Domain model and migrations | ✅ Complete | 7 / 7 |
-| 4 | Event-centred API | 🔄 In Progress | 7 / 10 |
+| 4 | Event-centred API | 🔄 In Progress | 8 / 10 |
 | 5 | Frontend restructure | ⬜ Not Started | 0 / 8 |
 | 6 | Collaborative UX | ⬜ Not Started | 0 / 7 |
 | 7 | Responsive polish and accessibility | ⬜ Not Started | 0 / 7 |
@@ -54,7 +54,7 @@
 | 4 – API | 4.5 | Error model, `asyncHandler`, request logging with redaction | ✅ Complete | Added `AppError`, `asyncHandler`, `requestLogger`, `errorHandler`, pino redaction, and a logger redaction test; request ids now flow into event route and health-route logs |
 | 4 – API | 4.6 | Event routes incl. aggregate GET | ✅ Complete | Implemented `POST`, aggregate `GET`, admin `PATCH`, and admin `DELETE` on `/api/events/:shareToken`; integration coverage now verifies the create response is the only admin-token leak point, share-token access cannot update, and a mismatched admin token/path pair returns `404 EVENT_NOT_FOUND` |
 | 4 – API | 4.7 | Participant and category routes | ✅ Complete | Added token-scoped `/api/participants` and `/api/categories` routes on the new schema with duplicate-name participant reuse, a 200-participant cap, a dedicated `POST /api/participants` limiter returning `429 RATE_LIMITED`, admin-only participant/category mutation, and route-level unit plus integration coverage |
-| 4 – API | 4.8 | Item routes with mixed permission rules | ⬜ Not Started | |
+| 4 – API | 4.8 | Item routes with mixed permission rules | ✅ Complete | Replaced the legacy `/api/items` surface with a token-scoped event route that returns assignment-backed coverage, supports guest-created ad-hoc contributions, enforces mixed guest/admin edit permissions through `itemService`, validates category and participant ownership inside the event, rejects cross-event item access with `404 ITEM_NOT_IN_EVENT`, and is covered by unit plus integration tests |
 | 4 – API | 4.9 | 🔒 Assignment routes — claim/unclaim with transactional over-claim check | ⬜ Not Started | Requires `SELECT ... FOR UPDATE` |
 | 4 – API | 4.10 | 🔒 helmet, CORS, rate limits, body cap, drop legacy tables | ⬜ Not Started | Migration 005 only after nothing reads them |
 | 5 – Frontend | 5.1 | Router + admin token via URL fragment | ⬜ Not Started | Strip fragment after read |
