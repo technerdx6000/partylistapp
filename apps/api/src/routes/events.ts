@@ -13,6 +13,7 @@ import express from 'express'
 import { withTransaction } from '../db/pool.js'
 import { AppError } from '../errors/AppError.js'
 import { requireAdminToken, requireEventToken } from '../middleware/eventToken.js'
+import { eventCreateRateLimit, tokenResolutionRateLimit } from '../middleware/rateLimits.js'
 import { listAssignmentsByEventId } from '../repositories/assignmentRepository.js'
 import { createCategory, listCategoriesByEventId } from '../repositories/categoryRepository.js'
 import { createEvent, deleteEvent, findEventById, toPublicEvent, updateEvent } from '../repositories/eventRepository.js'
@@ -74,6 +75,7 @@ async function buildAggregateResponse(eventId: number): Promise<AggregateEventRe
 
 router.post(
     '/',
+    eventCreateRateLimit,
     asyncHandler(async (req, res) => {
         const parsedBody = CreateEventRequestSchema.safeParse(req.body as CreateEventRequest)
 
@@ -117,6 +119,7 @@ router.post(
 
 router.get(
     '/:shareToken',
+    tokenResolutionRateLimit,
     requireEventToken,
     asyncHandler(async (req, res) => {
         const shareToken = String(req.params.shareToken)

@@ -4,11 +4,10 @@ import helmet from "helmet";
 
 import db from './config/database.js'
 import logger, { configureLogger } from './logger.js'
-import peopleRoutes from './routes/people.js'
-import requiredItemsRoutes from './routes/required-items.js'
 import { getEnv } from './src/config/env.js'
 import { AppError } from './src/errors/AppError.js'
 import { errorHandler } from './src/middleware/errorHandler.js'
+import { generalRateLimit } from './src/middleware/rateLimits.js'
 import { requestLogger } from './src/middleware/requestLogger.js'
 import assignmentsRoutes from './src/routes/assignments.js'
 import eventCategoriesRoutes from './src/routes/categories.js'
@@ -24,25 +23,37 @@ configureLogger(env.LOG_LEVEL)
 const app = express();
 const PORT = env.PORT;
 
+app.set('trust proxy', 1)
+
 // Middleware
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'none'"],
+        baseUri: ["'none'"],
+        formAction: ["'none'"],
+        frameAncestors: ["'none'"],
+      },
+    },
+  })
+);
 app.use(
   cors({
     origin: env.CORS_ORIGIN,
     credentials: true,
   })
 );
-app.use(express.json());
 app.use(requestLogger)
+app.use(generalRateLimit)
+app.use(express.json({ limit: '100kb' }));
 
 // Routes
 app.use('/api/events', eventsRoutes)
 app.use('/api/assignments', assignmentsRoutes)
 app.use('/api/participants', participantsRoutes)
-app.use("/api/people", peopleRoutes);
 app.use('/api/items', eventItemsRoutes)
 app.use("/api/categories", eventCategoriesRoutes);
-app.use("/api/required-items", requiredItemsRoutes);
 
 app.get('/api/health', asyncHandler(async (_req: Request, res: Response) => {
   try {

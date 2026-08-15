@@ -1,8 +1,6 @@
-import express from 'express'
+import express, { type Router } from 'express'
 import request from 'supertest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-
-import participantsRouter from './participants.js'
 
 process.env.NODE_ENV = 'test'
 process.env.PORT = '3002'
@@ -41,6 +39,10 @@ vi.mock('../repositories/participantRepository.js', () => ({
 }))
 
 async function createTestApp() {
+    vi.resetModules()
+
+    const participantsModule = await import('./participants.js')
+    const participantsRouter = participantsModule.default as unknown as Router
     const { errorHandler } = await import('../middleware/errorHandler.js')
 
     const app = express()

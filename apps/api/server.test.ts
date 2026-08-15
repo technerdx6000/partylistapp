@@ -36,4 +36,29 @@ describe('GET /api/health', () => {
         expect(response.status).toBe(503)
         expect(response.body).toEqual({ status: 'degraded', db: false })
     })
+
+    it('applies the configured CORS and CSP headers on health responses', async () => {
+        executeMock.mockResolvedValueOnce([])
+
+        const { app } = await import('./server.js')
+        const response = await request(app)
+            .get('/api/health')
+            .set('Origin', 'http://127.0.0.1:4273')
+
+        expect(response.status).toBe(200)
+        expect(response.headers['access-control-allow-origin']).toBe('http://127.0.0.1:4273')
+        expect(response.headers['content-security-policy']).toContain("default-src 'none'")
+    })
+
+    it('rejects oversized JSON payloads', async () => {
+        const { app } = await import('./server.js')
+        const response = await request(app)
+            .post('/api/events')
+            .send({ name: 'Event', description: 'x'.repeat(120_000) })
+
+        expect(response.status).toBe(413)
+        expect(response.body).toMatchObject({
+            error: { code: 'PAYLOAD_TOO_LARGE' },
+        })
+    })
 })

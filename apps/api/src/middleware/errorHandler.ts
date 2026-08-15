@@ -12,7 +12,10 @@ const env = getEnv()
 export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction): void {
     void next
 
-    const appError = err instanceof AppError
+    const appError =
+        'type' in err && err.type === 'entity.too.large'
+            ? new AppError(413, 'PAYLOAD_TOO_LARGE', 'Payload too large')
+            : err instanceof AppError
         ? err
         : new AppError(500, 'INTERNAL_ERROR', 'Something went wrong')
 

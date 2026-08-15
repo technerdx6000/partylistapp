@@ -7,10 +7,10 @@ import {
     type UpdateParticipantRequest,
 } from '@listcollab/shared'
 import express from 'express'
-import rateLimit from 'express-rate-limit'
 
 import { AppError } from '../errors/AppError.js'
 import { requireAdminToken, requireEventToken } from '../middleware/eventToken.js'
+import { participantCreateRateLimit } from '../middleware/rateLimits.js'
 import {
     createParticipant,
     deleteParticipant,
@@ -22,22 +22,6 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 
 const MAX_PARTICIPANTS_PER_EVENT = 200
 const router = express.Router()
-
-const participantCreateRateLimit = rateLimit({
-    windowMs: 60_000,
-    limit: 30,
-    standardHeaders: 'draft-8',
-    legacyHeaders: false,
-    handler: (req, res) => {
-        res.status(429).json({
-            error: {
-                code: 'RATE_LIMITED',
-                message: 'Too many requests',
-                requestId: req.requestId ?? 'unknown',
-            },
-        })
-    },
-})
 
 function parseParticipantId(value: string): number {
     const parsed = PositiveIntIdSchema.safeParse(value)

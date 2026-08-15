@@ -2,7 +2,7 @@ import express, { type Router } from 'express'
 import request from 'supertest'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-process.env.NODE_ENV = 'test'
+process.env.NODE_ENV = 'production'
 process.env.PORT = '3002'
 process.env.DB_HOST = '127.0.0.1'
 process.env.DB_PORT = '3307'
