@@ -1,8 +1,6 @@
-import express from 'express'
+import express, { type Router } from 'express'
 import request from 'supertest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-
-import itemsRouter from './items.js'
 
 process.env.NODE_ENV = 'test'
 process.env.PORT = '3002'
@@ -94,6 +92,10 @@ function buildAssignment(overrides: Record<string, unknown> = {}) {
 }
 
 async function createTestApp() {
+    vi.resetModules()
+
+    const itemsModule = await import('./items.js')
+    const itemsRouter = itemsModule.default as unknown as Router
     const { errorHandler } = await import('../middleware/errorHandler.js')
 
     const app = express()

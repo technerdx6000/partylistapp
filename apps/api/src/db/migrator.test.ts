@@ -194,18 +194,15 @@ describe('migration runner', () => {
             '002_events_categories_participants',
             '003_event_items_assignments',
             '004_migrate_legacy_party',
+            '005_drop_legacy_tables',
         ])
 
         expect(await getTableNames()).toEqual([
-            'categories',
             'event_categories',
             'event_item_assignments',
             'event_items',
             'event_participants',
             'events',
-            'items',
-            'people',
-            'required_items',
             'schema_migrations',
         ])
     })
@@ -215,6 +212,7 @@ describe('migration runner', () => {
 
         try {
             await migrator.up()
+            await migrator.down()
             await migrator.down()
             await migrator.down()
 
@@ -233,6 +231,7 @@ describe('migration runner', () => {
             '002_events_categories_participants',
             '003_event_items_assignments',
             '004_migrate_legacy_party',
+            '005_drop_legacy_tables',
         ])
     })
 
