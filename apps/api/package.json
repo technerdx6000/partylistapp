@@ -13,8 +13,8 @@
     "test:coverage": "vitest run --config ../../vitest.config.ts --project api --coverage",
     "test:watch": "vitest --config ../../vitest.config.ts --project api",
     "type-check": "tsc -p tsconfig.json --noEmit",
-    "db:migrate": "node scripts/db-migrate.js",
-    "db:rollback": "node scripts/db-rollback.js"
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:rollback": "tsx src/db/rollback.ts"
   },
   "dependencies": {
     "@listcollab/shared": "1.0.0",
@@ -23,7 +23,8 @@
     "express": "4.22.2",
     "helmet": "7.2.0",
     "mysql2": "3.14.5",
-    "pino": "9.9.5"
+    "pino": "9.9.5",
+    "umzug": "3.8.2"
   },
   "devDependencies": {
     "@types/cors": "2.8.19",

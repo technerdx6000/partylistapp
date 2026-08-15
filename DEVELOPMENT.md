@@ -69,6 +69,12 @@ docker compose down -v
 docker compose up --build -d
 ```
 
+## Migration Notes
+
+- `npm run db:migrate` now runs the numbered migration runner from `apps/api/migrations`.
+- On an existing legacy database with no `schema_migrations` rows, the runner seeds `001_initial_schema` as already applied instead of replaying the baseline migration.
+- `npm run db:rollback` currently rolls back only tracked migrations; once later Phase 3 migrations exist, it will revert the newest applied migration.
+
 ## Notes
 
 - The root `.env` file controls Docker Compose startup values, including the `listcollab` database name.

@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS required_items;
+DROP TABLE IF EXISTS items;
+DROP TABLE IF EXISTS people;
+DROP TABLE IF EXISTS categories;

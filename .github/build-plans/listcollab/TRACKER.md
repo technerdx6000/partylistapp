@@ -11,7 +11,7 @@
 |-------|------|--------|-----------|
 | 1 | Stabilise the existing repo | ✅ Complete | 7 / 7 |
 | 2 | Turborepo, TypeScript and test infrastructure | ✅ Complete | 9 / 9 |
-| 3 | Domain model and migrations | 🔄 In Progress | 0 / 7 |
+| 3 | Domain model and migrations | 🔄 In Progress | 1 / 7 |
 | 4 | Event-centred API | ⬜ Not Started | 0 / 10 |
 | 5 | Frontend restructure | ⬜ Not Started | 0 / 8 |
 | 6 | Collaborative UX | ⬜ Not Started | 0 / 7 |
@@ -40,7 +40,8 @@
 | 2 – Foundation | 2.7 | ESLint flat config + Prettier across all workspaces | ✅ Complete | Added a monorepo-aware flat ESLint config with typed TypeScript support, import ordering, cross-app import restrictions, and Prettier deferral; added workspace lint scripts and root tooling deps; `npm run lint` now exits zero across `@listcollab/api`, `@listcollab/shared`, and `@listcollab/web` |
 | 2 – Foundation | 2.8 | Vitest, Supertest, RTL, Playwright, test DB compose file | ✅ Complete | Added root Vitest, Playwright, and disposable `docker-compose.test.yml` scaffolding plus one real passing test for shared coverage logic, API `/api/health` 503 behavior, web loading render, and desktop/mobile Playwright smoke coverage |
 | 2 – Foundation | 2.9 | Verify the whole toolchain | ✅ Complete | Verified in the current workspace and in a fresh clone at `/tmp/partylistapp-phase2-check`: `npm install`, `npm run dev`, `npm run build`, `npm run test`, `npm run test:coverage`, `npm run lint`, `npm run type-check`, `npm run test:e2e`, and `docker compose up --build -d` all succeed; `git log --follow` on `apps/web/src/App.tsx` preserves history; `npm audit --audit-level=high` is clean with only a remaining moderate Turbo advisory |
-| 3 – Domain Model | 3.1 | Migration runner (umzug) + `db:migrate` / `db:rollback` | 🔄 In Progress | Replacing the temporary Phase 2 database scripts with a real numbered migration runner and rollback flow |
+| 3 – Domain Model | 3.1 | Migration runner (umzug) + `db:migrate` / `db:rollback` | ✅ Complete | Replaced the temporary schema scripts with an `umzug` runner under `apps/api/src/db`, added paired SQL migration support with required `.down.sql` files, seeded `001_initial_schema` automatically when legacy tables exist without migration history, and validated migrate/rollback against the disposable test DB |
+| 3 – Domain Model | 3.2 | Migration 001 — baseline the current schema | 🔄 In Progress | Added `001_initial_schema.up.sql` / `.down.sql` and validated them against the test DB. Deleting the old ad-hoc SQL and moving on to 002 is blocked on a schema-plan ambiguity: the phase says the old tables remain in use while the new tables sit alongside them, but the new plan also wants new `categories` and `items` tables with names that collide with the current legacy tables |
 | 3 – Domain Model | 3.1 | Migration runner (umzug) + `db:migrate` / `db:rollback` | ⬜ Not Started | |
 | 3 – Domain Model | 3.2 | Migration 001 — baseline the current schema | ⬜ Not Started | Diff against existing schema before deleting old scripts |
 | 3 – Domain Model | 3.3 | Migration 002 — events, participants, categories | ⬜ Not Started | |
