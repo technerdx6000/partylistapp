@@ -9,9 +9,9 @@
     "dev": "DB_HOST=127.0.0.1 PORT=4301 tsx watch server.ts",
     "build": "tsc -p tsconfig.json",
     "lint": "eslint .",
-    "test": "vitest run --config ../../vitest.config.ts --project api",
-    "test:coverage": "vitest run --config ../../vitest.config.ts --project api --coverage",
-    "test:watch": "vitest --config ../../vitest.config.ts --project api",
+    "test": "vitest run --root ../.. --config vitest.config.ts --project api",
+    "test:coverage": "vitest run --root ../.. --config vitest.config.ts --project api --coverage",
+    "test:watch": "vitest --root ../.. --config vitest.config.ts --project api",
     "type-check": "tsc -p tsconfig.json --noEmit",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:rollback": "tsx src/db/rollback.ts"

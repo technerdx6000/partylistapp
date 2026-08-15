@@ -8,9 +8,9 @@
     "build": "vite build",
     "type-check": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
-    "test": "vitest run --config ../../vitest.config.ts --project web",
-    "test:coverage": "vitest run --config ../../vitest.config.ts --project web --coverage",
-    "test:watch": "vitest --config ../../vitest.config.ts --project web",
+    "test": "vitest run --root ../.. --config vitest.config.ts --project web",
+    "test:coverage": "vitest run --root ../.. --config vitest.config.ts --project web --coverage",
+    "test:watch": "vitest --root ../.. --config vitest.config.ts --project web",
     "preview": "vite preview"
   },
   "dependencies": {

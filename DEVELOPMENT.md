@@ -29,6 +29,8 @@ Run the application from the repository root:
 docker compose up --build
 ```
 
+The API container now runs `npm run db:migrate` before starting, so a fresh database is created from numbered migrations rather than ad-hoc SQL bootstrap files.
+
 Services:
 
 - Frontend: http://localhost
@@ -41,6 +43,8 @@ Services:
 npm install
 npm run dev
 ```
+
+The root dev wrapper starts the MariaDB container, waits for it to become healthy, runs `npm run db:migrate`, and then launches the web and API dev servers.
 
 Local development endpoints:
 

@@ -1,12 +1,11 @@
-import dotenv from 'dotenv'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+
+import dotenv from 'dotenv'
 
 import { createMigrator } from './migrator.js'
+import logger from '../../logger.js'
 
-const currentFilePath = fileURLToPath(import.meta.url)
-const currentDirectory = path.dirname(currentFilePath)
-const repoRoot = path.resolve(currentDirectory, '..', '..', '..', '..')
+const repoRoot = path.resolve(__dirname, '..', '..', '..', '..')
 
 dotenv.config({ path: path.resolve(repoRoot, '.env') })
 dotenv.config({ path: path.resolve(repoRoot, 'apps/api/.env') })
@@ -18,7 +17,7 @@ async function main() {
     const result = await migrator.down()
     const rolledBack = result.length > 0 ? result[0]?.name ?? 'unknown' : 'none'
 
-    console.log(`Rolled back migration: ${rolledBack}`)
+    logger.info({ rolledBack }, 'Rolled back migration')
   } finally {
     await close()
   }

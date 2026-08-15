@@ -6,9 +6,9 @@
     "scripts": {
         "build": "tsc -p tsconfig.json",
         "lint": "eslint .",
-        "test": "vitest run --config ../../vitest.config.ts --project shared",
-        "test:coverage": "vitest run --config ../../vitest.config.ts --project shared --coverage",
-        "test:watch": "vitest --config ../../vitest.config.ts --project shared",
+        "test": "vitest run --root ../.. --config vitest.config.ts --project shared",
+        "test:coverage": "vitest run --root ../.. --config vitest.config.ts --project shared --coverage",
+        "test:watch": "vitest --root ../.. --config vitest.config.ts --project shared",
         "type-check": "tsc -p tsconfig.json --noEmit"
     },
     "dependencies": {

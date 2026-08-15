@@ -1,12 +1,11 @@
-import dotenv from 'dotenv'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+
+import dotenv from 'dotenv'
 
 import { createMigrator } from './migrator.js'
+import logger from '../../logger.js'
 
-const currentFilePath = fileURLToPath(import.meta.url)
-const currentDirectory = path.dirname(currentFilePath)
-const repoRoot = path.resolve(currentDirectory, '..', '..', '..', '..')
+const repoRoot = path.resolve(__dirname, '..', '..', '..', '..')
 
 dotenv.config({ path: path.resolve(repoRoot, '.env') })
 dotenv.config({ path: path.resolve(repoRoot, 'apps/api/.env') })
@@ -20,7 +19,13 @@ async function main() {
     const pending = await migrator.pending()
     const result = await migrator.up()
 
-    console.log(`Applied ${result.length} migration(s): ${pending.map((migration) => migration.name).join(', ') || 'none'}`)
+    logger.info(
+      {
+        appliedCount: result.length,
+        pendingMigrations: pending.map((migration) => migration.name),
+      },
+      'Applied migrations'
+    )
   } finally {
     await close()
   }

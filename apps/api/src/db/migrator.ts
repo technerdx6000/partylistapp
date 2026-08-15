@@ -1,17 +1,28 @@
-import path from 'node:path'
+import crypto from 'node:crypto'
 import { existsSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import path from 'node:path'
 
 import type { Pool, RowDataPacket } from 'mysql2/promise'
 import mysql from 'mysql2/promise'
 import { Umzug } from 'umzug'
 
+import logger from '../../logger.js'
+
 type MigrationRecord = RowDataPacket & {
   name: string
 }
 
+type LegacyImportSummaryRow = RowDataPacket & {
+  id: number
+  name: string
+  participant_count: number
+  category_count: number
+  item_count: number
+  assignment_count: number
+}
+
 function resolveDatabaseHost(): string {
-  return process.env.DB_HOST === 'db' ? '127.0.0.1' : process.env.DB_HOST ?? '127.0.0.1'
+  return process.env.DB_HOST ?? '127.0.0.1'
 }
 
 function createPool(): Pool {
@@ -43,13 +54,64 @@ async function readMigrationSql(filePath: string): Promise<string> {
   return readFile(filePath, 'utf8')
 }
 
+function createShareToken(): string {
+  return crypto.randomBytes(8).toString('base64url').slice(0, 10)
+}
+
+function createAdminToken(): string {
+  return crypto.randomBytes(32).toString('hex')
+}
+
+function replacePlaceholders(sql: string, replacements: Record<string, string>): string {
+  return Object.entries(replacements).reduce(
+    (currentSql, [placeholder, value]) => currentSql.replaceAll(`{{${placeholder}}}`, value),
+    sql
+  )
+}
+
+async function logLegacyImportSummary(pool: Pool): Promise<void> {
+  const [rows] = await pool.query<LegacyImportSummaryRow[]>(`
+    SELECT
+      e.id,
+      e.name,
+      (SELECT COUNT(*) FROM event_participants ep WHERE ep.event_id = e.id) AS participant_count,
+      (SELECT COUNT(*) FROM event_categories ec WHERE ec.event_id = e.id) AS category_count,
+      (SELECT COUNT(*) FROM event_items ei WHERE ei.event_id = e.id) AS item_count,
+      (
+        SELECT COUNT(*)
+        FROM event_item_assignments eia
+        JOIN event_items ei ON ei.id = eia.item_id
+        WHERE ei.event_id = e.id
+      ) AS assignment_count
+    FROM events e
+    WHERE e.description = 'Imported from legacy PartyList data'
+    LIMIT 1
+  `)
+
+  const summary = rows[0]
+
+  if (!summary) {
+    return
+  }
+
+  logger.info(
+    {
+      eventId: summary.id,
+      eventName: summary.name,
+      participants: summary.participant_count,
+      categories: summary.category_count,
+      items: summary.item_count,
+      assignments: summary.assignment_count,
+    },
+    'Legacy event import summary'
+  )
+}
+
 function getMigrationName(fileName: string): string {
   return fileName.replace(/\.up\.sql$/, '')
 }
 
-const currentFilePath = fileURLToPath(import.meta.url)
-const currentDirectory = path.dirname(currentFilePath)
-const repoRoot = path.resolve(currentDirectory, '..', '..', '..', '..')
+const repoRoot = path.resolve(__dirname, '..', '..', '..', '..')
 
 async function seedBaselineMigrationIfNeeded(pool: Pool, baselineName: string): Promise<boolean> {
   const [existingMigrations] = await pool.query<MigrationRecord[]>(
@@ -95,14 +157,27 @@ export async function createMigrator() {
           throw new Error(`Migration ${name} is missing required down file: ${path.basename(downPath)}`)
         }
 
+        const migrationName = getMigrationName(name)
+        const replacements =
+          migrationName === '004_migrate_legacy_party'
+            ? {
+                IMPORT_SHARE_TOKEN: createShareToken(),
+                IMPORT_ADMIN_TOKEN: createAdminToken(),
+              }
+            : {}
+
         return {
-          name: getMigrationName(name),
+          name: migrationName,
           up: async () => {
-            const sql = await readMigrationSql(upPath)
+            const sql = replacePlaceholders(await readMigrationSql(upPath), replacements)
             await pool.query(sql)
+
+            if (migrationName === '004_migrate_legacy_party') {
+              await logLegacyImportSummary(pool)
+            }
           },
           down: async () => {
-            const sql = await readMigrationSql(downPath)
+            const sql = replacePlaceholders(await readMigrationSql(downPath), replacements)
             await pool.query(sql)
           },
         }
