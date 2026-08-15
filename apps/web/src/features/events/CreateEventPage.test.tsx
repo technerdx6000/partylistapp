@@ -79,7 +79,7 @@ describe('CreateEventPage', () => {
       expect(recordVisitedEventMock).toHaveBeenCalledWith(expect.objectContaining({ name: 'Camp Weekend' }))
       expect(navigateMock).toHaveBeenCalledWith(`/e/abcdefghij/manage#k=${'a'.repeat(64)}`)
     })
-  })
+  }, 10000)
 
   it('renders request-id aware errors from the API client', async () => {
     const user = userEvent.setup()

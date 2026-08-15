@@ -18,6 +18,7 @@ export default defineConfig({
                 CORS_ORIGIN: 'http://127.0.0.1:4273',
                 DB_HOST: '127.0.0.1',
                 DB_PORT: '3306',
+                E2E_TEST: 'true',
                 LOG_LEVEL: 'info',
                 NODE_ENV: 'development',
             },

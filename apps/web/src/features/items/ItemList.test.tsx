@@ -26,6 +26,8 @@ describe('ItemList', () => {
             createdAt: '2026-08-15T00:00:00.000Z',
           },
         ]}
+        currentIdentity={null}
+        isManageMode={false}
         items={[
           {
             id: 1,
@@ -56,6 +58,8 @@ describe('ItemList', () => {
             coverage: { claimed: 0, required: null, remaining: null, status: 'open' },
           },
         ]}
+        onAddItem={() => undefined}
+        onClaim={() => undefined}
         participants={[]}
       />
     )

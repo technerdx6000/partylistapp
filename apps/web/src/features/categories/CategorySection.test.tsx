@@ -32,11 +32,16 @@ describe('CategorySection', () => {
             coverage: { claimed: 0, required: 4, remaining: 4, status: 'open' },
           },
         ]}
+        currentIdentity={null}
+        isManageMode={false}
+        onAddItem={() => undefined}
+        onClaim={() => undefined}
         participants={[]}
       />
     )
 
     expect(screen.getByText('Drinks')).toBeInTheDocument()
+    expect(screen.getByText('0 / 1 covered')).toBeInTheDocument()
     expect(screen.getByText('Soda cans')).toBeInTheDocument()
   })
 })

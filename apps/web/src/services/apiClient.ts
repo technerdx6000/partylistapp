@@ -1,11 +1,35 @@
 import {
   AggregateEventResponseSchema,
   ApiErrorSchema,
+  CreateAssignmentRequestSchema,
   CreateEventRequestSchema,
+  CreateItemRequestSchema,
+  CreateParticipantRequestSchema,
   CreateEventResponseSchema,
+  DeleteAssignmentRequestSchema,
+  EventItemAssignmentSchema,
+  EventItemWithAssignmentsSchema,
+  EventParticipantSchema,
+  EventCategorySchema,
+  UpdateCategoryRequestSchema,
+  UpdateAssignmentRequestSchema,
+  UpdateEventRequestSchema,
+  UpdateItemRequestSchema,
   type AggregateEventResponse,
+  type CreateAssignmentRequest,
   type CreateEventRequest,
   type CreateEventResponse,
+  type CreateItemRequest,
+  type CreateParticipantRequest,
+  type DeleteAssignmentRequest,
+  type EventCategory,
+  type EventItemAssignment,
+  type EventItemWithAssignments,
+  type EventParticipant,
+  type UpdateAssignmentRequest,
+  type UpdateCategoryRequest,
+  type UpdateEventRequest,
+  type UpdateItemRequest,
 } from '@listcollab/shared'
 import { useMemo } from 'react'
 
@@ -23,13 +47,27 @@ export class ApiClientError extends Error {
 }
 
 type ApiClient = {
+  claimItem: (itemId: number, input: CreateAssignmentRequest) => Promise<EventItemAssignment>
+  createCategory: (input: { icon?: string | null; name: string; sortOrder?: number }) => Promise<EventCategory>
   createEvent: (input: CreateEventRequest) => Promise<CreateEventResponse>
+  createItem: (input: CreateItemRequest) => Promise<EventItemWithAssignments>
+  createParticipant: (input: CreateParticipantRequest) => Promise<EventParticipant>
+  deleteAssignment: (assignmentId: number, input: DeleteAssignmentRequest) => Promise<void>
+  deleteCategory: (categoryId: number) => Promise<void>
+  deleteEvent: (shareToken: string) => Promise<void>
+  deleteItem: (itemId: number) => Promise<void>
+  deleteParticipant: (participantId: number) => Promise<void>
   getEvent: (shareToken: string) => Promise<AggregateEventResponse>
+  updateAssignment: (assignmentId: number, input: UpdateAssignmentRequest) => Promise<EventItemAssignment>
+  updateCategory: (categoryId: number, input: UpdateCategoryRequest) => Promise<EventCategory>
+  updateEvent: (shareToken: string, input: UpdateEventRequest) => Promise<AggregateEventResponse>
+  updateItem: (itemId: number, input: UpdateItemRequest) => Promise<EventItemWithAssignments>
+  updateParticipant: (participantId: number, input: { name: string }) => Promise<EventParticipant>
 }
 
 type ApiRequestOptions<TResponse> = {
   endpoint: string
-  eventToken?: string | null
+  eventToken?: string | null | undefined
   requestInit?: RequestInit
   responseSchema: {
     parse: (value: unknown) => TResponse
@@ -103,6 +141,110 @@ export function createApiClient(eventToken?: string | null): ApiClient {
         endpoint: `/events/${shareToken}`,
         eventToken: eventToken ?? shareToken,
         responseSchema: AggregateEventResponseSchema,
+      }),
+    createParticipant: (input) =>
+      apiRequest({
+        endpoint: '/participants',
+        eventToken,
+        requestInit: {
+          method: 'POST',
+          body: JSON.stringify(CreateParticipantRequestSchema.parse(input)),
+        },
+        responseSchema: EventParticipantSchema,
+      }),
+    updateParticipant: (participantId, input) =>
+      apiRequest({
+        endpoint: `/participants/${participantId}`,
+        eventToken,
+        requestInit: {
+          method: 'PATCH',
+          body: JSON.stringify(CreateParticipantRequestSchema.parse(input)),
+        },
+        responseSchema: EventParticipantSchema,
+      }),
+    deleteParticipant: (participantId) =>
+      apiRequest({
+        endpoint: `/participants/${participantId}`,
+        eventToken,
+        requestInit: { method: 'DELETE' },
+        responseSchema: { parse: () => undefined },
+      }),
+    createCategory: (input) =>
+      apiRequest({
+        endpoint: '/categories',
+        eventToken,
+        requestInit: { method: 'POST', body: JSON.stringify(input) },
+        responseSchema: EventCategorySchema,
+      }),
+    updateCategory: (categoryId, input) =>
+      apiRequest({
+        endpoint: `/categories/${categoryId}`,
+        eventToken,
+        requestInit: { method: 'PATCH', body: JSON.stringify(UpdateCategoryRequestSchema.parse(input)) },
+        responseSchema: EventCategorySchema,
+      }),
+    deleteCategory: (categoryId) =>
+      apiRequest({
+        endpoint: `/categories/${categoryId}`,
+        eventToken,
+        requestInit: { method: 'DELETE' },
+        responseSchema: { parse: () => undefined },
+      }),
+    createItem: (input) =>
+      apiRequest({
+        endpoint: '/items',
+        eventToken,
+        requestInit: { method: 'POST', body: JSON.stringify(CreateItemRequestSchema.parse(input)) },
+        responseSchema: EventItemWithAssignmentsSchema,
+      }),
+    updateItem: (itemId, input) =>
+      apiRequest({
+        endpoint: `/items/${itemId}`,
+        eventToken,
+        requestInit: { method: 'PATCH', body: JSON.stringify(UpdateItemRequestSchema.parse(input)) },
+        responseSchema: EventItemWithAssignmentsSchema,
+      }),
+    deleteItem: (itemId) =>
+      apiRequest({
+        endpoint: `/items/${itemId}`,
+        eventToken,
+        requestInit: { method: 'DELETE' },
+        responseSchema: { parse: () => undefined },
+      }),
+    claimItem: (itemId, input) =>
+      apiRequest({
+        endpoint: `/items/${itemId}/assignments`,
+        eventToken,
+        requestInit: { method: 'POST', body: JSON.stringify(CreateAssignmentRequestSchema.parse(input)) },
+        responseSchema: EventItemAssignmentSchema,
+      }),
+    updateAssignment: (assignmentId, input) =>
+      apiRequest({
+        endpoint: `/assignments/${assignmentId}`,
+        eventToken,
+        requestInit: { method: 'PATCH', body: JSON.stringify(UpdateAssignmentRequestSchema.parse(input)) },
+        responseSchema: EventItemAssignmentSchema,
+      }),
+    deleteAssignment: (assignmentId, input) =>
+      apiRequest({
+        endpoint: `/assignments/${assignmentId}`,
+        eventToken,
+        requestInit: { method: 'DELETE', body: JSON.stringify(DeleteAssignmentRequestSchema.parse(input)) },
+        responseSchema: { parse: () => undefined },
+      }),
+    updateEvent: (shareToken, input) =>
+      apiRequest({
+        endpoint: `/events/${shareToken}`,
+        eventToken,
+        requestInit: { method: 'PATCH', body: JSON.stringify(UpdateEventRequestSchema.parse(input)) },
+        responseSchema: AggregateEventResponseSchema,
+      }),
+    deleteEvent: (shareToken) =>
+      apiRequest({
+        endpoint: `/events/${shareToken}`,
+        eventToken,
+        requestInit: { method: 'DELETE' },
+        responseSchema: { parse: () => undefined },
       }),
   }
 }

@@ -14,7 +14,7 @@
 | 3 | Domain model and migrations | ✅ Complete | 7 / 7 |
 | 4 | Event-centred API | ✅ Complete | 10 / 10 |
 | 5 | Frontend restructure | ✅ Complete | 8 / 8 |
-| 6 | Collaborative UX | ⬜ Not Started | 0 / 7 |
+| 6 | Collaborative UX | ✅ Complete | 7 / 7 |
 | 7 | Responsive polish and accessibility | ⬜ Not Started | 0 / 7 |
 | 8 | Hardening, deployment and handoff | ⬜ Not Started | 0 / 9 |
 
@@ -65,13 +65,13 @@
 | 5 – Frontend | 5.6 | CategorySection, ItemList, ItemRow + XSS render test | ✅ Complete | Added category-grouped item sections, uncategorised item handling, contribution-specific row messaging, client-side search across item and participant names, and a component test proving attacker-controlled HTML renders as inert text |
 | 5 – Frontend | 5.7 | CreateEventPage + EventForm with starter categories | ✅ Complete | Added the create-event flow with shared-schema validation, starter and custom categories, visited-event tracking in `localStorage`, and organiser-link navigation that preserves admin access only in the manage-route fragment |
 | 5 – Frontend | 5.8 | Delete the old App and dead code; component tests | ✅ Complete | Deleted the legacy app body and obsolete API helper, replaced the Playwright smoke with an event-page flow, added component and hook tests across the new feature structure, and passed the mobile-first smoke gate with no horizontal scrolling at 390px and 320px |
-| 6 – Collaboration | 6.1 | Identity hook + IdentifyDialog | ⬜ Not Started | Prompt on first action, not on load |
-| 6 – Collaboration | 6.2 | ClaimItemDialog with partial quantities and optimistic update | ⬜ Not Started | Rollback on failure; must be submittable with the on-screen keyboard open |
-| 6 – Collaboration | 6.3 | Unclaim and adjust own claim | ⬜ Not Started | |
-| 6 – Collaboration | 6.4 | Add a contribution (organiser requirement / guest extra) | ⬜ Not Started | |
-| 6 – Collaboration | 6.5 | Coverage indicators at item, category and event level | ⬜ Not Started | Ad-hoc items excluded from denominators |
-| 6 – Collaboration | 6.6 | 🔒 Organiser mode — structural controls absent without admin token | ⬜ Not Started | Server check is the control, not the UI |
-| 6 – Collaboration | 6.7 | 🔒 Share flow — share URL, copy, admin link never leaked | ⬜ Not Started | MVP is complete when this phase is done |
+| 6 – Collaboration | 6.1 | Identity hook + IdentifyDialog | ✅ Complete | Added per-event identity storage, first-action prompting, shared-device reset, and focused hook/dialog tests |
+| 6 – Collaboration | 6.2 | ClaimItemDialog with partial quantities and optimistic update | ✅ Complete | Added optimistic claim create/update with rollback, clear over-claim feedback, and mobile reduced-viewport e2e coverage |
+| 6 – Collaboration | 6.3 | Unclaim and adjust own claim | ✅ Complete | Participants can edit or remove their own claims, organisers can adjust any claim, and failure paths are covered |
+| 6 – Collaboration | 6.4 | Add a contribution (organiser requirement / guest extra) | ✅ Complete | Guests can add auto-claimed contributions, organisers can add requirements, and both flows are exercised in unit and e2e tests |
+| 6 – Collaboration | 6.5 | Coverage indicators at item, category and event level | ✅ Complete | Added per-item progress, per-category covered counts, and tests proving ad-hoc contributions stay out of denominators |
+| 6 – Collaboration | 6.6 | 🔒 Organiser mode — structural controls absent without admin token | ✅ Complete | Guest view hides structural controls, organiser view exposes them, and Playwright verifies share-token admin actions still return `403 ADMIN_REQUIRED` |
+| 6 – Collaboration | 6.7 | 🔒 Share flow — share URL, copy, admin link never leaked | ✅ Complete | Share/copy uses the guest URL only, organiser link remains separately labelled, and landing-page revisit plus e2e flow passed |
 | 7 – Polish | 7.1 | Responsive layout, touch targets, dialogs as sheets on mobile | ⬜ Not Started | Refinement only — restructuring here means Phase 5 regressed |
 | 7 – Polish | 7.2 | Skeletons and empty states | ⬜ Not Started | |
 | 7 – Polish | 7.3 | Snackbars replacing persistent error banners | ⬜ Not Started | Include requestId only |

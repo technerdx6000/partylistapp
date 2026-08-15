@@ -168,4 +168,35 @@ describe('EventPage', () => {
 
     expect(screen.getByText('No items yet')).toBeInTheDocument()
   })
+
+  it('renders the invalid-link fallback when no event data resolves and there is no API error', () => {
+    useEventMock.mockReturnValue(buildUseEventResult({
+      data: undefined,
+      error: null,
+      isLoading: false,
+    }))
+
+    renderEventPage()
+
+    expect(screen.getByRole('heading', { name: "This event link isn't valid." })).toBeInTheDocument()
+  })
+
+  it('renders the invalid-link state when no share token route param exists', () => {
+    renderWithProviders(
+      <Routes>
+        <Route path="/" element={<EventPage manageMode={false} />} />
+      </Routes>,
+      { route: '/' }
+    )
+
+    expect(screen.getByRole('heading', { name: "This event link isn't valid." })).toBeInTheDocument()
+  })
+
+  it('renders the no-match state when the search filters out every item', () => {
+    renderEventPage()
+
+    fireEvent.change(screen.getByLabelText('Search items or people'), { target: { value: 'zzz' } })
+
+    expect(screen.getByText('No items match that search.')).toBeInTheDocument()
+  })
 })

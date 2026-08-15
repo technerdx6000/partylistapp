@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit'
 import { getEnv } from '../config/env.js'
 
 const env = getEnv()
-const isTestEnvironment = env.NODE_ENV === 'test'
+const isTestEnvironment = env.NODE_ENV === 'test' || env.E2E_TEST === 'true'
 
 function createLimiter(limit: number) {
     return rateLimit({

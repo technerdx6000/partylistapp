@@ -1,14 +1,35 @@
-import type { EventCategory, EventItemWithAssignments, EventParticipant } from '@listcollab/shared'
+import type { EventCategory, EventItemAssignment, EventItemWithAssignments, EventParticipant } from '@listcollab/shared'
 import { Stack } from '@mui/material'
 
+import type { EventIdentity } from '../../hooks/useEventIdentity'
 import { CategorySection } from '../categories/CategorySection'
 
 type ItemListProps = {
   categories: readonly EventCategory[]
+  currentIdentity: EventIdentity | null
+  isManageMode: boolean
   items: readonly EventItemWithAssignments[]
+  onAddItem: (categoryId: number | null) => void
+  onClaim: (item: EventItemWithAssignments, assignment?: EventItemAssignment) => void
+  onDeleteCategory?: ((category: EventCategory) => void) | undefined
+  onDeleteItem?: ((item: EventItemWithAssignments) => void) | undefined
+  onEditCategory?: ((category: EventCategory) => void) | undefined
+  onEditItem?: ((item: EventItemWithAssignments) => void) | undefined
   participants: readonly EventParticipant[]
 }
-export function ItemList({ categories, items, participants }: ItemListProps): React.JSX.Element {
+export function ItemList({
+  categories,
+  currentIdentity,
+  isManageMode,
+  items,
+  onAddItem,
+  onClaim,
+  onDeleteCategory,
+  onDeleteItem,
+  onEditCategory,
+  onEditItem,
+  participants,
+}: ItemListProps): React.JSX.Element {
   const uncategorisedItems = items.filter((item) => item.categoryId === null)
   const groupedCategories = categories
     .slice()
@@ -24,14 +45,32 @@ export function ItemList({ categories, items, participants }: ItemListProps): Re
       {groupedCategories.map((group) => (
         <CategorySection
           category={group.category}
+          currentIdentity={currentIdentity}
+          isManageMode={isManageMode}
           items={group.items}
           key={group.category.id}
+          onAddItem={onAddItem}
+          onClaim={onClaim}
+          onDeleteCategory={onDeleteCategory}
+          onDeleteItem={onDeleteItem}
+          onEditCategory={onEditCategory}
+          onEditItem={onEditItem}
           participants={participants}
         />
       ))}
 
       {uncategorisedItems.length > 0 ? (
-        <CategorySection category={null} items={uncategorisedItems} participants={participants} />
+        <CategorySection
+          category={null}
+          currentIdentity={currentIdentity}
+          isManageMode={isManageMode}
+          items={uncategorisedItems}
+          onAddItem={onAddItem}
+          onClaim={onClaim}
+          onDeleteItem={onDeleteItem}
+          onEditItem={onEditItem}
+          participants={participants}
+        />
       ) : null}
     </Stack>
   )

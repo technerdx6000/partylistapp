@@ -10,6 +10,7 @@ dotenv.config({ path: path.resolve(repoRoot, 'apps/api/.env') })
 
 const EnvSchema = z.object({
     NODE_ENV: z.enum(['development', 'test', 'production']),
+    E2E_TEST: z.enum(['true', 'false']).optional(),
     PORT: z.coerce.number().int().min(1).max(65535),
     DB_HOST: z.string().min(1),
     DB_PORT: z.coerce.number().int().min(1).max(65535),
