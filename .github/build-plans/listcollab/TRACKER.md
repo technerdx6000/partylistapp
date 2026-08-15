@@ -50,7 +50,7 @@
 | 4 – API | 4.1 | 🔒 Zod-validated env config with fail-fast startup | ✅ Complete | Added `apps/api/src/config/env.ts` with Zod validation over the required API environment variables, switched runtime code off direct `process.env` reads, updated examples/compose envs for `CORS_ORIGIN` and `LOG_LEVEL`, and enforced the boundary with ESLint while keeping test/bootstrap paths green |
 | 4 – API | 4.2 | Connection pool, `withTransaction`, repository layer | 🔄 In Progress | Added `apps/api/src/db/pool.ts` with `withTransaction()` plus event-scoped repositories for events, participants, categories, items, and assignments; routes are still being rewired off the legacy direct-SQL modules |
 | 4 – API | 4.3 | Shared API contract schemas in `packages/shared` | 🔄 In Progress | Added event-centred shared schema files for events, participants, categories, items, assignments, aggregate responses, and API errors; route-layer request/response wiring is still in progress |
-| 4 – API | 4.4 | 🔒 Token generation + `requireEventToken` / `requireAdminToken` | ⬜ Not Started | Most important task in the phase |
+| 4 – API | 4.4 | 🔒 Token generation + `requireEventToken` / `requireAdminToken` | 🔄 In Progress | Added token generation/comparison helpers, Express request typing, and event/admin token middleware with focused tests for the 401/403/404 branches; the real route surface is not yet wired through them |
 | 4 – API | 4.5 | Error model, `asyncHandler`, request logging with redaction | ⬜ Not Started | |
 | 4 – API | 4.6 | Event routes incl. aggregate GET | ⬜ Not Started | Admin token must never appear outside the create response |
 | 4 – API | 4.7 | Participant and category routes | ⬜ Not Started | POST participants is intentionally not admin-gated |

@@ -1,5 +1,5 @@
 import type { CreateEventRequest, Event, EventWithAdminToken, UpdateEventRequest } from '@listcollab/shared'
-import type { PoolConnection, ResultSetHeader } from 'mysql2/promise'
+import type { ResultSetHeader } from 'mysql2/promise'
 
 import { type EventRow, queryable, type Queryable } from './shared.js'
 
@@ -18,8 +18,16 @@ function mapEventRow(row: EventRow): EventWithAdminToken {
 }
 
 function stripAdminToken(event: EventWithAdminToken): Event {
-  const { adminToken: _adminToken, ...rest } = event
-  return rest
+  return {
+    id: event.id,
+    name: event.name,
+    description: event.description,
+    eventDate: event.eventDate,
+    location: event.location,
+    shareToken: event.shareToken,
+    createdAt: event.createdAt,
+    updatedAt: event.updatedAt,
+  }
 }
 
 /**

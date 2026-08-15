@@ -1,6 +1,21 @@
 import type { z } from "zod";
 
 import {
+    ApiErrorSchema,
+    AggregateEventResponseSchema,
+    CreateEventResponseSchema,
+} from "./schemas/api";
+import {
+    CreateAssignmentRequestSchema as NewCreateAssignmentRequestSchema,
+    EventItemAssignmentSchema as NewEventItemAssignmentSchema,
+    UpdateAssignmentRequestSchema as NewUpdateAssignmentRequestSchema,
+} from "./schemas/assignment";
+import {
+    CreateCategoryRequestSchema as NewCreateCategoryRequestSchema,
+    EventCategorySchema as NewEventCategorySchema,
+    UpdateCategoryRequestSchema as NewUpdateCategoryRequestSchema,
+} from "./schemas/category";
+import {
     CategoryInputSchema,
     CategorySchema,
     ItemCreateInputSchema,
@@ -12,16 +27,6 @@ import {
     RequiredItemInputSchema,
     RequiredItemSchema,
 } from "./schemas/entities";
-import {
-    ApiErrorSchema,
-    AggregateEventResponseSchema,
-    CreateEventResponseSchema,
-} from "./schemas/api";
-import {
-    CreateCategoryRequestSchema as NewCreateCategoryRequestSchema,
-    EventCategorySchema as NewEventCategorySchema,
-    UpdateCategoryRequestSchema as NewUpdateCategoryRequestSchema,
-} from "./schemas/category";
 import {
     CreateEventRequestSchema as NewCreateEventRequestSchema,
     EventSchema as NewEventSchema,
@@ -41,11 +46,6 @@ import {
     EventParticipantSchema as NewEventParticipantSchema,
     UpdateParticipantRequestSchema as NewUpdateParticipantRequestSchema,
 } from "./schemas/participant";
-import {
-    CreateAssignmentRequestSchema as NewCreateAssignmentRequestSchema,
-    EventItemAssignmentSchema as NewEventItemAssignmentSchema,
-    UpdateAssignmentRequestSchema as NewUpdateAssignmentRequestSchema,
-} from "./schemas/assignment";
 
 export type Person = z.infer<typeof PersonSchema>;
 export type PersonInput = z.infer<typeof PersonInputSchema>;
