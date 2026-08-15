@@ -595,4 +595,187 @@ describe('migration runner', () => {
             error: { code: 'EVENT_NOT_FOUND' },
         })
     })
+
+    it('creates, reuses, updates, lists, and deletes participants within the scoped event', async () => {
+        const { migrator, close } = await createMigrator()
+
+        try {
+            await migrator.up()
+        } finally {
+            await close()
+        }
+
+        const { app } = await import('../../server.js')
+
+        const createEventResponse = await request(app).post('/api/events').send({
+            name: 'Participant Flow',
+        })
+        const event = createEventResponse.body as {
+            event: { shareToken: string; adminToken: string }
+        }
+
+        const createParticipantResponse = await request(app)
+            .post('/api/participants')
+            .set('X-Event-Token', event.event.shareToken)
+            .send({ name: 'Alex' })
+        const createdParticipant = createParticipantResponse.body as { id: number; name: string }
+
+        expect(createParticipantResponse.status).toBe(201)
+        expect(createdParticipant.name).toBe('Alex')
+
+        const duplicateParticipantResponse = await request(app)
+            .post('/api/participants')
+            .set('X-Event-Token', event.event.shareToken)
+            .send({ name: 'Alex' })
+        const duplicateParticipant = duplicateParticipantResponse.body as { id: number }
+
+        expect(duplicateParticipantResponse.status).toBe(200)
+        expect(duplicateParticipant.id).toBe(createdParticipant.id)
+
+        const updateParticipantResponse = await request(app)
+            .patch(`/api/participants/${createdParticipant.id}`)
+            .set('X-Event-Token', event.event.adminToken)
+            .send({ name: 'Alex Johnson' })
+
+        expect(updateParticipantResponse.status).toBe(200)
+        expect(updateParticipantResponse.body).toMatchObject({
+            id: createdParticipant.id,
+            name: 'Alex Johnson',
+        })
+
+        const listParticipantsResponse = await request(app)
+            .get('/api/participants')
+            .set('X-Event-Token', event.event.shareToken)
+
+        expect(listParticipantsResponse.status).toBe(200)
+        expect(listParticipantsResponse.body).toEqual([
+            expect.objectContaining({ id: createdParticipant.id, name: 'Alex Johnson' }),
+        ])
+
+        const deleteParticipantResponse = await request(app)
+            .delete(`/api/participants/${createdParticipant.id}`)
+            .set('X-Event-Token', event.event.adminToken)
+
+        expect(deleteParticipantResponse.status).toBe(204)
+
+        const emptyParticipantsResponse = await request(app)
+            .get('/api/participants')
+            .set('X-Event-Token', event.event.shareToken)
+
+        expect(emptyParticipantsResponse.status).toBe(200)
+        expect(emptyParticipantsResponse.body).toEqual([])
+    })
+
+    it('rejects participant creation once an event already has 200 participants', async () => {
+        const { migrator, close } = await createMigrator()
+
+        try {
+            await migrator.up()
+        } finally {
+            await close()
+        }
+
+        const { app } = await import('../../server.js')
+
+        const createEventResponse = await request(app).post('/api/events').send({
+            name: 'Participant Limit',
+        })
+        const event = createEventResponse.body as {
+            event: { id: number; shareToken: string }
+        }
+
+        const connection = await createAppConnection()
+
+        try {
+            const inserts = Array.from({ length: 200 }, (_, index) => [event.event.id, `Guest ${index + 1}`])
+            await connection.query(
+                'INSERT INTO event_participants (event_id, name) VALUES ?',
+                [inserts]
+            )
+        } finally {
+            await connection.end()
+        }
+
+        const response = await request(app)
+            .post('/api/participants')
+            .set('X-Event-Token', event.event.shareToken)
+            .send({ name: 'Overflow Guest' })
+
+        expect(response.status).toBe(409)
+        expect(response.body).toMatchObject({
+            error: { code: 'PARTICIPANT_LIMIT_REACHED' },
+        })
+    })
+
+    it('enforces admin-only category mutation while keeping category reads token-scoped', async () => {
+        const { migrator, close } = await createMigrator()
+
+        try {
+            await migrator.up()
+        } finally {
+            await close()
+        }
+
+        const { app } = await import('../../server.js')
+
+        const createEventResponse = await request(app).post('/api/events').send({
+            name: 'Category Flow',
+        })
+        const event = createEventResponse.body as {
+            event: { shareToken: string; adminToken: string }
+        }
+
+        const forbiddenCreateResponse = await request(app)
+            .post('/api/categories')
+            .set('X-Event-Token', event.event.shareToken)
+            .send({ name: 'Drinks' })
+
+        expect(forbiddenCreateResponse.status).toBe(403)
+        expect(forbiddenCreateResponse.body).toMatchObject({
+            error: { code: 'ADMIN_REQUIRED' },
+        })
+
+        const createCategoryResponse = await request(app)
+            .post('/api/categories')
+            .set('X-Event-Token', event.event.adminToken)
+            .send({ name: 'Drinks', icon: '🥤', sortOrder: 1 })
+        const category = createCategoryResponse.body as { id: number }
+
+        expect(createCategoryResponse.status).toBe(201)
+
+        const listCategoriesResponse = await request(app)
+            .get('/api/categories')
+            .set('X-Event-Token', event.event.shareToken)
+
+        expect(listCategoriesResponse.status).toBe(200)
+        expect(listCategoriesResponse.body).toEqual([
+            expect.objectContaining({ id: category.id, name: 'Drinks', icon: '🥤', sortOrder: 1 }),
+        ])
+
+        const updateCategoryResponse = await request(app)
+            .patch(`/api/categories/${category.id}`)
+            .set('X-Event-Token', event.event.adminToken)
+            .send({ name: 'Cold Drinks', icon: '🧃', sortOrder: 2 })
+
+        expect(updateCategoryResponse.status).toBe(200)
+        expect(updateCategoryResponse.body).toMatchObject({
+            id: category.id,
+            name: 'Cold Drinks',
+            icon: '🧃',
+            sortOrder: 2,
+        })
+
+        const deleteCategoryResponse = await request(app)
+            .delete(`/api/categories/${category.id}`)
+            .set('X-Event-Token', event.event.adminToken)
+
+        expect(deleteCategoryResponse.status).toBe(204)
+
+        const emptyCategoriesResponse = await request(app)
+            .get('/api/categories')
+            .set('X-Event-Token', event.event.shareToken)
+
+        expect(emptyCategoriesResponse.status).toBe(200)
+        expect(emptyCategoriesResponse.body).toEqual([])
+    })
 })

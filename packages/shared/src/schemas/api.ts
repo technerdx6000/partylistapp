@@ -13,6 +13,8 @@ export const ApiErrorSchema = z.object({
     }),
 });
 
+export const PositiveIntIdSchema = z.coerce.number().int().positive()
+
 export const AggregateEventResponseSchema = z.object({
     event: EventSchema,
     participants: z.array(EventParticipantSchema),
