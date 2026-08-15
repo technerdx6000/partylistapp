@@ -12,7 +12,7 @@
 | 1 | Stabilise the existing repo | ✅ Complete | 7 / 7 |
 | 2 | Turborepo, TypeScript and test infrastructure | ✅ Complete | 9 / 9 |
 | 3 | Domain model and migrations | ✅ Complete | 7 / 7 |
-| 4 | Event-centred API | 🔄 In Progress | 4 / 10 |
+| 4 | Event-centred API | 🔄 In Progress | 5 / 10 |
 | 5 | Frontend restructure | ⬜ Not Started | 0 / 8 |
 | 6 | Collaborative UX | ⬜ Not Started | 0 / 7 |
 | 7 | Responsive polish and accessibility | ⬜ Not Started | 0 / 7 |
@@ -52,7 +52,7 @@
 | 4 – API | 4.3 | Shared API contract schemas in `packages/shared` | ✅ Complete | Added event-centred shared schema files for events, participants, categories, items, assignments, aggregate responses, and API errors; the new event routes validate against those contracts |
 | 4 – API | 4.4 | 🔒 Token generation + `requireEventToken` / `requireAdminToken` | ✅ Complete | Added token generation/comparison helpers, Express request typing, and event/admin token middleware with focused tests for the 401/403/404 branches; the new event aggregate route is wired through the token middleware |
 | 4 – API | 4.5 | Error model, `asyncHandler`, request logging with redaction | ✅ Complete | Added `AppError`, `asyncHandler`, `requestLogger`, `errorHandler`, pino redaction, and a logger redaction test; request ids now flow into event route and health-route logs |
-| 4 – API | 4.6 | Event routes incl. aggregate GET | 🔄 In Progress | Implemented `POST /api/events` and `GET /api/events/:shareToken` on the new schema with aggregate payloads and no admin-token leak; `PATCH` and `DELETE` are still placeholders pending the rest of the Phase 4 route cutover |
+| 4 – API | 4.6 | Event routes incl. aggregate GET | ✅ Complete | Implemented `POST`, aggregate `GET`, admin `PATCH`, and admin `DELETE` on `/api/events/:shareToken`; integration coverage now verifies the create response is the only admin-token leak point, share-token access cannot update, and a mismatched admin token/path pair returns `404 EVENT_NOT_FOUND` |
 | 4 – API | 4.7 | Participant and category routes | ⬜ Not Started | POST participants is intentionally not admin-gated |
 | 4 – API | 4.8 | Item routes with mixed permission rules | ⬜ Not Started | |
 | 4 – API | 4.9 | 🔒 Assignment routes — claim/unclaim with transactional over-claim check | ⬜ Not Started | Requires `SELECT ... FOR UPDATE` |

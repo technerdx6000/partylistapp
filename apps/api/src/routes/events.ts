@@ -2,9 +2,11 @@ import {
     AggregateEventResponseSchema,
     CreateEventRequestSchema,
     CreateEventResponseSchema,
+    UpdateEventRequestSchema,
     calculateCoverage,
     type AggregateEventResponse,
     type CreateEventRequest,
+    type UpdateEventRequest,
 } from '@listcollab/shared'
 import express from 'express'
 
@@ -13,13 +15,19 @@ import { AppError } from '../errors/AppError.js'
 import { requireAdminToken, requireEventToken } from '../middleware/eventToken.js'
 import { listAssignmentsByEventId } from '../repositories/assignmentRepository.js'
 import { createCategory, listCategoriesByEventId } from '../repositories/categoryRepository.js'
-import { createEvent, findEventById, toPublicEvent } from '../repositories/eventRepository.js'
+import { createEvent, deleteEvent, findEventById, toPublicEvent, updateEvent } from '../repositories/eventRepository.js'
 import { listItemsByEventId } from '../repositories/itemRepository.js'
 import { listParticipantsByEventId } from '../repositories/participantRepository.js'
 import { generateAdminToken, generateShareToken } from '../services/tokenService.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 
 const router = express.Router()
+
+function assertEventRouteScope(routeShareToken: string, requestShareToken: string): void {
+    if (routeShareToken !== requestShareToken) {
+        throw new AppError(404, 'EVENT_NOT_FOUND', 'Event not found')
+    }
+}
 
 async function buildAggregateResponse(eventId: number): Promise<AggregateEventResponse> {
     const event = await findEventById(eventId)
@@ -111,23 +119,62 @@ router.get(
     '/:shareToken',
     requireEventToken,
     asyncHandler(async (req, res) => {
-        const shareToken = String(req.params.shareToken ?? '')
+        const shareToken = String(req.params.shareToken)
+        const eventContext = req.event!
 
-        if (!req.event || req.event.shareToken !== shareToken) {
-            throw new AppError(404, 'EVENT_NOT_FOUND', 'Event not found')
-        }
+        assertEventRouteScope(shareToken, eventContext.shareToken)
 
-        const aggregate = await buildAggregateResponse(req.event.id)
+        const aggregate = await buildAggregateResponse(eventContext.id)
         res.json(aggregate)
     })
 )
 
-router.patch('/:shareToken', requireEventToken, requireAdminToken, () => {
-    throw new AppError(501, 'NOT_IMPLEMENTED', 'Event update route not implemented yet')
-})
+router.patch(
+    '/:shareToken',
+    requireEventToken,
+    requireAdminToken,
+    asyncHandler(async (req, res) => {
+        const shareToken = String(req.params.shareToken)
+        const eventContext = req.event!
+        const parsedBody = UpdateEventRequestSchema.safeParse(req.body as UpdateEventRequest)
 
-router.delete('/:shareToken', requireEventToken, requireAdminToken, () => {
-    throw new AppError(501, 'NOT_IMPLEMENTED', 'Event delete route not implemented yet')
-})
+        assertEventRouteScope(shareToken, eventContext.shareToken)
+
+        if (!parsedBody.success) {
+            throw new AppError(400, 'VALIDATION_FAILED', 'Invalid event payload', {
+                fields: parsedBody.error.issues.map((issue) => issue.path.join('.')),
+            })
+        }
+
+        const updatedEvent = await updateEvent(eventContext.id, parsedBody.data)
+
+        if (!updatedEvent) {
+            throw new AppError(404, 'EVENT_NOT_FOUND', 'Event not found')
+        }
+
+        const aggregate = await buildAggregateResponse(updatedEvent.id)
+        res.json(aggregate)
+    })
+)
+
+router.delete(
+    '/:shareToken',
+    requireEventToken,
+    requireAdminToken,
+    asyncHandler(async (req, res) => {
+        const shareToken = String(req.params.shareToken)
+        const eventContext = req.event!
+
+        assertEventRouteScope(shareToken, eventContext.shareToken)
+
+        const deleted = await deleteEvent(eventContext.id)
+
+        if (!deleted) {
+            throw new AppError(404, 'EVENT_NOT_FOUND', 'Event not found')
+        }
+
+        res.status(204).send()
+    })
+)
 
 export default router

@@ -498,4 +498,101 @@ describe('migration runner', () => {
         expect(body.event.adminToken).toBeUndefined()
         expect(body.items).toEqual([])
     })
+
+    it('updates an event only when the matching admin token is supplied', async () => {
+        const { migrator, close } = await createMigrator()
+
+        try {
+            await migrator.up()
+        } finally {
+            await close()
+        }
+
+        const { app } = await import('../../server.js')
+
+        const createResponse = await request(app).post('/api/events').send({
+            name: 'Camp Weekend',
+            description: 'Initial plan',
+            location: 'Old location',
+        })
+        const createBody = createResponse.body as {
+            event: { shareToken: string; adminToken: string }
+        }
+
+        const updateResponse = await request(app)
+            .patch(`/api/events/${createBody.event.shareToken}`)
+            .set('X-Event-Token', createBody.event.adminToken)
+            .send({
+                name: 'Camp Weekend Updated',
+                description: 'Bring torches',
+                location: 'Lakeside',
+            })
+        const updateBody = updateResponse.body as {
+            event: { name: string; description: string | null; location: string | null; adminToken?: string }
+        }
+
+        expect(updateResponse.status).toBe(200)
+        expect(updateBody.event).toMatchObject({
+            name: 'Camp Weekend Updated',
+            description: 'Bring torches',
+            location: 'Lakeside',
+        })
+        expect(updateBody.event.adminToken).toBeUndefined()
+
+        const forbiddenResponse = await request(app)
+            .patch(`/api/events/${createBody.event.shareToken}`)
+            .set('X-Event-Token', createBody.event.shareToken)
+            .send({ name: 'Should Fail' })
+
+        expect(forbiddenResponse.status).toBe(403)
+        expect(forbiddenResponse.body).toMatchObject({
+            error: { code: 'ADMIN_REQUIRED' },
+        })
+    })
+
+    it('deletes an event and rejects cross-event admin token reuse on the route path', async () => {
+        const { migrator, close } = await createMigrator()
+
+        try {
+            await migrator.up()
+        } finally {
+            await close()
+        }
+
+        const { app } = await import('../../server.js')
+
+        const firstCreateResponse = await request(app).post('/api/events').send({
+            name: 'First Event',
+        })
+        const secondCreateResponse = await request(app).post('/api/events').send({
+            name: 'Second Event',
+        })
+
+        const firstEvent = firstCreateResponse.body as { event: { shareToken: string; adminToken: string } }
+        const secondEvent = secondCreateResponse.body as { event: { shareToken: string; adminToken: string } }
+
+        const mismatchedDeleteResponse = await request(app)
+            .delete(`/api/events/${secondEvent.event.shareToken}`)
+            .set('X-Event-Token', firstEvent.event.adminToken)
+
+        expect(mismatchedDeleteResponse.status).toBe(404)
+        expect(mismatchedDeleteResponse.body).toMatchObject({
+            error: { code: 'EVENT_NOT_FOUND' },
+        })
+
+        const deleteResponse = await request(app)
+            .delete(`/api/events/${firstEvent.event.shareToken}`)
+            .set('X-Event-Token', firstEvent.event.adminToken)
+
+        expect(deleteResponse.status).toBe(204)
+
+        const fetchDeletedResponse = await request(app)
+            .get(`/api/events/${firstEvent.event.shareToken}`)
+            .set('X-Event-Token', firstEvent.event.shareToken)
+
+        expect(fetchDeletedResponse.status).toBe(404)
+        expect(fetchDeletedResponse.body).toMatchObject({
+            error: { code: 'EVENT_NOT_FOUND' },
+        })
+    })
 })
