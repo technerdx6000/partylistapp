@@ -12,7 +12,7 @@
 | 1 | Stabilise the existing repo | ✅ Complete | 7 / 7 |
 | 2 | Turborepo, TypeScript and test infrastructure | ✅ Complete | 9 / 9 |
 | 3 | Domain model and migrations | ✅ Complete | 7 / 7 |
-| 4 | Event-centred API | 🔄 In Progress | 5 / 10 |
+| 4 | Event-centred API | 🔄 In Progress | 7 / 10 |
 | 5 | Frontend restructure | ⬜ Not Started | 0 / 8 |
 | 6 | Collaborative UX | ⬜ Not Started | 0 / 7 |
 | 7 | Responsive polish and accessibility | ⬜ Not Started | 0 / 7 |
@@ -53,7 +53,7 @@
 | 4 – API | 4.4 | 🔒 Token generation + `requireEventToken` / `requireAdminToken` | ✅ Complete | Added token generation/comparison helpers, Express request typing, and event/admin token middleware with focused tests for the 401/403/404 branches; the new event aggregate route is wired through the token middleware |
 | 4 – API | 4.5 | Error model, `asyncHandler`, request logging with redaction | ✅ Complete | Added `AppError`, `asyncHandler`, `requestLogger`, `errorHandler`, pino redaction, and a logger redaction test; request ids now flow into event route and health-route logs |
 | 4 – API | 4.6 | Event routes incl. aggregate GET | ✅ Complete | Implemented `POST`, aggregate `GET`, admin `PATCH`, and admin `DELETE` on `/api/events/:shareToken`; integration coverage now verifies the create response is the only admin-token leak point, share-token access cannot update, and a mismatched admin token/path pair returns `404 EVENT_NOT_FOUND` |
-| 4 – API | 4.7 | Participant and category routes | 🔄 In Progress | Added token-scoped `/api/participants` and `/api/categories` routes on the new schema with duplicate-name participant reuse, a 200-participant cap, admin-only participant/category mutation, and route-level unit plus integration coverage; the remaining close-out item is the dedicated participant-create rate limit required by the phase file |
+| 4 – API | 4.7 | Participant and category routes | ✅ Complete | Added token-scoped `/api/participants` and `/api/categories` routes on the new schema with duplicate-name participant reuse, a 200-participant cap, a dedicated `POST /api/participants` limiter returning `429 RATE_LIMITED`, admin-only participant/category mutation, and route-level unit plus integration coverage |
 | 4 – API | 4.8 | Item routes with mixed permission rules | ⬜ Not Started | |
 | 4 – API | 4.9 | 🔒 Assignment routes — claim/unclaim with transactional over-claim check | ⬜ Not Started | Requires `SELECT ... FOR UPDATE` |
 | 4 – API | 4.10 | 🔒 helmet, CORS, rate limits, body cap, drop legacy tables | ⬜ Not Started | Migration 005 only after nothing reads them |
