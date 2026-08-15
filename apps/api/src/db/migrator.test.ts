@@ -57,11 +57,15 @@ type NullabilityRow = RowDataPacket & {
 }
 
 function applyTestEnvironment(): void {
+    process.env.NODE_ENV = 'test'
+    process.env.PORT = '3002'
     process.env.DB_HOST = testDatabaseConfig.host
     process.env.DB_PORT = String(testDatabaseConfig.port)
     process.env.DB_NAME = testDatabaseConfig.database
     process.env.DB_USER = testDatabaseConfig.user
     process.env.DB_PASSWORD = testDatabaseConfig.password
+    process.env.CORS_ORIGIN = 'http://127.0.0.1:4273'
+    process.env.LOG_LEVEL = 'info'
 }
 
 async function wait(ms: number): Promise<void> {

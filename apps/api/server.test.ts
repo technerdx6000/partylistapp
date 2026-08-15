@@ -12,6 +12,14 @@ vi.mock('./config/database.js', () => ({
 describe('GET /api/health', () => {
     beforeEach(() => {
         process.env.NODE_ENV = 'test'
+        process.env.PORT = '3002'
+        process.env.DB_HOST = '127.0.0.1'
+        process.env.DB_PORT = '3306'
+        process.env.DB_USER = 'listcollab_test_user'
+        process.env.DB_PASSWORD = 'listcollab_test_password_only'
+        process.env.DB_NAME = 'listcollab_test'
+        process.env.CORS_ORIGIN = 'http://127.0.0.1:4273'
+        process.env.LOG_LEVEL = 'info'
     })
 
     afterEach(() => {

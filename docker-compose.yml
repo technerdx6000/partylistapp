@@ -35,6 +35,8 @@ services:
       DB_NAME: ${DB_NAME:-listcollab}
       DB_USER: ${DB_USER:-listcollab_user}
       DB_PASSWORD: ${DB_PASSWORD:-change_me_app_password}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     depends_on:
       db:
         condition: service_healthy

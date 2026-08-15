@@ -7,6 +7,7 @@ import mysql from 'mysql2/promise'
 import { Umzug } from 'umzug'
 
 import logger from '../../logger.js'
+import { getEnv } from '../config/env.js'
 
 type MigrationRecord = RowDataPacket & {
   name: string
@@ -22,16 +23,18 @@ type LegacyImportSummaryRow = RowDataPacket & {
 }
 
 function resolveDatabaseHost(): string {
-  return process.env.DB_HOST ?? '127.0.0.1'
+  return getEnv().DB_HOST
 }
 
 function createPool(): Pool {
+  const env = getEnv()
+
   return mysql.createPool({
     host: resolveDatabaseHost(),
-    port: Number(process.env.DB_PORT ?? 3306),
-    user: process.env.DB_USER ?? '',
-    password: process.env.DB_PASSWORD ?? '',
-    database: process.env.DB_NAME ?? '',
+    port: env.DB_PORT,
+    user: env.DB_USER,
+    password: env.DB_PASSWORD,
+    database: env.DB_NAME,
     waitForConnections: true,
     connectionLimit: 1,
     queueLimit: 0,

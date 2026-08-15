@@ -85,6 +85,14 @@ export default defineConfig([
     },
     rules: {
       'no-console': 'error',
+      'no-restricted-properties': [
+        'error',
+        {
+          object: 'process',
+          property: 'env',
+          message: 'Use apps/api/src/config/env.ts instead of reading process.env directly.',
+        },
+      ],
       'no-restricted-imports': [
         'error',
         {
@@ -94,7 +102,13 @@ export default defineConfig([
     },
   },
   {
-    files: ['apps/api/scripts/**/*.js', 'apps/api/setup-required-items.js', 'apps/api/test-*.js'],
+    files: ['apps/api/src/config/env.ts', 'apps/api/**/*.test.ts'],
+    rules: {
+      'no-restricted-properties': 'off',
+    },
+  },
+  {
+    files: ['apps/api/scripts/**/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       globals: globals.node,

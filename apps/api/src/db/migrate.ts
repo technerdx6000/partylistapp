@@ -1,14 +1,8 @@
-import path from 'node:path'
-
-import dotenv from 'dotenv'
-
 import { createMigrator } from './migrator.js'
-import logger from '../../logger.js'
+import logger, { configureLogger } from '../../logger.js'
+import { getEnv } from '../config/env.js'
 
-const repoRoot = path.resolve(__dirname, '..', '..', '..', '..')
-
-dotenv.config({ path: path.resolve(repoRoot, '.env') })
-dotenv.config({ path: path.resolve(repoRoot, 'apps/api/.env') })
+configureLogger(getEnv().LOG_LEVEL)
 
 async function main() {
   const { migrator, seedBaselineMigrationIfNeeded, close } = await createMigrator()
