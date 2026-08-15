@@ -47,6 +47,22 @@ export async function findItemById(
 }
 
 /**
+ * Finds and locks an item row within an event for a transaction-scoped mutation.
+ */
+export async function findItemByIdForUpdate(
+    eventId: number,
+    itemId: number,
+    connection?: Queryable
+): Promise<EventItem | null> {
+    const [rows] = await queryable(connection).execute<EventItemRow[]>(
+        'SELECT * FROM event_items WHERE event_id = ? AND id = ? LIMIT 1 FOR UPDATE',
+        [eventId, itemId]
+    )
+
+    return rows[0] ? mapItemRow(rows[0]) : null
+}
+
+/**
  * Creates an item for an event.
  */
 export async function createItem(

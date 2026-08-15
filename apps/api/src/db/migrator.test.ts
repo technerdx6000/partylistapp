@@ -908,4 +908,234 @@ describe('migration runner', () => {
             error: { code: 'ITEM_NOT_IN_EVENT' },
         })
     })
+
+    it('creates and updates claims without changing item status', async () => {
+        const { migrator, close } = await createMigrator()
+
+        try {
+            await migrator.up()
+        } finally {
+            await close()
+        }
+
+        const { app } = await import('../../server.js')
+
+        const createEventResponse = await request(app).post('/api/events').send({
+            name: 'Assignment Flow',
+        })
+        const event = createEventResponse.body as {
+            event: { shareToken: string; adminToken: string }
+        }
+
+        const createParticipantResponse = await request(app)
+            .post('/api/participants')
+            .set('X-Event-Token', event.event.shareToken)
+            .send({ name: 'Morgan' })
+        const participant = createParticipantResponse.body as { id: number }
+
+        const createItemResponse = await request(app)
+            .post('/api/items')
+            .set('X-Event-Token', event.event.shareToken)
+            .send({ name: 'Milk', quantityRequired: 2, createdBy: participant.id })
+        const item = createItemResponse.body as { id: number }
+
+        const createAssignmentResponse = await request(app)
+            .post(`/api/items/${item.id}/assignments`)
+            .set('X-Event-Token', event.event.shareToken)
+            .send({ participantId: participant.id, quantity: 1 })
+        const assignment = createAssignmentResponse.body as { id: number }
+
+        expect(createAssignmentResponse.status).toBe(201)
+
+        const updateAssignmentResponse = await request(app)
+            .patch(`/api/assignments/${assignment.id}`)
+            .set('X-Event-Token', event.event.shareToken)
+            .send({ participantId: participant.id, quantity: 2 })
+
+        expect(updateAssignmentResponse.status).toBe(200)
+        expect(updateAssignmentResponse.body).toMatchObject({ id: assignment.id, quantity: 2 })
+
+        const listItemsResponse = await request(app)
+            .get('/api/items')
+            .set('X-Event-Token', event.event.shareToken)
+
+        expect(listItemsResponse.status).toBe(200)
+        expect(listItemsResponse.body).toEqual([
+            expect.objectContaining({
+                id: item.id,
+                status: 'open',
+                coverage: { required: 2, claimed: 2, remaining: 0, status: 'covered' },
+                assignments: [expect.objectContaining({ id: assignment.id, quantity: 2 })],
+            }),
+        ])
+    })
+
+    it('rejects assignment mutation by a different participant and allows admin deletion', async () => {
+        const { migrator, close } = await createMigrator()
+
+        try {
+            await migrator.up()
+        } finally {
+            await close()
+        }
+
+        const { app } = await import('../../server.js')
+
+        const createEventResponse = await request(app).post('/api/events').send({
+            name: 'Assignment Ownership',
+        })
+        const event = createEventResponse.body as {
+            event: { shareToken: string; adminToken: string }
+        }
+
+        const firstParticipantResponse = await request(app)
+            .post('/api/participants')
+            .set('X-Event-Token', event.event.shareToken)
+            .send({ name: 'Alex' })
+        const secondParticipantResponse = await request(app)
+            .post('/api/participants')
+            .set('X-Event-Token', event.event.shareToken)
+            .send({ name: 'Jamie' })
+
+        const firstParticipant = firstParticipantResponse.body as { id: number }
+        const secondParticipant = secondParticipantResponse.body as { id: number }
+
+        const createItemResponse = await request(app)
+            .post('/api/items')
+            .set('X-Event-Token', event.event.shareToken)
+            .send({ name: 'Bread', quantityRequired: 2, createdBy: firstParticipant.id })
+        const item = createItemResponse.body as { id: number }
+
+        const createAssignmentResponse = await request(app)
+            .post(`/api/items/${item.id}/assignments`)
+            .set('X-Event-Token', event.event.shareToken)
+            .send({ participantId: firstParticipant.id, quantity: 1 })
+        const assignment = createAssignmentResponse.body as { id: number }
+
+        const forbiddenPatchResponse = await request(app)
+            .patch(`/api/assignments/${assignment.id}`)
+            .set('X-Event-Token', event.event.shareToken)
+            .send({ participantId: secondParticipant.id, quantity: 1 })
+
+        expect(forbiddenPatchResponse.status).toBe(403)
+        expect(forbiddenPatchResponse.body).toMatchObject({
+            error: { code: 'ASSIGNMENT_FORBIDDEN' },
+        })
+
+        const adminDeleteResponse = await request(app)
+            .delete(`/api/assignments/${assignment.id}`)
+            .set('X-Event-Token', event.event.adminToken)
+            .send({})
+
+        expect(adminDeleteResponse.status).toBe(204)
+    })
+
+    it('serializes competing claims so only one claimant gets the last unit', async () => {
+        const { migrator, close } = await createMigrator()
+
+        try {
+            await migrator.up()
+        } finally {
+            await close()
+        }
+
+        const { app } = await import('../../server.js')
+
+        const createEventResponse = await request(app).post('/api/events').send({
+            name: 'Concurrency Check',
+        })
+        const event = createEventResponse.body as {
+            event: { shareToken: string }
+        }
+
+        const firstParticipantResponse = await request(app)
+            .post('/api/participants')
+            .set('X-Event-Token', event.event.shareToken)
+            .send({ name: 'Avery' })
+        const secondParticipantResponse = await request(app)
+            .post('/api/participants')
+            .set('X-Event-Token', event.event.shareToken)
+            .send({ name: 'Riley' })
+
+        const firstParticipant = firstParticipantResponse.body as { id: number }
+        const secondParticipant = secondParticipantResponse.body as { id: number }
+
+        const createItemResponse = await request(app)
+            .post('/api/items')
+            .set('X-Event-Token', event.event.shareToken)
+            .send({ name: 'Ice', quantityRequired: 1, createdBy: firstParticipant.id })
+        const item = createItemResponse.body as { id: number }
+
+        const [firstClaimResponse, secondClaimResponse] = await Promise.all([
+            request(app)
+                .post(`/api/items/${item.id}/assignments`)
+                .set('X-Event-Token', event.event.shareToken)
+                .send({ participantId: firstParticipant.id, quantity: 1 }),
+            request(app)
+                .post(`/api/items/${item.id}/assignments`)
+                .set('X-Event-Token', event.event.shareToken)
+                .send({ participantId: secondParticipant.id, quantity: 1 }),
+        ])
+
+        expect([firstClaimResponse.status, secondClaimResponse.status].sort()).toEqual([201, 409])
+
+        const listItemsResponse = await request(app)
+            .get('/api/items')
+            .set('X-Event-Token', event.event.shareToken)
+
+        expect(listItemsResponse.status).toBe(200)
+        expect(listItemsResponse.body).toEqual([
+            expect.objectContaining({
+                id: item.id,
+                coverage: { required: 1, claimed: 1, remaining: 0, status: 'covered' },
+                assignments: [expect.objectContaining({ quantity: 1 })],
+            }),
+        ])
+    })
+
+    it('rejects cross-event assignment access', async () => {
+        const { migrator, close } = await createMigrator()
+
+        try {
+            await migrator.up()
+        } finally {
+            await close()
+        }
+
+        const { app } = await import('../../server.js')
+
+        const firstEventResponse = await request(app).post('/api/events').send({ name: 'First Event' })
+        const secondEventResponse = await request(app).post('/api/events').send({ name: 'Second Event' })
+
+        const firstEvent = firstEventResponse.body as { event: { adminToken: string; shareToken: string } }
+        const secondEvent = secondEventResponse.body as { event: { shareToken: string } }
+
+        const createParticipantResponse = await request(app)
+            .post('/api/participants')
+            .set('X-Event-Token', secondEvent.event.shareToken)
+            .send({ name: 'Casey' })
+        const participant = createParticipantResponse.body as { id: number }
+
+        const createItemResponse = await request(app)
+            .post('/api/items')
+            .set('X-Event-Token', secondEvent.event.shareToken)
+            .send({ name: 'Juice', quantityRequired: 1, createdBy: participant.id })
+        const item = createItemResponse.body as { id: number }
+
+        const createAssignmentResponse = await request(app)
+            .post(`/api/items/${item.id}/assignments`)
+            .set('X-Event-Token', secondEvent.event.shareToken)
+            .send({ participantId: participant.id, quantity: 1 })
+        const assignment = createAssignmentResponse.body as { id: number }
+
+        const crossEventDeleteResponse = await request(app)
+            .delete(`/api/assignments/${assignment.id}`)
+            .set('X-Event-Token', firstEvent.event.adminToken)
+            .send({})
+
+        expect(crossEventDeleteResponse.status).toBe(404)
+        expect(crossEventDeleteResponse.body).toMatchObject({
+            error: { code: 'ASSIGNMENT_NOT_IN_EVENT' },
+        })
+    })
 })

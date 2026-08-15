@@ -20,3 +20,7 @@ export const UpdateAssignmentRequestSchema = z.object({
     quantity: z.number().int().min(1).max(999),
     note: z.string().trim().max(500).nullable().optional(),
 }).strict();
+
+export const DeleteAssignmentRequestSchema = z.object({
+    participantId: z.number().int().positive().optional(),
+}).strict();

@@ -1,9 +1,12 @@
 import {
+    CreateAssignmentRequestSchema,
     CreateItemRequestSchema,
+    EventItemAssignmentSchema,
     EventItemWithAssignmentsSchema,
     PositiveIntIdSchema,
     UpdateItemRequestSchema,
     calculateCoverage,
+    type CreateAssignmentRequest,
     type CreateItemRequest,
     type EventItem,
     type EventItemWithAssignments,
@@ -17,6 +20,7 @@ import { listAssignmentsByEventId, listAssignmentsByItemId } from '../repositori
 import { findCategoryById } from '../repositories/categoryRepository.js'
 import { createItem, deleteItem, findItemById, listItemsByEventId, updateItem } from '../repositories/itemRepository.js'
 import { findParticipantById } from '../repositories/participantRepository.js'
+import { claimAssignment } from '../services/assignmentService.js'
 import { assertCanCreateItem, authorizeItemUpdate } from '../services/itemService.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 
@@ -163,6 +167,23 @@ router.patch(
         }
 
         res.json(await buildEventItemResponse(req.event!.id, item))
+    })
+)
+
+router.post(
+    '/:id/assignments',
+    asyncHandler(async (req, res) => {
+        const itemId = parseItemId(String(req.params.id))
+        const parsedBody = CreateAssignmentRequestSchema.safeParse(req.body as CreateAssignmentRequest)
+
+        if (!parsedBody.success) {
+            throw new AppError(400, 'VALIDATION_FAILED', 'Invalid assignment payload', {
+                fields: parsedBody.error.issues.map((issue) => issue.path.join('.')),
+            })
+        }
+
+        const assignment = await claimAssignment(req.event!.id, itemId, parsedBody.data)
+        res.status(201).json(EventItemAssignmentSchema.parse(assignment))
     })
 )
 

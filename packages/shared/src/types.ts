@@ -7,6 +7,7 @@ import {
 } from "./schemas/api";
 import {
     CreateAssignmentRequestSchema as NewCreateAssignmentRequestSchema,
+    DeleteAssignmentRequestSchema as NewDeleteAssignmentRequestSchema,
     EventItemAssignmentSchema as NewEventItemAssignmentSchema,
     UpdateAssignmentRequestSchema as NewUpdateAssignmentRequestSchema,
 } from "./schemas/assignment";
@@ -78,4 +79,5 @@ export type CreateItemRequest = z.infer<typeof NewCreateItemRequestSchema>;
 export type UpdateItemRequest = z.infer<typeof NewUpdateItemRequestSchema>;
 export type EventItemAssignment = z.infer<typeof NewEventItemAssignmentSchema>;
 export type CreateAssignmentRequest = z.infer<typeof NewCreateAssignmentRequestSchema>;
+export type DeleteAssignmentRequest = z.infer<typeof NewDeleteAssignmentRequestSchema>;
 export type UpdateAssignmentRequest = z.infer<typeof NewUpdateAssignmentRequestSchema>;

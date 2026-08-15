@@ -10,6 +10,7 @@ import { getEnv } from './src/config/env.js'
 import { AppError } from './src/errors/AppError.js'
 import { errorHandler } from './src/middleware/errorHandler.js'
 import { requestLogger } from './src/middleware/requestLogger.js'
+import assignmentsRoutes from './src/routes/assignments.js'
 import eventCategoriesRoutes from './src/routes/categories.js'
 import eventsRoutes from './src/routes/events.js'
 import eventItemsRoutes from './src/routes/items.js'
@@ -36,6 +37,7 @@ app.use(requestLogger)
 
 // Routes
 app.use('/api/events', eventsRoutes)
+app.use('/api/assignments', assignmentsRoutes)
 app.use('/api/participants', participantsRoutes)
 app.use("/api/people", peopleRoutes);
 app.use('/api/items', eventItemsRoutes)
