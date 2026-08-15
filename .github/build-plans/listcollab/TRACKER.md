@@ -13,7 +13,7 @@
 | 2 | Turborepo, TypeScript and test infrastructure | ✅ Complete | 9 / 9 |
 | 3 | Domain model and migrations | ✅ Complete | 7 / 7 |
 | 4 | Event-centred API | ✅ Complete | 10 / 10 |
-| 5 | Frontend restructure | ⬜ Not Started | 0 / 8 |
+| 5 | Frontend restructure | ✅ Complete | 8 / 8 |
 | 6 | Collaborative UX | ⬜ Not Started | 0 / 7 |
 | 7 | Responsive polish and accessibility | ⬜ Not Started | 0 / 7 |
 | 8 | Hardening, deployment and handoff | ⬜ Not Started | 0 / 9 |
@@ -57,14 +57,14 @@
 | 4 – API | 4.8 | Item routes with mixed permission rules | ✅ Complete | Replaced the legacy `/api/items` surface with a token-scoped event route that returns assignment-backed coverage, supports guest-created ad-hoc contributions, enforces mixed guest/admin edit permissions through `itemService`, validates category and participant ownership inside the event, rejects cross-event item access with `404 ITEM_NOT_IN_EVENT`, and is covered by unit plus integration tests |
 | 4 – API | 4.9 | 🔒 Assignment routes — claim/unclaim with transactional over-claim check | ✅ Complete | Added transactional claim, patch, and delete routes using `SELECT ... FOR UPDATE` on InnoDB item rows, over-claim rejection with `409 OVER_CLAIM`, own-assignment enforcement with admin override, cross-event assignment rejection, and unit plus integration coverage including the parallel “last unit” race |
 | 4 – API | 4.10 | 🔒 helmet, CORS, rate limits, body cap, drop legacy tables | ✅ Complete | Added shared API rate-limit middleware with general plus tighter event/participant buckets, enabled `trust proxy`, locked JSON bodies to `100kb`, configured an API-only `helmet` CSP, translated oversized payloads to `413 PAYLOAD_TOO_LARGE`, removed the mounted legacy `/api/people` and `/api/required-items` surfaces, deleted the obsolete legacy route files, and added migration `005_drop_legacy_tables`; the old frontend now predictably breaks at runtime against the removed legacy API until Phase 5 replaces it, which is expected per the plan |
-| 5 – Frontend | 5.1 | Router + admin token via URL fragment | ⬜ Not Started | Strip fragment after read |
-| 5 – Frontend | 5.2 | API client with `X-Event-Token` and response validation | ⬜ Not Started | |
-| 5 – Frontend | 5.3 | TanStack Query provider + `useEvent` | ⬜ Not Started | One query key, no state mirrors |
-| 5 – Frontend | 5.4 | MUI theme, mobile-first | ⬜ Not Started | Base layout is the phone layout; desktop is the adaptation |
-| 5 – Frontend | 5.5 | EventPage shell + EventHeader with coverage summary | ⬜ Not Started | |
-| 5 – Frontend | 5.6 | CategorySection, ItemList, ItemRow + XSS render test | ⬜ Not Started | |
-| 5 – Frontend | 5.7 | CreateEventPage + EventForm with starter categories | ⬜ Not Started | |
-| 5 – Frontend | 5.8 | Delete the old App and dead code; component tests | ⬜ Not Started | Mobile E2E must pass before the phase closes |
+| 5 – Frontend | 5.1 | Router + admin token via URL fragment | ✅ Complete | Added `react-router-dom` routes for landing, create, event, manage, and not-found screens; organiser mode now reads the admin token from `#k=...`, stores it only in memory, and strips the fragment from the URL with `history.replaceState` |
+| 5 – Frontend | 5.2 | API client with `X-Event-Token` and response validation | ✅ Complete | Replaced the legacy helper with `apps/web/src/services/apiClient.ts`, centralised token-header attachment, and validated both event read and event create responses with shared Zod schemas before they reach the UI |
+| 5 – Frontend | 5.3 | TanStack Query provider + `useEvent` | ✅ Complete | Mounted `@tanstack/react-query` in the app shell, implemented `useEvent` on the single `['event', shareToken]` key, and verified the aggregate event read path through unit tests without local state mirrors |
+| 5 – Frontend | 5.4 | MUI theme, mobile-first | ✅ Complete | Added a dedicated app theme with mobile-first typography, spacing, component defaults, and responsive page shells built for 390px first rather than retrofitted from desktop |
+| 5 – Frontend | 5.5 | EventPage shell + EventHeader with coverage summary | ✅ Complete | Replaced the old three-panel app with a routed event page that renders loading, invalid-link, error, empty, and populated states from the aggregate API, with event coverage totals derived from the shared `calculateCoverage()` helper |
+| 5 – Frontend | 5.6 | CategorySection, ItemList, ItemRow + XSS render test | ✅ Complete | Added category-grouped item sections, uncategorised item handling, contribution-specific row messaging, client-side search across item and participant names, and a component test proving attacker-controlled HTML renders as inert text |
+| 5 – Frontend | 5.7 | CreateEventPage + EventForm with starter categories | ✅ Complete | Added the create-event flow with shared-schema validation, starter and custom categories, visited-event tracking in `localStorage`, and organiser-link navigation that preserves admin access only in the manage-route fragment |
+| 5 – Frontend | 5.8 | Delete the old App and dead code; component tests | ✅ Complete | Deleted the legacy app body and obsolete API helper, replaced the Playwright smoke with an event-page flow, added component and hook tests across the new feature structure, and passed the mobile-first smoke gate with no horizontal scrolling at 390px and 320px |
 | 6 – Collaboration | 6.1 | Identity hook + IdentifyDialog | ⬜ Not Started | Prompt on first action, not on load |
 | 6 – Collaboration | 6.2 | ClaimItemDialog with partial quantities and optimistic update | ⬜ Not Started | Rollback on failure; must be submittable with the on-screen keyboard open |
 | 6 – Collaboration | 6.3 | Unclaim and adjust own claim | ⬜ Not Started | |
