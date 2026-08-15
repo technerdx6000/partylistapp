@@ -1,13 +1,9 @@
-import { execFileSync } from 'node:child_process'
-import path from 'node:path'
-
 import mysql from 'mysql2/promise'
 import type { RowDataPacket } from 'mysql2/promise'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import request from 'supertest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { createMigrator } from './migrator.js'
-
-const repoRoot = path.resolve(__dirname, '..', '..', '..', '..')
 
 const testDatabaseConfig = {
     host: '127.0.0.1',
@@ -177,20 +173,6 @@ async function getImportedCounts() {
         await connection.end()
     }
 }
-
-beforeAll(() => {
-    execFileSync('docker', ['compose', '-f', 'docker-compose.test.yml', 'up', '-d', '--wait'], {
-        cwd: repoRoot,
-        stdio: 'inherit',
-    })
-}, 60_000)
-
-afterAll(() => {
-    execFileSync('docker', ['compose', '-f', 'docker-compose.test.yml', 'down', '-v', '--remove-orphans'], {
-        cwd: repoRoot,
-        stdio: 'inherit',
-    })
-}, 60_000)
 
 beforeEach(async () => {
     applyTestEnvironment()
@@ -461,5 +443,59 @@ describe('migration runner', () => {
         } finally {
             await connection.end()
         }
+    })
+
+    it('creates an event and returns both tokens once', async () => {
+        const { migrator, close } = await createMigrator()
+
+        try {
+            await migrator.up()
+        } finally {
+            await close()
+        }
+
+        const { app } = await import('../../server.js')
+
+        const response = await request(app).post('/api/events').send({
+            name: 'Birthday Picnic',
+            description: 'Bring snacks',
+            categories: [{ name: 'Food', icon: '🍔', sortOrder: 0 }],
+        })
+        const body = response.body as { event: { shareToken: string; adminToken: string }; categories: unknown[] }
+
+        expect(response.status).toBe(201)
+        expect(body.event.shareToken).toHaveLength(10)
+        expect(body.event.adminToken).toHaveLength(64)
+        expect(body.categories).toHaveLength(1)
+    })
+
+    it('returns the aggregate event response without leaking the admin token', async () => {
+        const { migrator, close } = await createMigrator()
+
+        try {
+            await migrator.up()
+        } finally {
+            await close()
+        }
+
+        const { app } = await import('../../server.js')
+
+        const createResponse = await request(app).post('/api/events').send({
+            name: 'Board Games Night',
+            categories: [{ name: 'Games', icon: '🎲', sortOrder: 0 }],
+        })
+        const createBody = createResponse.body as { event: { shareToken: string } }
+
+        const shareToken = createBody.event.shareToken
+
+        const response = await request(app)
+            .get(`/api/events/${shareToken}`)
+            .set('X-Event-Token', shareToken)
+        const body = response.body as { event: { shareToken: string; adminToken?: string }; items: unknown[] }
+
+        expect(response.status).toBe(200)
+        expect(body.event.shareToken).toBe(shareToken)
+        expect(body.event.adminToken).toBeUndefined()
+        expect(body.items).toEqual([])
     })
 })

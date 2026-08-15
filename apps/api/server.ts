@@ -1,5 +1,5 @@
 import cors from "cors";
-import express, { type NextFunction, type Request, type Response } from "express";
+import express, { type Request, type Response } from "express";
 import helmet from "helmet";
 
 import db from './config/database.js'
@@ -9,6 +9,11 @@ import itemsRoutes from './routes/items.js'
 import peopleRoutes from './routes/people.js'
 import requiredItemsRoutes from './routes/required-items.js'
 import { getEnv } from './src/config/env.js'
+import { AppError } from './src/errors/AppError.js'
+import { errorHandler } from './src/middleware/errorHandler.js'
+import { requestLogger } from './src/middleware/requestLogger.js'
+import eventsRoutes from './src/routes/events.js'
+import { asyncHandler } from './src/utils/asyncHandler.js'
 
 const env = getEnv()
 
@@ -26,14 +31,16 @@ app.use(
   })
 );
 app.use(express.json());
+app.use(requestLogger)
 
 // Routes
+app.use('/api/events', eventsRoutes)
 app.use("/api/people", peopleRoutes);
 app.use("/api/items", itemsRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/required-items", requiredItemsRoutes);
 
-app.get('/api/health', async (_req: Request, res: Response) => {
+app.get('/api/health', asyncHandler(async (_req: Request, res: Response) => {
   try {
     await db.execute('SELECT 1')
 
@@ -41,25 +48,14 @@ app.get('/api/health', async (_req: Request, res: Response) => {
   } catch {
     res.status(503).json({ status: 'degraded', db: false })
   }
-})
-
-// Error handling middleware
-app.use((err: Error, _req: Request, res: Response, next: NextFunction) => {
-  void next
-  logger.error({ err }, 'Unhandled API error')
-  res.status(500).json({
-    error: 'Something went wrong!',
-    message:
-      env.NODE_ENV === 'development'
-        ? err.message
-        : 'Internal Server Error',
-  })
-})
+}))
 
 // 404 handler
-app.use('*', (_req: Request, res: Response) => {
-  res.status(404).json({ error: 'Route not found' })
+app.use('*', (_req: Request, _res: Response, next) => {
+  next(new AppError(404, 'ROUTE_NOT_FOUND', 'Route not found'))
 })
+
+app.use(errorHandler)
 
 if (env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {

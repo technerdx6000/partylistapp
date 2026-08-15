@@ -1,8 +1,22 @@
-import pino from 'pino'
+import pino, { type DestinationStream, type Logger } from 'pino'
 
-const logger = pino({
-    level: 'info',
-})
+/**
+ * Creates a configured API logger with token redaction applied.
+ */
+export function createLogger(destination?: DestinationStream): Logger {
+    return pino(
+        {
+            level: 'info',
+            redact: {
+                paths: ['req.headers["x-event-token"]', 'req.headers.cookie'],
+                censor: '[REDACTED]',
+            },
+        },
+        destination
+    )
+}
+
+const logger = createLogger()
 
 /**
  * Applies the validated runtime log level to the shared API logger instance.
