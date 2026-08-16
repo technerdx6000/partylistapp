@@ -1,5 +1,6 @@
 import type { AggregateEventResponse } from '@listcollab/shared'
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -307,7 +308,7 @@ describe('EventPage', () => {
     expect(screen.getByText('Bread Rolls')).toBeInTheDocument()
     expect(screen.queryByText('Water bottles')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Drinks' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'Drinks, 0 of 1 covered' }))
 
     expect(screen.getByText('Water bottles')).toBeInTheDocument()
     expect(screen.queryByText('Bread Rolls')).not.toBeInTheDocument()
@@ -371,5 +372,57 @@ describe('EventPage', () => {
     renderEventPage()
 
     expect(screen.queryByRole('tablist', { name: 'Category navigation' })).not.toBeInTheDocument()
+  })
+
+  it('renders a compact mobile organiser panel and opens participant management in a dialog', async () => {
+    setMatchMedia(true)
+    useStoredAdminTokenMock.mockReturnValue('a'.repeat(64))
+
+    renderEventPage('/e/abcdefghij', true)
+
+    expect(screen.queryByRole('heading', { name: 'Participants' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Participants' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add category' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Participants' }))
+
+    const dialog = await screen.findByRole('dialog', { name: 'Participants' })
+
+    expect(within(dialog).getByText('Taylor')).toBeInTheDocument()
+    expect(within(dialog).getAllByRole('button', { name: 'Remove' })).toHaveLength(2)
+  })
+
+  it('shows the participant empty state inside the mobile participant manager dialog', async () => {
+    setMatchMedia(true)
+    useStoredAdminTokenMock.mockReturnValue('a'.repeat(64))
+    useEventMock.mockReturnValue(buildUseEventResult({ data: { ...buildAggregateResponse(), participants: [] } }))
+
+    renderEventPage('/e/abcdefghij', true)
+    fireEvent.click(screen.getByRole('button', { name: 'Participants' }))
+
+    const dialog = await screen.findByRole('dialog', { name: 'Participants' })
+
+    expect(within(dialog).getByText('No participants yet. Claims will appear here as people identify themselves.')).toBeInTheDocument()
+  })
+
+  it('returns focus to the mobile participants trigger when the participant manager closes on Escape', async () => {
+    const user = userEvent.setup()
+
+    setMatchMedia(true)
+    useStoredAdminTokenMock.mockReturnValue('a'.repeat(64))
+
+    renderEventPage('/e/abcdefghij', true)
+
+    const participantsTrigger = screen.getByRole('button', { name: 'Participants' })
+    participantsTrigger.focus()
+    fireEvent.click(participantsTrigger)
+
+    await screen.findByRole('dialog', { name: 'Participants' })
+    await user.keyboard('{Escape}')
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Participants' })).not.toBeInTheDocument()
+    })
+    expect(participantsTrigger).toHaveFocus()
   })
 })

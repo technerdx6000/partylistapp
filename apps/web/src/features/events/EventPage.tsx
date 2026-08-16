@@ -37,6 +37,7 @@ import { getEventCoverageSummary } from './eventCoverage'
 import { EventHeader } from './EventHeader'
 import { applyOptimisticAssignment, removeOptimisticAssignment } from './eventOptimisticUpdates'
 import { MobileCategoryNav } from './MobileCategoryNav'
+import { MobileOrganiserPanel } from './MobileOrganiserPanel'
 import { recordVisitedEvent } from './visitedEvents'
 import { ConfirmationDialog } from '../../components/ConfirmationDialog'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -50,6 +51,7 @@ import { groupItemsByCategory } from '../items/groupItemsByCategory'
 import { ItemForm } from '../items/ItemForm'
 import { ItemList } from '../items/ItemList'
 import { IdentifyDialog } from '../participants/IdentifyDialog'
+import { ParticipantManagerDialog } from '../participants/ParticipantManagerDialog'
 
 type EventPageProps = {
   manageMode: boolean
@@ -175,6 +177,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   const [isConfirmingAction, setIsConfirmingAction] = useState(false)
   const [identifyDialogOpen, setIdentifyDialogOpen] = useState(false)
   const [itemFormState, setItemFormState] = useState<ItemFormState>(null)
+  const [isParticipantManagerOpen, setIsParticipantManagerOpen] = useState(false)
   const [, setPendingIdentityAction] = useState<PendingIdentityAction>(null)
   const shareToken = routeShareToken ?? ''
   const adminToken = useStoredAdminToken(shareToken)
@@ -668,44 +671,55 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
               </Stack>
 
               {manageMode ? (
-                <Stack spacing={1.5}>
-                  <Divider />
-                  <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-                    <Button onClick={() => void handleEventSettings()} startIcon={<SettingsRoundedIcon />} variant="outlined">
-                      Edit event
-                    </Button>
-                    <Button onClick={() => openContributionForm(null)} startIcon={<PlaylistAddRoundedIcon />} variant="outlined">
-                      Add requirement
-                    </Button>
-                    <Button color="error" onClick={openDeleteEventDialog} variant="outlined">
-                      Delete event
-                    </Button>
-                  </Stack>
-                  <Stack spacing={1}>
-                    <Typography variant="h4">Participants</Typography>
-                    <List disablePadding>
-                      {data.participants.length === 0 ? (
-                        <ListItem>
-                          <ListItemText secondary="No participants yet. Claims will appear here as people identify themselves." />
-                        </ListItem>
-                      ) : (
-                        data.participants.map((participant) => (
-                          <ListItem divider key={participant.id}>
-                            <ListItemText primary={participant.name} />
-                            <ListItemSecondaryAction>
-                              <Button color="error" onClick={() => openDeleteParticipantDialog(participant.id, participant.name)} variant="text">
-                                Remove
-                              </Button>
-                            </ListItemSecondaryAction>
+                isSmallScreen ? (
+                  <MobileOrganiserPanel
+                    onAddCategory={() => setCategoryFormState({ category: null })}
+                    onAddRequirement={() => openContributionForm(null)}
+                    onDeleteEvent={openDeleteEventDialog}
+                    onEditEvent={() => void handleEventSettings()}
+                    onOpenParticipants={() => setIsParticipantManagerOpen(true)}
+                    participantsCount={data.participants.length}
+                  />
+                ) : (
+                  <Stack spacing={1.5}>
+                    <Divider />
+                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                      <Button onClick={() => void handleEventSettings()} startIcon={<SettingsRoundedIcon />} variant="outlined">
+                        Edit event
+                      </Button>
+                      <Button onClick={() => openContributionForm(null)} startIcon={<PlaylistAddRoundedIcon />} variant="outlined">
+                        Add requirement
+                      </Button>
+                      <Button color="error" onClick={openDeleteEventDialog} variant="outlined">
+                        Delete event
+                      </Button>
+                    </Stack>
+                    <Stack spacing={1}>
+                      <Typography variant="h4">Participants</Typography>
+                      <List disablePadding>
+                        {data.participants.length === 0 ? (
+                          <ListItem>
+                            <ListItemText secondary="No participants yet. Claims will appear here as people identify themselves." />
                           </ListItem>
-                        ))
-                      )}
-                    </List>
-                    <Button onClick={() => setCategoryFormState({ category: null })} variant="text">
-                      Add category
-                    </Button>
+                        ) : (
+                          data.participants.map((participant) => (
+                            <ListItem divider key={participant.id}>
+                              <ListItemText primary={participant.name} />
+                              <ListItemSecondaryAction>
+                                <Button color="error" onClick={() => openDeleteParticipantDialog(participant.id, participant.name)} variant="text">
+                                  Remove
+                                </Button>
+                              </ListItemSecondaryAction>
+                            </ListItem>
+                          ))
+                        )}
+                      </List>
+                      <Button onClick={() => setCategoryFormState({ category: null })} variant="text">
+                        Add category
+                      </Button>
+                    </Stack>
                   </Stack>
-                </Stack>
+                )
               ) : null}
             </Stack>
           </CardContent>
@@ -825,6 +839,13 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
         isOpen={Boolean(categoryFormState)}
         onClose={() => setCategoryFormState(null)}
         onSave={handleSaveCategory}
+      />
+
+      <ParticipantManagerDialog
+        isOpen={isParticipantManagerOpen}
+        onClose={() => setIsParticipantManagerOpen(false)}
+        onRemoveParticipant={(participant) => openDeleteParticipantDialog(participant.id, participant.name)}
+        participants={data.participants}
       />
 
       <Snackbar

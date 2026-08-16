@@ -71,8 +71,9 @@ describe('MobileCategoryNav', () => {
       />
     )
 
-    expect(screen.getAllByText('0/1 covered')).toHaveLength(2)
-    fireEvent.click(screen.getByRole('tab', { name: 'Drinks' }))
+    expect(screen.getAllByText('0/1')).toHaveLength(2)
+    expect(screen.getByRole('tab', { name: 'Food, 0 of 1 covered' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('tab', { name: 'Drinks, 0 of 1 covered' }))
 
     expect(onChange).toHaveBeenCalledWith('2')
   })
@@ -107,7 +108,59 @@ describe('MobileCategoryNav', () => {
       />
     )
 
-    expect(screen.getByText('1 extras ready')).toBeInTheDocument()
+    expect(screen.getByText('1 extra')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Uncategorised, 1 extra ready' })).toBeInTheDocument()
+  })
+
+  it('renders plural contribution labels for multiple extras', () => {
+    renderWithProviders(
+      <MobileCategoryNav
+        activeGroupKey="uncategorised"
+        groups={[
+          {
+            category: null,
+            items: [
+              {
+                id: 2,
+                eventId: 1,
+                categoryId: null,
+                name: 'Portable speaker',
+                description: null,
+                quantityRequired: null,
+                status: 'open',
+                createdBy: null,
+                createdAt: '2026-08-15T00:00:00.000Z',
+                updatedAt: '2026-08-15T00:00:00.000Z',
+                assignments: [
+                  { id: 1, itemId: 2, participantId: 4, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' },
+                  { id: 2, itemId: 2, participantId: 5, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' },
+                ],
+                coverage: { claimed: 2, required: null, remaining: null, status: 'completed' },
+              },
+              {
+                id: 3,
+                eventId: 1,
+                categoryId: null,
+                name: 'Ice bags',
+                description: null,
+                quantityRequired: null,
+                status: 'open',
+                createdBy: null,
+                createdAt: '2026-08-15T00:00:00.000Z',
+                updatedAt: '2026-08-15T00:00:00.000Z',
+                assignments: [{ id: 3, itemId: 3, participantId: 6, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' }],
+                coverage: { claimed: 1, required: null, remaining: null, status: 'completed' },
+              },
+            ],
+            key: 'uncategorised',
+          },
+        ]}
+        onChange={() => undefined}
+      />
+    )
+
+    expect(screen.getByText('2 extras')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Uncategorised, 2 extras ready' })).toBeInTheDocument()
   })
 
   it('renders the no-requirements label for an empty category', () => {
@@ -132,6 +185,7 @@ describe('MobileCategoryNav', () => {
       />
     )
 
-    expect(screen.getByText('No requirements')).toBeInTheDocument()
+    expect(screen.getByText('None')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Food, No requirements' })).toBeInTheDocument()
   })
 })

@@ -11,16 +11,16 @@ Default image names:
 
 Recommended tags:
 
-- release tag: `1.0.5`
-- immutable build tag: `git-a94779b`
+- release tag: `1.0.6`
+- immutable build tag: `git-3e0d25b-dirty`
 - moving tag: `latest`
 
 Build and publish from the repo root:
 
 ```bash
 DOCKERHUB_NAMESPACE=technerdx6000 \
-IMAGE_TAG=1.0.5 \
-EXTRA_TAG=git-a94779b \
+IMAGE_TAG=1.0.6 \
+EXTRA_TAG=git-3e0d25b-dirty \
 bash scripts/publish-dockerhub.sh
 ```
 
@@ -93,17 +93,20 @@ Important for repeated TrueNAS deploy attempts:
 - Starting with image tag `1.0.3`, the API normalizes DATE-backed event values at the repository boundary and includes a repository contract suite that validates event, participant, category, item, and assignment outputs against the shared Zod schemas.
 - Starting with image tag `1.0.4`, the organiser-link field includes an inline copy action in the header so the token-safe manage link is easier to capture without text selection.
 - Starting with image tag `1.0.5`, phone-sized event pages use a sticky category navigator that shows one category at a time, which reduces long vertical scrolling while keeping search global across the whole event.
+- Starting with image tag `1.0.6`, phone-sized organiser pages use a compact action panel with participant management moved into a dedicated dialog, and the sticky category tabs use denser coverage badges while preserving fuller accessibility labels.
 
 Values to edit inline in the TrueNAS compose:
 
 ```bash
-technerdx6000/listcollab-api:1.0.5
-technerdx6000/listcollab-web:1.0.5
+technerdx6000/listcollab-api:1.0.6
+technerdx6000/listcollab-web:1.0.6
 DB_PASSWORD=replace_with_generated_app_password
 DB_ROOT_PASSWORD=replace_with_generated_root_password
 CORS_ORIGIN=https://listcollab.example.com
 WEB_PORT=8080
 ```
+
+The current `git-3e0d25b-dirty` image tag was published from a validated but uncommitted workspace state. If you want a strictly commit-backed immutable tag later, commit the tuning pass first and republish from that commit.
 
 If you want immutable deploys on TrueNAS, replace the image tags inline with the current git-tagged images you published from this repo instead of the release tag.
 

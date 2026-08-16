@@ -16,15 +16,36 @@ function getCoverageLabel(group: GroupedItemsByCategory): string {
   const coverageSummary = getCategoryCoverageSummary(group.items)
 
   if (coverageSummary.totalItems > 0) {
-    return `${coverageSummary.coveredItems}/${coverageSummary.totalItems} covered`
+    return `${coverageSummary.coveredItems} of ${coverageSummary.totalItems} covered`
   }
 
   if (coverageSummary.completedContributions > 0) {
-    return `${coverageSummary.completedContributions} extras ready`
+    return `${coverageSummary.completedContributions} extra${coverageSummary.completedContributions === 1 ? '' : 's'} ready`
   }
 
   return 'No requirements'
 }
+
+function getCompactCoverageLabel(group: GroupedItemsByCategory): string {
+  const coverageSummary = getCategoryCoverageSummary(group.items)
+
+  if (coverageSummary.totalItems > 0) {
+    return `${coverageSummary.coveredItems}/${coverageSummary.totalItems}`
+  }
+
+  if (coverageSummary.completedContributions > 0) {
+    return `${coverageSummary.completedContributions} extra${coverageSummary.completedContributions === 1 ? '' : 's'}`
+  }
+
+  return 'None'
+}
+
+/**
+ * Renders the compact sticky category navigation used on phone-sized event pages.
+ *
+ * @param {MobileCategoryNavProps} props - The category groups, current selection, and change handler.
+ * @returns {React.JSX.Element} The mobile category navigation tabs.
+ */
 
 export function MobileCategoryNav({ activeGroupKey, groups, onChange }: MobileCategoryNavProps): React.JSX.Element {
   return (
@@ -56,10 +77,11 @@ export function MobileCategoryNav({ activeGroupKey, groups, onChange }: MobileCa
       >
         {groups.map((group) => {
           const label = group.category?.name ?? 'Uncategorised'
+          const coverageLabel = getCoverageLabel(group)
 
           return (
             <Tab
-              aria-label={label}
+              aria-label={`${label}, ${coverageLabel}`}
               key={group.key}
               label={
                 <Stack spacing={0.5} sx={{ alignItems: 'flex-start', minWidth: 0 }}>
@@ -73,18 +95,20 @@ export function MobileCategoryNav({ activeGroupKey, groups, onChange }: MobileCa
                   </Stack>
                   <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
                     <CheckCircleRoundedIcon fontSize="inherit" />
-                    <Typography color="text.secondary" variant="caption">
-                      {getCoverageLabel(group)}
-                    </Typography>
+                    <Box component="span" sx={{ bgcolor: 'action.hover', borderRadius: 999, px: 0.75, py: 0.125 }}>
+                      <Typography color="text.secondary" variant="caption">
+                        {getCompactCoverageLabel(group)}
+                      </Typography>
+                    </Box>
                   </Stack>
                 </Stack>
               }
               sx={{
                 alignItems: 'flex-start',
-                minHeight: 72,
-                minWidth: 120,
-                px: 1.5,
-                py: 1,
+                minHeight: 64,
+                minWidth: 104,
+                px: 1.25,
+                py: 0.75,
                 textTransform: 'none',
               }}
               value={group.key}
