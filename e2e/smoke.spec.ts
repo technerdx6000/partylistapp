@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
 const API_URL = 'http://127.0.0.1:4301'
@@ -73,6 +74,18 @@ async function createParticipantAndClaim(page: Page, displayName: string, quanti
     await expect(page.getByText('Claim saved.')).toBeVisible()
 }
 
+async function expectNoSeriousOrCriticalAxeViolations(page: Page): Promise<void> {
+    const accessibilityScanResults = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa'])
+        .analyze()
+
+    const blockingViolations = accessibilityScanResults.violations.filter((violation) =>
+        violation.impact === 'serious' || violation.impact === 'critical'
+    )
+
+    expect(blockingViolations).toEqual([])
+}
+
 test('completes the collaborative MVP flow and avoids horizontal scrolling at mobile widths', async ({ browser, page, request }) => {
     await waitForApiReady(request)
     const event = await createEventFixture(request, 'Collaboration Flow Event')
@@ -92,10 +105,10 @@ test('completes the collaborative MVP flow and avoids horizontal scrolling at mo
     await expect(secondPage.getByRole('heading', { name: 'Collaboration Flow Event' })).toBeVisible()
 
     await createParticipantAndClaim(secondPage, 'Jordan', 2)
-    await expect(secondPage.getByText('3 / 3 covered')).toBeVisible()
+    await expect(secondPage.getByText('Covered · 3 / 3')).toBeVisible()
 
     await page.reload()
-    await expect(page.getByText('3 / 3 covered')).toBeVisible()
+    await expect(page.getByText('Covered · 3 / 3')).toBeVisible()
 
     await secondPage.getByRole('button', { name: 'Add your contribution' }).click()
     await expect(secondPage.getByRole('heading', { name: 'Add your contribution' })).toBeVisible()
@@ -214,4 +227,23 @@ test('rejects admin-only category creation when only the share token is supplied
     }
 
     expect(responseBody.error.code).toBe('ADMIN_REQUIRED')
+}, 60000)
+
+test('passes axe checks on the landing, event, and manage routes', async ({ page, request }) => {
+    await waitForApiReady(request)
+    const event = await createEventFixture(request, 'Accessibility Audit Event')
+    await createRequirement(request, event, 'Crackers', 2)
+
+    await page.goto(`${APP_URL}/`)
+    await expect(page.getByRole('heading', { name: 'ListCollab' })).toBeVisible()
+    await expectNoSeriousOrCriticalAxeViolations(page)
+
+    await page.goto(`${APP_URL}/e/${event.shareToken}`)
+    await expect(page.getByRole('heading', { name: 'Accessibility Audit Event' })).toBeVisible()
+    await expectNoSeriousOrCriticalAxeViolations(page)
+
+    await page.goto(`${APP_URL}/e/${event.shareToken}/manage#k=${event.adminToken}`)
+    await expect(page.getByRole('heading', { name: 'Accessibility Audit Event' })).toBeVisible()
+    await expect(page.getByText('Organiser mode')).toBeVisible()
+    await expectNoSeriousOrCriticalAxeViolations(page)
 }, 60000)
