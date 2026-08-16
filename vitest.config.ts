@@ -1,4 +1,8 @@
+import { fileURLToPath } from 'node:url'
+
 import { defineConfig } from 'vitest/config'
+
+const sharedPackageAlias = fileURLToPath(new URL('./packages/shared/src/index.ts', import.meta.url))
 
 const coverage = {
   provider: 'v8' as const,
@@ -6,9 +10,19 @@ const coverage = {
 }
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@listcollab/shared': sharedPackageAlias,
+    },
+  },
   test: {
     projects: [
       {
+        resolve: {
+          alias: {
+            '@listcollab/shared': sharedPackageAlias,
+          },
+        },
         test: {
           name: 'shared',
           include: ['packages/shared/src/**/*.test.ts'],
@@ -17,6 +31,11 @@ export default defineConfig({
         },
       },
       {
+        resolve: {
+          alias: {
+            '@listcollab/shared': sharedPackageAlias,
+          },
+        },
         test: {
           name: 'api',
           include: ['apps/api/**/*.test.ts'],
@@ -28,6 +47,11 @@ export default defineConfig({
         },
       },
       {
+        resolve: {
+          alias: {
+            '@listcollab/shared': sharedPackageAlias,
+          },
+        },
         test: {
           name: 'web',
           include: ['apps/web/src/**/*.test.ts', 'apps/web/src/**/*.test.tsx'],
