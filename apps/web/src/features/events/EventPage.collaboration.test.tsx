@@ -249,7 +249,7 @@ describe('EventPage collaboration', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Claim item' }))
 
     await waitFor(() => {
-      expect(screen.getByText('3 / 4 covered')).toBeInTheDocument()
+      expect(screen.getByText('Partly covered · 3 / 4')).toBeInTheDocument()
     })
 
     deferredClaim.reject(new ApiClientError('Too late', 'OVER_CLAIM', 'req-9'))
@@ -258,7 +258,7 @@ describe('EventPage collaboration', () => {
       expect(screen.getByText(/Someone else claimed that amount first\. The list has been refreshed\./)).toBeInTheDocument()
     })
     await waitFor(() => {
-      expect(screen.getByText('2 / 4 covered')).toBeInTheDocument()
+      expect(screen.getByText('Partly covered · 2 / 4')).toBeInTheDocument()
     })
   })
 
@@ -457,13 +457,20 @@ describe('EventPage collaboration', () => {
 
   it('supports organiser structural actions and warns before deleting the event', async () => {
     const apiClient = buildApiClient()
+    apiClient.getEvent.mockResolvedValue({
+      ...buildAggregateResponse(),
+      categories: [
+        { id: 1, eventId: 1, name: 'Food', icon: '🍽️', sortOrder: 0, createdAt: '2026-08-15T00:00:00.000Z' },
+        { id: 3, eventId: 1, name: 'Games', icon: 'games', sortOrder: 1, createdAt: '2026-08-15T00:00:00.000Z' },
+      ],
+    })
     apiClient.updateEvent.mockResolvedValue(buildAggregateResponse())
     apiClient.createCategory.mockResolvedValue({
       id: 4,
       eventId: 1,
       name: 'Dessert',
-      icon: null,
-      sortOrder: 1,
+      icon: 'drinks',
+      sortOrder: 2,
       createdAt: '2026-08-15T00:00:00.000Z',
     })
     apiClient.updateCategory.mockResolvedValue({
@@ -481,18 +488,33 @@ describe('EventPage collaboration', () => {
     useStoredAdminTokenMock.mockReturnValue('a'.repeat(64))
     useApiClientMock.mockReturnValue(apiClient)
 
-    const promptMock = vi
-      .spyOn(window, 'prompt')
-      .mockReturnValueOnce('Camp Weekend Updated')
-      .mockReturnValueOnce('Dessert')
-      .mockReturnValueOnce('Meals')
+    const promptMock = vi.spyOn(window, 'prompt').mockReturnValueOnce('Camp Weekend Updated')
 
     renderEventPage('/e/abcdefghij', true)
 
     await screen.findByRole('heading', { name: 'Camp Weekend' })
     fireEvent.click(screen.getByRole('button', { name: 'Edit event' }))
     fireEvent.click(screen.getByRole('button', { name: 'Add category' }))
+    const addCategoryDialog = await screen.findByRole('dialog', { name: 'Add category' })
+    fireEvent.change(within(addCategoryDialog).getByLabelText('Category name'), { target: { value: 'Dessert' } })
+    fireEvent.click(within(addCategoryDialog).getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => {
+      expect(apiClient.createCategory).toHaveBeenCalledWith({ icon: 'other', name: 'Dessert', sortOrder: 2 })
+    })
+    await screen.findByLabelText('Edit Food')
+
     fireEvent.click(screen.getByLabelText('Edit Food'))
+    await screen.findByRole('heading', { name: 'Edit category' })
+    fireEvent.change(screen.getByLabelText('Category name'), { target: { value: 'Meals' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => {
+      expect(apiClient.updateCategory).toHaveBeenCalledWith(1, { icon: 'food', name: 'Meals' })
+    })
+    await screen.findByRole('button', { name: 'Move Food down' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Move Food down' }))
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Remove' })[0] as HTMLButtonElement)
     fireEvent.click(within(await screen.findByRole('dialog', { name: 'Remove participant' })).getByRole('button', { name: 'Remove participant' }))
@@ -526,11 +548,11 @@ describe('EventPage collaboration', () => {
     await waitFor(() => {
       expect(promptMock).toHaveBeenNthCalledWith(1, 'Event name', 'Camp Weekend')
       expect(apiClient.updateEvent).toHaveBeenCalledWith('abcdefghij', expect.objectContaining({ name: 'Camp Weekend Updated' }))
-      expect(apiClient.createCategory).toHaveBeenCalledWith({ name: 'Dessert', sortOrder: 1 })
-      expect(apiClient.updateCategory).toHaveBeenCalledWith(1, { name: 'Meals' })
       expect(apiClient.deleteParticipant).toHaveBeenCalledWith(1)
       expect(apiClient.deleteItem).toHaveBeenCalledWith(1)
       expect(apiClient.deleteCategory).toHaveBeenCalledWith(1)
+      expect(apiClient.updateCategory).toHaveBeenCalledWith(1, { sortOrder: 1 })
+      expect(apiClient.updateCategory).toHaveBeenCalledWith(3, { sortOrder: 0 })
     })
   }, 10000)
 
@@ -546,7 +568,14 @@ describe('EventPage collaboration', () => {
     await screen.findByRole('heading', { name: 'Camp Weekend' })
     fireEvent.click(screen.getByRole('button', { name: 'Edit event' }))
     fireEvent.click(screen.getByRole('button', { name: 'Add category' }))
+    await screen.findByRole('heading', { name: 'Add category' })
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    await screen.findByLabelText('Edit Food')
+
     fireEvent.click(screen.getByLabelText('Edit Food'))
+    await screen.findByRole('heading', { name: 'Edit category' })
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    await screen.findAllByRole('button', { name: 'Remove' })
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Remove' })[0] as HTMLButtonElement)
     fireEvent.click(within(await screen.findByRole('dialog', { name: 'Remove participant' })).getByRole('button', { name: 'Cancel' }))

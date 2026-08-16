@@ -1,4 +1,4 @@
-import type { EventItemAssignment, EventItemWithAssignments } from '@listcollab/shared'
+import type { EventCategory, EventItemAssignment, EventItemWithAssignments } from '@listcollab/shared'
 import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded'
 import GroupRoundedIcon from '@mui/icons-material/GroupRounded'
 import PlaylistAddRoundedIcon from '@mui/icons-material/PlaylistAddRounded'
@@ -40,6 +40,7 @@ import { useEvent } from '../../hooks/useEvent'
 import { useEventIdentity, type EventIdentity } from '../../hooks/useEventIdentity'
 import { useStoredAdminToken } from '../../hooks/useEventToken'
 import { ApiClientError, useApiClient } from '../../services/apiClient'
+import { CategoryForm } from '../categories/CategoryForm'
 import { ClaimItemDialog } from '../items/ClaimItemDialog'
 import { ItemForm } from '../items/ItemForm'
 import { ItemList } from '../items/ItemList'
@@ -64,6 +65,10 @@ type FeedbackState = {
   message: string
   requestId?: string
   severity: 'error' | 'success'
+} | null
+
+type CategoryFormState = {
+  category: EventCategory | null
 } | null
 
 type PendingIdentityAction = ((eventIdentity: EventIdentity) => void) | null
@@ -148,6 +153,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   const [claimDialogState, setClaimDialogState] = useState<ClaimDialogState>(null)
   const [feedback, setFeedback] = useState<FeedbackState>(null)
   const [confirmationDialogState, setConfirmationDialogState] = useState<ConfirmationDialogState>(null)
+  const [categoryFormState, setCategoryFormState] = useState<CategoryFormState>(null)
   const [isConfirmingAction, setIsConfirmingAction] = useState(false)
   const [identifyDialogOpen, setIdentifyDialogOpen] = useState(false)
   const [itemFormState, setItemFormState] = useState<ItemFormState>(null)
@@ -396,21 +402,40 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
     await refreshEvent()
   }
 
-  async function handleCategoryPrompt(categoryId: number | null, currentName?: string): Promise<void> {
-    const categoryName = window.prompt('Category name', currentName ?? '')?.trim()
+  async function handleSaveCategory(input: { icon: string; name: string }): Promise<void> {
+    if (categoryFormState?.category) {
+      await apiClient.updateCategory(categoryFormState.category.id, input)
+      setFeedback({ message: 'Category updated.', severity: 'success' })
+    } else {
+      await apiClient.createCategory({ ...input, sortOrder: data?.categories.length ?? 0 })
+      setFeedback({ message: 'Category added.', severity: 'success' })
+    }
 
-    if (!categoryName) {
+    setCategoryFormState(null)
+    await refreshEvent()
+  }
+
+  async function handleMoveCategory(categoryId: number, direction: -1 | 1): Promise<void> {
+    const orderedCategories = data!.categories.slice().sort((leftCategory, rightCategory) => leftCategory.sortOrder - rightCategory.sortOrder)
+    const currentIndex = orderedCategories.findIndex((category) => category.id === categoryId)
+
+    if (currentIndex === -1) {
       return
     }
 
-    if (categoryId === null) {
-      await apiClient.createCategory({ name: categoryName, sortOrder: data?.categories.length ?? 0 })
-      setFeedback({ message: 'Category added.', severity: 'success' })
-    } else {
-      await apiClient.updateCategory(categoryId, { name: categoryName })
-      setFeedback({ message: 'Category updated.', severity: 'success' })
+    const swapCategory = orderedCategories[currentIndex + direction]
+    const currentCategory = orderedCategories[currentIndex]
+
+    if (!swapCategory || !currentCategory) {
+      return
     }
 
+    await Promise.all([
+      apiClient.updateCategory(currentCategory.id, { sortOrder: swapCategory.sortOrder }),
+      apiClient.updateCategory(swapCategory.id, { sortOrder: currentCategory.sortOrder }),
+    ])
+
+    setFeedback({ message: 'Category order updated.', severity: 'success' })
     await refreshEvent()
   }
 
@@ -623,7 +648,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
                         ))
                       )}
                     </List>
-                    <Button onClick={() => void handleCategoryPrompt(null)} variant="text">
+                    <Button onClick={() => setCategoryFormState({ category: null })} variant="text">
                       Add category
                     </Button>
                   </Stack>
@@ -675,13 +700,15 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
             onClaim={openClaimDialog}
             onDeleteCategory={(category) => openDeleteCategoryDialog(category.id, category.name)}
             onDeleteItem={openDeleteItemDialog}
-            onEditCategory={(category) => void handleCategoryPrompt(category.id, category.name)}
+            onEditCategory={(category) => setCategoryFormState({ category })}
             onEditItem={(item) =>
               setItemFormState({
                 categoryId: item.categoryId,
                 item,
                 mode: manageMode ? 'manage-edit' : 'guest-edit',
               })}
+            onMoveCategoryDown={(category) => void handleMoveCategory(category.id, 1)}
+            onMoveCategoryUp={(category) => void handleMoveCategory(category.id, -1)}
             participants={data.participants}
           />
         )}
@@ -722,6 +749,13 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
         onClose={() => setItemFormState(null)}
         onCreate={handleCreateItem}
         onUpdate={handleUpdateItem}
+      />
+
+      <CategoryForm
+        category={categoryFormState?.category ?? null}
+        isOpen={Boolean(categoryFormState)}
+        onClose={() => setCategoryFormState(null)}
+        onSave={handleSaveCategory}
       />
 
       <Snackbar

@@ -1,16 +1,21 @@
 import type { EventCategory, EventItemAssignment, EventItemWithAssignments, EventParticipant } from '@listcollab/shared'
 import AddRoundedIcon from '@mui/icons-material/AddRounded'
+import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded'
+import ArrowUpwardRoundedIcon from '@mui/icons-material/ArrowUpwardRounded'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded'
 import EditRoundedIcon from '@mui/icons-material/EditRounded'
 import FolderOpenRoundedIcon from '@mui/icons-material/FolderOpenRounded'
 import { Button, Chip, IconButton, Stack, Typography } from '@mui/material'
 
+import { renderCategoryIcon } from './categoryIcons'
 import type { EventIdentity } from '../../hooks/useEventIdentity'
 import { getCategoryCoverageSummary } from '../events/eventCoverage'
 import { ItemRow } from '../items/ItemRow'
 
 type CategorySectionProps = {
+  canMoveDown?: boolean | undefined
+  canMoveUp?: boolean | undefined
   category: EventCategory | null
   currentIdentity: EventIdentity | null
   isManageMode: boolean
@@ -21,10 +26,14 @@ type CategorySectionProps = {
   onDeleteItem?: ((item: EventItemWithAssignments) => void) | undefined
   onEditCategory?: ((category: EventCategory) => void) | undefined
   onEditItem?: ((item: EventItemWithAssignments) => void) | undefined
+  onMoveCategoryDown?: ((category: EventCategory) => void) | undefined
+  onMoveCategoryUp?: ((category: EventCategory) => void) | undefined
   participants: readonly EventParticipant[]
 }
 
 export function CategorySection({
+  canMoveDown,
+  canMoveUp,
   category,
   currentIdentity,
   isManageMode,
@@ -35,9 +44,10 @@ export function CategorySection({
   onDeleteItem,
   onEditCategory,
   onEditItem,
+  onMoveCategoryDown,
+  onMoveCategoryUp,
   participants,
 }: CategorySectionProps): React.JSX.Element {
-  const icon = category?.icon ?? '•'
   const name = category?.name ?? 'Uncategorised'
   const coverageSummary = getCategoryCoverageSummary(items)
   const coverageLabel =
@@ -53,7 +63,7 @@ export function CategorySection({
         <Stack spacing={0.75}>
           <Typography variant="h3">
             <Stack component="span" direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-              <Typography component="span">{category ? icon : <FolderOpenRoundedIcon fontSize="small" />}</Typography>
+              <Typography component="span">{category ? renderCategoryIcon(category.icon) : <FolderOpenRoundedIcon fontSize="small" />}</Typography>
               <Typography component="span" variant="inherit">
                 {name}
               </Typography>
@@ -68,6 +78,26 @@ export function CategorySection({
           {isManageMode && category && onEditCategory ? (
             <IconButton aria-label={`Edit ${category.name}`} onClick={() => onEditCategory(category)} size="small">
               <EditRoundedIcon fontSize="small" />
+            </IconButton>
+          ) : null}
+          {isManageMode && category && onMoveCategoryUp ? (
+            <IconButton
+              aria-label={`Move ${category.name} up`}
+              disabled={!canMoveUp}
+              onClick={() => onMoveCategoryUp(category)}
+              size="small"
+            >
+              <ArrowUpwardRoundedIcon fontSize="small" />
+            </IconButton>
+          ) : null}
+          {isManageMode && category && onMoveCategoryDown ? (
+            <IconButton
+              aria-label={`Move ${category.name} down`}
+              disabled={!canMoveDown}
+              onClick={() => onMoveCategoryDown(category)}
+              size="small"
+            >
+              <ArrowDownwardRoundedIcon fontSize="small" />
             </IconButton>
           ) : null}
           {isManageMode && category && onDeleteCategory ? (

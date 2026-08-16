@@ -1,5 +1,5 @@
-import { screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { fireEvent, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
 
 import { CategorySection } from './CategorySection'
 import { renderWithProviders } from '../../../test/renderWithProviders'
@@ -66,5 +66,38 @@ describe('CategorySection', () => {
     )
 
     expect(screen.getByText('No items in this category yet. Add the first one here.')).toBeInTheDocument()
+  })
+
+  it('renders move controls for organiser-managed categories when reorder handlers are available', () => {
+    const onMoveCategoryUp = vi.fn()
+    const onMoveCategoryDown = vi.fn()
+
+    renderWithProviders(
+      <CategorySection
+        canMoveDown
+        canMoveUp={false}
+        category={{
+          id: 4,
+          eventId: 1,
+          name: 'Dessert',
+          icon: 'food',
+          sortOrder: 2,
+          createdAt: '2026-08-15T00:00:00.000Z',
+        }}
+        items={[]}
+        currentIdentity={null}
+        isManageMode
+        onAddItem={() => undefined}
+        onClaim={() => undefined}
+        onMoveCategoryDown={onMoveCategoryDown}
+        onMoveCategoryUp={onMoveCategoryUp}
+        participants={[]}
+      />
+    )
+
+    expect(screen.getByRole('button', { name: 'Move Dessert up' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Move Dessert down' }))
+
+    expect(onMoveCategoryDown).toHaveBeenCalledWith(expect.objectContaining({ id: 4, name: 'Dessert' }))
   })
 })
