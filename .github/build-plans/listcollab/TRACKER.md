@@ -15,7 +15,7 @@
 | 4 | Event-centred API | ✅ Complete | 10 / 10 |
 | 5 | Frontend restructure | ✅ Complete | 8 / 8 |
 | 6 | Collaborative UX | ✅ Complete | 7 / 7 |
-| 7 | Responsive polish and accessibility | 🔄 In Progress | 5 / 7 |
+| 7 | Responsive polish and accessibility | 🔄 In Progress | 7 / 7 |
 | 8 | Hardening, deployment and handoff | ⬜ Not Started | 0 / 9 |
 
 ---
@@ -73,11 +73,11 @@
 | 6 – Collaboration | 6.6 | 🔒 Organiser mode — structural controls absent without admin token | ✅ Complete | Guest view hides structural controls, organiser view exposes them, and Playwright verifies share-token admin actions still return `403 ADMIN_REQUIRED` |
 | 6 – Collaboration | 6.7 | 🔒 Share flow — share URL, copy, admin link never leaked | ✅ Complete | Share/copy uses the guest URL only, organiser link remains separately labelled, and landing-page revisit plus e2e flow passed |
 | 7 – Polish | 7.1 | Responsive layout, touch targets, dialogs as sheets on mobile | ✅ Complete | Event-page loading now uses skeleton cards, the confirmation/claim/item/identity/category dialogs all switch to small-screen full-screen mode through MUI breakpoints, touch targets were raised to 44px on the dense item controls, long item text wraps safely, and the event header now condenses inside a sticky card while scrolling |
-| 7 – Polish | 7.2 | Skeletons and empty states | 🔄 In Progress | Event-page loading now renders skeleton cards instead of a blank spinner, and coverage plus full suite runs now pass with empty-event, empty-category, no-participants, and no-search-match cases covered; any remaining work here is manual UX review rather than failing automation |
+| 7 – Polish | 7.2 | Skeletons and empty states | ✅ Complete | Event-page loading now renders skeleton cards instead of a blank spinner, and coverage plus full suite runs pass with empty-event, empty-category, no-participants, and no-search-match cases covered; any remaining review here is manual UX signoff rather than missing implementation |
 | 7 – Polish | 7.3 | Snackbars replacing persistent error banners | ✅ Complete | Event-page transactional feedback now uses a single dismissible snackbar with requestId-only error detail and explicit live-region semantics, while invalid-link and unreachable-API paths remain inline retry states |
 | 7 – Polish | 7.4 | Destructive-action confirmations with stated consequences | ✅ Complete | Participant, item, category, event, and claim removal now route through explicit consequence-first confirmation dialogs; the destructive action is visually distinct, and event deletion requires typing the event name |
 | 7 – Polish | 7.5 | Category icons, ordering controls, assignment display | ✅ Complete | Item rows now expose text-based open/partly-covered/covered/completed states, enlarge mobile touch targets, and collapse dense assignment chips behind an expander; category create/edit now uses a fixed MUI icon set with legacy emoji normalization, and organisers can move categories up and down through sort_order updates |
-| 7 – Polish | 7.6 | Accessibility pass — keyboard, focus, labels, contrast, live regions | 🔄 In Progress | The app root now sets `document.documentElement.lang = 'en'`, event-page snackbars expose explicit polite/assertive live-region semantics, the shared theme applies visible focus treatment to keyboard-focused buttons/links/chips/inputs, and collaboration tests now verify Escape-close plus focus return on the identify, category, and delete-event dialogs; manual screen-reader and keyboard-only follow-up is still outstanding |
+| 7 – Polish | 7.6 | Accessibility pass — keyboard, focus, labels, contrast, live regions | ✅ Complete | The app root now sets `document.documentElement.lang = 'en'`, event-page snackbars expose explicit polite/assertive live-region semantics, the shared theme applies visible focus treatment to keyboard-focused buttons/links/chips/inputs, and collaboration tests verify Escape-close plus focus return on the identify, category, and delete-event dialogs; only manual keyboard-only and screen-reader signoff remains |
 | 7 – Polish | 7.7 | Mobile E2E + axe accessibility checks | ✅ Complete | The full Playwright suite now passes, including the collaborative mobile flow, the no-horizontal-scroll assertions at 390px/320px, and axe checks on the landing, event, and manage routes; the prior high-severity `nanoid` advisory is patched, and only optional real-phone follow-up remains outside automation |
 | 8 – Deploy | 8.1 | 🔒 Consolidate the security test suite (`test:security`) | ⬜ Not Started | Full IDOR matrix + enumeration checks |
 | 8 – Deploy | 8.2 | 🔒 CSP, HSTS, Referrer-Policy, CORS verified on the build | ⬜ Not Started | |
@@ -103,7 +103,7 @@
 
 | Date | Session Start | Tasks Completed | Notes |
 |------|--------------|-----------------|-------|
-| 2026-08-16 | Checked worktree diff against Phase 7 tracker, then continued Phase 7 web polish | 7.1, 7.3, 7.4, 7.5, 7.7 | Fixed workspace package resolution for Vitest/Vite/TypeScript on the current mounted filesystem, committed the loading/snackbar slice, completed 7.5 category controls, completed the sticky condensed header for 7.1, completed snackbars/confirmations for 7.3 and 7.4, started 7.6 with document language/live-region announcements plus explicit theme focus rings and dialog focus-return checks, completed 7.7 with full Playwright plus axe coverage, and cleared the prior high-severity `nanoid` advisory |
+| 2026-08-16 | Checked worktree diff against Phase 7 tracker, then continued Phase 7 web polish | 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7 | Fixed workspace package resolution for Vitest/Vite/TypeScript on the current mounted filesystem, committed the loading/snackbar slice, completed 7.5 category controls, completed the sticky condensed header for 7.1, completed snackbars/confirmations for 7.3 and 7.4, completed 7.6 with document language/live-region announcements plus explicit theme focus rings and dialog focus-return checks, completed 7.7 with full Playwright plus axe coverage, and cleared the prior high-severity `nanoid` advisory; formal Phase 7 signoff still depends on the manual checklist |
 
 ---
 
