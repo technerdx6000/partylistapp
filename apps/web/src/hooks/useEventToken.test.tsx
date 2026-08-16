@@ -23,10 +23,11 @@ function TokenProbe(): React.JSX.Element {
 describe('useEventToken hooks', () => {
   afterEach(() => {
     window.localStorage.clear()
+    window.sessionStorage.clear()
     window.history.replaceState(null, document.title, '/')
   })
 
-  it('stores the admin token in memory, strips the fragment, and never writes it to localStorage', () => {
+  it('stores the admin token for the session, strips the fragment, and never writes it to localStorage', () => {
     window.history.replaceState(null, document.title, '/e/abcdefghij/manage#k=' + 'a'.repeat(64))
 
     renderWithProviders(
@@ -40,5 +41,19 @@ describe('useEventToken hooks', () => {
     expect(screen.getByTestId('preferred-token')).toHaveTextContent('a'.repeat(64))
     expect(window.location.hash).toBe('')
     expect(window.localStorage.length).toBe(0)
+    expect(window.sessionStorage.getItem('listcollab:admin-token:abcdefghij')).toBe('a'.repeat(64))
+  })
+
+  it('restores the admin token from sessionStorage on a fresh provider mount', () => {
+    window.sessionStorage.setItem('listcollab:admin-token:abcdefghij', 'b'.repeat(64))
+
+    renderWithProviders(
+      <EventTokenProvider>
+        <TokenProbe />
+      </EventTokenProvider>
+    )
+
+    expect(screen.getByTestId('admin-token')).toHaveTextContent('b'.repeat(64))
+    expect(screen.getByTestId('preferred-token')).toHaveTextContent('b'.repeat(64))
   })
 })
