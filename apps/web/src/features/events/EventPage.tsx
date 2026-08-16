@@ -770,7 +770,13 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
         }}
         open={Boolean(feedback)}
       >
-        <Alert color={feedback?.severity === 'error' ? 'error' : 'success'} onClose={() => setFeedback(null)} variant="filled">
+        <Alert
+          aria-live={feedback?.severity === 'error' ? 'assertive' : 'polite'}
+          color={feedback?.severity === 'error' ? 'error' : 'success'}
+          onClose={() => setFeedback(null)}
+          role={feedback?.severity === 'error' ? 'alert' : 'status'}
+          variant="filled"
+        >
           {feedback ? getFeedbackMessage(feedback) : ''}
         </Alert>
       </Snackbar>

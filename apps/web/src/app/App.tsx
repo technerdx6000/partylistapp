@@ -1,7 +1,7 @@
 import CssBaseline from '@mui/material/CssBaseline'
 import { ThemeProvider } from '@mui/material/styles'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { RouterProvider } from 'react-router-dom'
 
 import { EventTokenProvider } from './EventTokenContext'
@@ -21,6 +21,10 @@ export default function App(): React.JSX.Element {
         },
       })
   )
+
+  useEffect(() => {
+    document.documentElement.lang = 'en'
+  }, [])
 
   return (
     <ThemeProvider theme={theme}>

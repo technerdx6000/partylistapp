@@ -13,5 +13,6 @@ describe('App', () => {
 
         expect(screen.getByRole('heading', { name: 'ListCollab' })).toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'Create an event' })).toBeInTheDocument()
+        expect(document.documentElement.lang).toBe('en')
     })
 })

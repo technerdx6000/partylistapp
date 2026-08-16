@@ -77,7 +77,7 @@
 | 7 – Polish | 7.3 | Snackbars replacing persistent error banners | 🔄 In Progress | Event-page transactional feedback now uses a single dismissible snackbar with requestId-only error detail while invalid-link and unreachable-API paths remain inline retry states |
 | 7 – Polish | 7.4 | Destructive-action confirmations with stated consequences | 🔄 In Progress | Participant, item, category, event, and claim removal now route through confirmation dialogs; event deletion requires typing the event name and the updated collaboration tests cover both confirm and back-out paths |
 | 7 – Polish | 7.5 | Category icons, ordering controls, assignment display | ✅ Complete | Item rows now expose text-based open/partly-covered/covered/completed states, enlarge mobile touch targets, and collapse dense assignment chips behind an expander; category create/edit now uses a fixed MUI icon set with legacy emoji normalization, and organisers can move categories up and down through sort_order updates |
-| 7 – Polish | 7.6 | Accessibility pass — keyboard, focus, labels, contrast, live regions | ⬜ Not Started | |
+| 7 – Polish | 7.6 | Accessibility pass — keyboard, focus, labels, contrast, live regions | 🔄 In Progress | The app root now sets `document.documentElement.lang = 'en'`, and event-page snackbars expose explicit polite/assertive live-region semantics; broader keyboard/focus/contrast verification is still outstanding |
 | 7 – Polish | 7.7 | Mobile E2E + axe accessibility checks | ⬜ Not Started | |
 | 8 – Deploy | 8.1 | 🔒 Consolidate the security test suite (`test:security`) | ⬜ Not Started | Full IDOR matrix + enumeration checks |
 | 8 – Deploy | 8.2 | 🔒 CSP, HSTS, Referrer-Policy, CORS verified on the build | ⬜ Not Started | |
@@ -103,7 +103,7 @@
 
 | Date | Session Start | Tasks Completed | Notes |
 |------|--------------|-----------------|-------|
-| 2026-08-16 | Checked worktree diff against Phase 7 tracker, then continued Phase 7 web polish | 7.5 | Fixed workspace package resolution for Vitest/Vite/TypeScript on the current mounted filesystem, committed the loading/snackbar slice, completed the category-icon / reorder / assignment-presentation work for 7.5, and kept 7.1/7.2/7.3/7.4 in progress |
+| 2026-08-16 | Checked worktree diff against Phase 7 tracker, then continued Phase 7 web polish | 7.5 | Fixed workspace package resolution for Vitest/Vite/TypeScript on the current mounted filesystem, committed the loading/snackbar slice, completed the category-icon / reorder / assignment-presentation work for 7.5, and started 7.6 with document language plus snackbar live-region announcements while keeping 7.1/7.2/7.3/7.4 in progress |
 
 ---
 

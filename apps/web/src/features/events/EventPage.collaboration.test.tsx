@@ -224,7 +224,10 @@ describe('EventPage collaboration', () => {
     await waitFor(() => {
       expect(apiClient.claimItem).toHaveBeenCalledWith(1, { note: 'Ready', participantId: 2, quantity: 2 })
     })
-    expect(screen.getByText('Claim saved.')).toBeInTheDocument()
+    const successMessage = screen.getByText('Claim saved.')
+
+    expect(successMessage).toBeInTheDocument()
+    expect(successMessage.closest('[aria-live="polite"]')).not.toBeNull()
   })
 
   it('optimistically updates a claim and rolls it back when the server rejects the claim', async () => {
