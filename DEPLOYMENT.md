@@ -90,12 +90,13 @@ Important for repeated TrueNAS deploy attempts:
 - `CORS_ORIGIN` must be a full origin including the scheme, for example `https://listcollab.example.com` or `http://truenas.local:8080`.
 - Starting with image tag `1.0.1`, the migration and rollback jobs no longer require `CORS_ORIGIN` or `PORT`, so a malformed frontend origin no longer blocks schema bootstrapping.
 - Starting with image tag `1.0.2`, the migration runner retries transient database startup/auth readiness errors before failing, which hardens slower first-boot environments like NAS deployments.
+- Starting with image tag `1.0.3`, the API normalizes DATE-backed event values at the repository boundary and includes a repository contract suite that validates event, participant, category, item, and assignment outputs against the shared Zod schemas.
 
 Values to edit inline in the TrueNAS compose:
 
 ```bash
-technerdx6000/listcollab-api:1.0.2
-technerdx6000/listcollab-web:1.0.2
+technerdx6000/listcollab-api:1.0.3
+technerdx6000/listcollab-web:1.0.3
 DB_PASSWORD=replace_with_generated_app_password
 DB_ROOT_PASSWORD=replace_with_generated_root_password
 CORS_ORIGIN=https://listcollab.example.com
