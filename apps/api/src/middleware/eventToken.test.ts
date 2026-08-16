@@ -26,6 +26,7 @@ describe('event token middleware', () => {
 
         expect(response.status).toBe(401)
         expect(body.error.code).toBe('INVALID_TOKEN')
+        expect(body.error.requestId).toBe('unknown')
     })
 
     it('returns 404 when the token is unknown', async () => {
@@ -40,6 +41,20 @@ describe('event token middleware', () => {
 
         expect(response.status).toBe(404)
         expect(body.error.code).toBe('EVENT_NOT_FOUND')
+        expect(body.error.requestId).toBe('unknown')
+    })
+
+    it('returns 404 when the token is malformed', async () => {
+        const { requireEventToken } = await import('./eventToken.js')
+        const app = express()
+        app.get('/check', requireEventToken, (_req, res) => res.json({ ok: true }))
+
+        const response = await request(app).get('/check').set('X-Event-Token', 'bad')
+        const body = response.body as { error: { code: string; requestId: string } }
+
+        expect(response.status).toBe(404)
+        expect(body.error.code).toBe('EVENT_NOT_FOUND')
+        expect(body.error.requestId).toBe('unknown')
     })
 
     it('attaches non-admin event context for a share token', async () => {
@@ -80,5 +95,6 @@ describe('event token middleware', () => {
 
         expect(response.status).toBe(403)
         expect(body.error.code).toBe('ADMIN_REQUIRED')
+        expect(body.error.requestId).toBe('unknown')
     })
 })

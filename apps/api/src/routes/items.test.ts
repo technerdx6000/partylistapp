@@ -14,6 +14,7 @@ process.env.LOG_LEVEL = 'info'
 
 const routeMocks = vi.hoisted(() => ({
     currentEvent: { id: 1, isAdmin: true, shareToken: 'abcdefghij', event: {} as never },
+    claimAssignment: vi.fn(),
     listAssignmentsByEventId: vi.fn(),
     listAssignmentsByItemId: vi.fn(),
     findCategoryById: vi.fn(),
@@ -56,6 +57,10 @@ vi.mock('../repositories/itemRepository.js', () => ({
 
 vi.mock('../repositories/participantRepository.js', () => ({
     findParticipantById: routeMocks.findParticipantById,
+}))
+
+vi.mock('../services/assignmentService.js', () => ({
+    claimAssignment: routeMocks.claimAssignment,
 }))
 
 vi.mock('../services/itemService.js', () => ({
@@ -109,6 +114,7 @@ async function createTestApp() {
 describe('items routes', () => {
     beforeEach(() => {
         routeMocks.currentEvent = { id: 1, isAdmin: true, shareToken: 'abcdefghij', event: {} as never }
+        routeMocks.claimAssignment.mockResolvedValue(buildAssignment())
         routeMocks.listAssignmentsByEventId.mockResolvedValue([])
         routeMocks.listAssignmentsByItemId.mockResolvedValue([])
         routeMocks.findCategoryById.mockResolvedValue({ id: 2 })
@@ -156,6 +162,14 @@ describe('items routes', () => {
         expect(response.body).toMatchObject({ error: { code: 'VALIDATION_FAILED' } })
     })
 
+    it('returns 400 when the create item name exceeds the documented length cap', async () => {
+        const app = await createTestApp()
+        const response = await request(app).post('/api/items').send({ name: 'x'.repeat(121) })
+
+        expect(response.status).toBe(400)
+        expect(response.body).toMatchObject({ error: { code: 'VALIDATION_FAILED' } })
+    })
+
     it('returns 404 when the create item category does not belong to the event', async () => {
         routeMocks.findCategoryById.mockResolvedValue(null)
 
@@ -198,6 +212,27 @@ describe('items routes', () => {
         expect(response.status).toBe(400)
         expect(response.body).toMatchObject({ error: { code: 'VALIDATION_FAILED' } })
     })
+
+    it('returns 400 when the update item payload contains the legacy person_id field', async () => {
+        const app = await createTestApp()
+        const response = await request(app).patch('/api/items/1').send({ person_id: 4 })
+
+        expect(response.status).toBe(400)
+        expect(response.body).toMatchObject({ error: { code: 'VALIDATION_FAILED' } })
+    })
+
+    it.each([0, -1, 1.5, Number.NaN, 999999])(
+        'returns 400 when the assignment quantity is %p',
+        async (quantity) => {
+            const app = await createTestApp()
+            const response = await request(app)
+                .post('/api/items/1/assignments')
+                .send({ participantId: 4, quantity })
+
+            expect(response.status).toBe(400)
+            expect(response.body).toMatchObject({ error: { code: 'VALIDATION_FAILED' } })
+        }
+    )
 
     it('returns 404 when the item is missing before update', async () => {
         routeMocks.findItemById.mockResolvedValue(null)

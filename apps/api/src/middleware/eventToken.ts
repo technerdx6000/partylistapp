@@ -9,6 +9,22 @@ import { tokensEqual } from '../services/tokenService.js'
 const SHARE_TOKEN_LENGTH = 10
 const ADMIN_TOKEN_LENGTH = 64
 
+function sendTokenError(
+    res: Response,
+    req: Request,
+    statusCode: number,
+    code: 'INVALID_TOKEN' | 'EVENT_NOT_FOUND' | 'ADMIN_REQUIRED',
+    message: string
+): void {
+    res.status(statusCode).json({
+        error: {
+            code,
+            message,
+            requestId: req.requestId ?? 'unknown',
+        },
+    })
+}
+
 /**
  * Resolves the current event from the X-Event-Token header and records whether the caller is using admin access.
  */
@@ -16,7 +32,7 @@ export async function requireEventToken(req: Request, res: Response, next: NextF
     const tokenHeader = req.header('X-Event-Token')
 
     if (!tokenHeader) {
-        res.status(401).json({ error: { code: 'INVALID_TOKEN', message: 'Missing event token' } })
+        sendTokenError(res, req, 401, 'INVALID_TOKEN', 'Missing event token')
         return
     }
 
@@ -32,7 +48,7 @@ export async function requireEventToken(req: Request, res: Response, next: NextF
     }
 
     if (!event) {
-        res.status(404).json({ error: { code: 'EVENT_NOT_FOUND', message: 'Event not found' } })
+        sendTokenError(res, req, 404, 'EVENT_NOT_FOUND', 'Event not found')
         return
     }
 
@@ -51,7 +67,7 @@ export async function requireEventToken(req: Request, res: Response, next: NextF
  */
 export function requireAdminToken(req: Request, res: Response, next: NextFunction): void {
     if (!req.event?.isAdmin) {
-        res.status(403).json({ error: { code: 'ADMIN_REQUIRED', message: 'Admin token required' } })
+        sendTokenError(res, req, 403, 'ADMIN_REQUIRED', 'Admin token required')
         return
     }
 
