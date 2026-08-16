@@ -15,8 +15,8 @@
 | 4 | Event-centred API | ✅ Complete | 10 / 10 |
 | 5 | Frontend restructure | ✅ Complete | 8 / 8 |
 | 6 | Collaborative UX | ✅ Complete | 7 / 7 |
-| 7 | Responsive polish and accessibility | 🔄 In Progress | 7 / 7 |
-| 8 | Hardening, deployment and handoff | ⬜ Not Started | 0 / 9 |
+| 7 | Responsive polish and accessibility | ✅ Complete | 7 / 7 |
+| 8 | Hardening, deployment and handoff | 🔄 In Progress | 0 / 9 |
 
 ---
 
@@ -79,7 +79,7 @@
 | 7 – Polish | 7.5 | Category icons, ordering controls, assignment display | ✅ Complete | Item rows now expose text-based open/partly-covered/covered/completed states, enlarge mobile touch targets, and collapse dense assignment chips behind an expander; category create/edit now uses a fixed MUI icon set with legacy emoji normalization, and organisers can move categories up and down through sort_order updates |
 | 7 – Polish | 7.6 | Accessibility pass — keyboard, focus, labels, contrast, live regions | ✅ Complete | The app root now sets `document.documentElement.lang = 'en'`, event-page snackbars expose explicit polite/assertive live-region semantics, the shared theme applies visible focus treatment to keyboard-focused buttons/links/chips/inputs, and collaboration tests verify Escape-close plus focus return on the identify, category, and delete-event dialogs; only manual keyboard-only and screen-reader signoff remains |
 | 7 – Polish | 7.7 | Mobile E2E + axe accessibility checks | ✅ Complete | The full Playwright suite now passes, including the collaborative mobile flow, the no-horizontal-scroll assertions at 390px/320px, and axe checks on the landing, event, and manage routes; the prior high-severity `nanoid` advisory is patched, and only optional real-phone follow-up remains outside automation |
-| 8 – Deploy | 8.1 | 🔒 Consolidate the security test suite (`test:security`) | ⬜ Not Started | Full IDOR matrix + enumeration checks |
+| 8 – Deploy | 8.1 | 🔒 Consolidate the security test suite (`test:security`) | 🔄 In Progress | Full IDOR matrix + enumeration checks |
 | 8 – Deploy | 8.2 | 🔒 CSP, HSTS, Referrer-Policy, CORS verified on the build | ⬜ Not Started | |
 | 8 – Deploy | 8.3 | 🔒 Dependency audit, pinning, Dependabot, slim prod images | ⬜ Not Started | |
 | 8 – Deploy | 8.4 | Production Compose stack with health checks and boot migrations | ⬜ Not Started | Non-root containers, DB not published |
@@ -103,7 +103,7 @@
 
 | Date | Session Start | Tasks Completed | Notes |
 |------|--------------|-----------------|-------|
-| 2026-08-16 | Checked worktree diff against Phase 7 tracker, then continued Phase 7 web polish | 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7 | Fixed workspace package resolution for Vitest/Vite/TypeScript on the current mounted filesystem, committed the loading/snackbar slice, completed 7.5 category controls, completed the sticky condensed header for 7.1, completed snackbars/confirmations for 7.3 and 7.4, completed 7.6 with document language/live-region announcements plus explicit theme focus rings and dialog focus-return checks, completed 7.7 with full Playwright plus axe coverage, cleared the prior high-severity `nanoid` advisory, and fixed three browser-manual-review regressions: overlong item names now show inline validation instead of crashing, duplicate category names now return a clean conflict error, and organiser access now survives reloads within the current browser session; formal Phase 7 signoff still depends on the manual checklist |
+| 2026-08-16 | Checked worktree diff against Phase 7 tracker, then continued Phase 7 web polish | 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7 | Fixed workspace package resolution for Vitest/Vite/TypeScript on the current mounted filesystem, committed the loading/snackbar slice, completed 7.5 category controls, completed the sticky condensed header for 7.1, completed snackbars/confirmations for 7.3 and 7.4, completed 7.6 with document language/live-region announcements plus explicit theme focus rings and dialog focus-return checks, completed 7.7 with full Playwright plus axe coverage, cleared the prior high-severity `nanoid` advisory, and fixed three browser-manual-review regressions: overlong item names now show inline validation instead of crashing, duplicate category names now return a clean conflict error, and organiser access now survives reloads within the current browser session; remaining screen-reader and phone checks were explicitly deferred by the user so Phase 7 is signed off and Phase 8 is now active |
 
 ---
 
