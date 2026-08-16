@@ -45,15 +45,34 @@ async function createEventFixture(request: APIRequestContext, name: string): Pro
     }
 }
 
-async function createRequirement(
+async function createCategory(
     request: APIRequestContext,
     event: CreatedEvent,
+    name: string,
+    sortOrder: number
+): Promise<number> {
+    const createCategoryResponse = await request.post(`${API_URL}/api/categories`, {
+        data: { name, sortOrder },
+        headers: { 'X-Event-Token': event.adminToken },
+    })
+
+    expect(createCategoryResponse.status()).toBe(201)
+
+    const createCategoryBody = (await createCategoryResponse.json()) as { id: number }
+
+    return createCategoryBody.id
+}
+
+async function createRequirement(
+    request: APIRequestContext,
+    event: Pick<CreatedEvent, 'adminToken'>,
+    categoryId: number | null,
     name: string,
     quantityRequired: number
 ): Promise<void> {
     const createItemResponse = await request.post(`${API_URL}/api/items`, {
         data: {
-            categoryId: event.categoryId,
+            categoryId,
             name,
             quantityRequired,
         },
@@ -89,7 +108,7 @@ async function expectNoSeriousOrCriticalAxeViolations(page: Page): Promise<void>
 test('completes the collaborative MVP flow and avoids horizontal scrolling at mobile widths', async ({ browser, page, request }) => {
     await waitForApiReady(request)
     const event = await createEventFixture(request, 'Collaboration Flow Event')
-    await createRequirement(request, event, 'Bread Rolls', 3)
+    await createRequirement(request, event, event.categoryId, 'Bread Rolls', 3)
 
     await page.goto(`${APP_URL}/e/${event.shareToken}`)
 
@@ -117,6 +136,7 @@ test('completes the collaborative MVP flow and avoids horizontal scrolling at mo
     await expect(secondPage.getByText('Contribution added.')).toBeVisible()
 
     await page.reload()
+    await page.getByLabel('Search items or people').fill('Ice bag')
     await expect(page.getByText('Ice bag')).toBeVisible()
 
     for (const width of [390, 320]) {
@@ -146,7 +166,7 @@ test('regression: organiser page avoids horizontal scrolling with max-length ite
 
     await waitForApiReady(request)
     const event = await createEventFixture(request, 'Manage Layout Event')
-    await createRequirement(request, event, 'X'.repeat(120), 1)
+    await createRequirement(request, event, event.categoryId, 'X'.repeat(120), 1)
 
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto(`${APP_URL}/e/${event.shareToken}/manage#k=${event.adminToken}`)
@@ -160,12 +180,38 @@ test('regression: organiser page avoids horizontal scrolling with max-length ite
     expect(managePageHasHorizontalScroll).toBeFalsy()
 }, 60000)
 
+test('regression: mobile category navigation shows one category at a time and keeps search global', async ({ page, request }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile', 'mobile-only viewport assertion')
+
+    await waitForApiReady(request)
+    const event = await createEventFixture(request, 'Mobile Category Event')
+    const drinksCategoryId = await createCategory(request, event, 'Drinks', 1)
+
+    await createRequirement(request, event, event.categoryId, 'Bread Rolls', 3)
+    await createRequirement(request, event, drinksCategoryId, 'Water bottles', 6)
+
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto(`${APP_URL}/e/${event.shareToken}`)
+
+    await expect(page.getByRole('tablist', { name: 'Category navigation' })).toBeVisible()
+    await expect(page.getByText('Bread Rolls')).toBeVisible()
+    await expect(page.getByText('Water bottles')).toHaveCount(0)
+
+    await page.getByRole('tab', { name: 'Drinks' }).click()
+    await expect(page.getByText('Water bottles')).toBeVisible()
+    await expect(page.getByText('Bread Rolls')).toHaveCount(0)
+
+    await page.getByLabel('Search items or people').fill('Water')
+    await expect(page.getByText('Showing matches across all categories while search is active.')).toBeVisible()
+    await expect(page.getByText('Water bottles')).toBeVisible()
+}, 60000)
+
 test('keeps the claim dialog submittable in a half-height mobile viewport', async ({ page, request }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile', 'mobile-only viewport assertion')
 
     await waitForApiReady(request)
     const event = await createEventFixture(request, 'Mobile Dialog Event')
-    await createRequirement(request, event, 'Water bottles', 2)
+    await createRequirement(request, event, event.categoryId, 'Water bottles', 2)
 
     await page.setViewportSize({ width: 390, height: 422 })
     await page.goto(`${APP_URL}/e/${event.shareToken}`)
@@ -184,7 +230,7 @@ test('keeps the claim dialog submittable in a half-height mobile viewport', asyn
 test('rejects over-claims visibly without writing a partial assignment', async ({ browser, page, request }) => {
     await waitForApiReady(request)
     const event = await createEventFixture(request, 'Overclaim Event')
-    await createRequirement(request, event, 'Napkins', 2)
+    await createRequirement(request, event, event.categoryId, 'Napkins', 2)
 
     await page.goto(`${APP_URL}/e/${event.shareToken}`)
 
@@ -251,7 +297,7 @@ test('rejects admin-only category creation when only the share token is supplied
 test('passes axe checks on the landing, event, and manage routes', async ({ page, request }) => {
     await waitForApiReady(request)
     const event = await createEventFixture(request, 'Accessibility Audit Event')
-    await createRequirement(request, event, 'Crackers', 2)
+    await createRequirement(request, event, event.categoryId, 'Crackers', 2)
 
     await page.goto(`${APP_URL}/`)
     await expect(page.getByRole('heading', { name: 'ListCollab' })).toBeVisible()

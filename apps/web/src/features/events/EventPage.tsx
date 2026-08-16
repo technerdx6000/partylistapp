@@ -24,16 +24,19 @@ import {
   Snackbar,
   Stack,
   TextField,
+  useMediaQuery,
   Typography,
   useScrollTrigger,
+  useTheme,
 } from '@mui/material'
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { getEventCoverageSummary } from './eventCoverage'
 import { EventHeader } from './EventHeader'
 import { applyOptimisticAssignment, removeOptimisticAssignment } from './eventOptimisticUpdates'
+import { MobileCategoryNav } from './MobileCategoryNav'
 import { recordVisitedEvent } from './visitedEvents'
 import { ConfirmationDialog } from '../../components/ConfirmationDialog'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -43,6 +46,7 @@ import { useStoredAdminToken } from '../../hooks/useEventToken'
 import { ApiClientError, useApiClient } from '../../services/apiClient'
 import { CategoryForm } from '../categories/CategoryForm'
 import { ClaimItemDialog } from '../items/ClaimItemDialog'
+import { groupItemsByCategory } from '../items/groupItemsByCategory'
 import { ItemForm } from '../items/ItemForm'
 import { ItemList } from '../items/ItemList'
 import { IdentifyDialog } from '../participants/IdentifyDialog'
@@ -153,6 +157,8 @@ function EventPageLoadingState(): React.JSX.Element {
 }
 
 export default function EventPage({ manageMode }: EventPageProps): React.JSX.Element {
+  const theme = useTheme()
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'))
   const isHeaderCondensed = useScrollTrigger({
     disableHysteresis: true,
     threshold: 96,
@@ -165,6 +171,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   const [feedback, setFeedback] = useState<FeedbackState>(null)
   const [confirmationDialogState, setConfirmationDialogState] = useState<ConfirmationDialogState>(null)
   const [categoryFormState, setCategoryFormState] = useState<CategoryFormState>(null)
+  const [activeMobileGroupKey, setActiveMobileGroupKey] = useState<string | null>(null)
   const [isConfirmingAction, setIsConfirmingAction] = useState(false)
   const [identifyDialogOpen, setIdentifyDialogOpen] = useState(false)
   const [itemFormState, setItemFormState] = useState<ItemFormState>(null)
@@ -174,6 +181,10 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   const { clearIdentity, identity, setIdentity } = useEventIdentity(shareToken)
   const { data, error, isLoading, refetch } = useEvent(shareToken, manageMode)
   const participantNamesById = new Map((data?.participants ?? []).map((participant) => [participant.id, participant.name]))
+  const groupedItemSections = useMemo(
+    () => (data ? groupItemsByCategory(data.categories, data.items) : []),
+    [data]
+  )
   const pageTitle = !shareToken
     ? 'Event unavailable | ListCollab'
     : isLoading
@@ -193,6 +204,26 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
       recordVisitedEvent(data.event)
     }
   }, [data])
+
+  useEffect(() => {
+    if (!isSmallScreen) {
+      return
+    }
+
+    if (groupedItemSections.length === 0) {
+      if (activeMobileGroupKey !== null) {
+        setActiveMobileGroupKey(null)
+      }
+
+      return
+    }
+
+    if (activeMobileGroupKey && groupedItemSections.some((group) => group.key === activeMobileGroupKey)) {
+      return
+    }
+
+    setActiveMobileGroupKey(groupedItemSections[0]?.key ?? null)
+  }, [activeMobileGroupKey, groupedItemSections, isSmallScreen])
 
   async function refreshEvent(): Promise<void> {
     await queryClient.invalidateQueries({ queryKey: ['event', shareToken] })
@@ -531,6 +562,9 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
 
   const visibleItems = filterItems(data.items, participantNamesById, searchTerm)
   const coverageSummary = getEventCoverageSummary(data.items)
+  const isSearchActive = searchTerm.trim().length > 0
+  const showMobileCategoryNav = isSmallScreen && groupedItemSections.length > 1 && data.items.length > 0
+  const visibleGroupKey = isSmallScreen && !isSearchActive ? (activeMobileGroupKey ?? groupedItemSections[0]?.key) : undefined
   const shareUrl = `${window.location.origin}/e/${shareToken}`
   const event = data.event
 
@@ -690,6 +724,21 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
           value={searchTerm}
         />
 
+        {showMobileCategoryNav ? (
+          <Stack spacing={1}>
+            <MobileCategoryNav
+              activeGroupKey={isSearchActive ? false : (visibleGroupKey ?? false)}
+              groups={groupedItemSections}
+              onChange={setActiveMobileGroupKey}
+            />
+            {isSearchActive ? (
+              <Typography color="text.secondary" variant="body2">
+                Showing matches across all categories while search is active.
+              </Typography>
+            ) : null}
+          </Stack>
+        ) : null}
+
         {data.items.length === 0 ? (
           <Card>
             <CardContent>
@@ -729,6 +778,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
             onMoveCategoryDown={(category) => void handleMoveCategory(category.id, 1)}
             onMoveCategoryUp={(category) => void handleMoveCategory(category.id, -1)}
             participants={data.participants}
+            visibleGroupKey={visibleGroupKey}
           />
         )}
 

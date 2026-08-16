@@ -1,6 +1,7 @@
 import type { EventCategory, EventItemAssignment, EventItemWithAssignments, EventParticipant } from '@listcollab/shared'
 import { Stack } from '@mui/material'
 
+import { groupItemsByCategory } from './groupItemsByCategory'
 import type { EventIdentity } from '../../hooks/useEventIdentity'
 import { CategorySection } from '../categories/CategorySection'
 
@@ -18,6 +19,7 @@ type ItemListProps = {
   onMoveCategoryDown?: ((category: EventCategory) => void) | undefined
   onMoveCategoryUp?: ((category: EventCategory) => void) | undefined
   participants: readonly EventParticipant[]
+  visibleGroupKey?: string | undefined
 }
 export function ItemList({
   categories,
@@ -33,19 +35,16 @@ export function ItemList({
   onMoveCategoryDown,
   onMoveCategoryUp,
   participants,
+  visibleGroupKey,
 }: ItemListProps): React.JSX.Element {
-  const uncategorisedItems = items.filter((item) => item.categoryId === null)
-  const groupedCategories = categories
-    .slice()
-    .sort((leftCategory, rightCategory) => leftCategory.sortOrder - rightCategory.sortOrder)
-    .map((category) => ({
-      category,
-      items: items.filter((item) => item.categoryId === category.id),
-    }))
+  const groupedCategories = groupItemsByCategory(categories, items)
+  const visibleGroups = visibleGroupKey
+    ? groupedCategories.filter((group) => group.key === visibleGroupKey)
+    : groupedCategories
 
   return (
     <Stack spacing={3}>
-      {groupedCategories.map((group) => (
+      {visibleGroups.map((group) => (
         <CategorySection
           canMoveDown={groupedCategories.indexOf(group) < groupedCategories.length - 1}
           canMoveUp={groupedCategories.indexOf(group) > 0}
@@ -53,7 +52,7 @@ export function ItemList({
           currentIdentity={currentIdentity}
           isManageMode={isManageMode}
           items={group.items}
-          key={group.category.id}
+          key={group.key}
           onAddItem={onAddItem}
           onClaim={onClaim}
           onDeleteCategory={onDeleteCategory}
@@ -65,20 +64,6 @@ export function ItemList({
           participants={participants}
         />
       ))}
-
-      {uncategorisedItems.length > 0 ? (
-        <CategorySection
-          category={null}
-          currentIdentity={currentIdentity}
-          isManageMode={isManageMode}
-          items={uncategorisedItems}
-          onAddItem={onAddItem}
-          onClaim={onClaim}
-          onDeleteItem={onDeleteItem}
-          onEditItem={onEditItem}
-          participants={participants}
-        />
-      ) : null}
     </Stack>
   )
 }

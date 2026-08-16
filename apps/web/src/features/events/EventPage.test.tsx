@@ -1,5 +1,5 @@
 import type { AggregateEventResponse } from '@listcollab/shared'
-import { fireEvent, screen } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -79,9 +79,26 @@ function buildAggregateResponse(): AggregateEventResponse {
   }
 }
 
+function setMatchMedia(matches: boolean): void {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn().mockImplementation((query: string) => ({
+      addEventListener: vi.fn(),
+      addListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+      matches,
+      media: query,
+      onchange: null,
+      removeEventListener: vi.fn(),
+      removeListener: vi.fn(),
+    }))
+  )
+}
+
 const useEventMock = vi.mocked(useEvent)
 const useStoredAdminTokenMock = vi.mocked(useStoredAdminToken)
 const recordVisitedEventMock = vi.mocked(recordVisitedEvent)
+const clipboardWriteTextMock = vi.fn<(...args: [string]) => Promise<void>>()
 
 function buildUseEventResult(
   overrides: {
@@ -111,12 +128,20 @@ function renderEventPage(route = '/e/abcdefghij', manageMode = false) {
 
 describe('EventPage', () => {
   beforeEach(() => {
+    setMatchMedia(false)
+    clipboardWriteTextMock.mockReset()
+    clipboardWriteTextMock.mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: clipboardWriteTextMock },
+    })
     useStoredAdminTokenMock.mockReturnValue(null)
     useEventMock.mockReturnValue(buildUseEventResult({}))
   })
 
   afterEach(() => {
     vi.clearAllMocks()
+    vi.unstubAllGlobals()
   })
 
   it('records the visited event and filters by participant names', () => {
@@ -219,5 +244,132 @@ describe('EventPage', () => {
     fireEvent.change(screen.getByLabelText('Search items or people'), { target: { value: 'zzz' } })
 
     expect(screen.getByText('No items match that search.')).toBeInTheDocument()
+  })
+
+  it('falls back to copying the share link when the Web Share API is unavailable', async () => {
+    renderEventPage()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Share event' }))
+
+    await waitFor(() => {
+      expect(clipboardWriteTextMock).toHaveBeenCalledWith(`${window.location.origin}/e/abcdefghij`)
+    })
+    expect(screen.getByText('Link ready to share.')).toBeInTheDocument()
+  })
+
+  it('shows a mobile category navigator and switches the visible category panel', () => {
+    setMatchMedia(true)
+    useEventMock.mockReturnValue(
+      buildUseEventResult({
+        data: {
+          ...buildAggregateResponse(),
+          categories: [
+            { id: 1, eventId: 1, name: 'Food', icon: 'food', sortOrder: 0, createdAt: '2026-08-15T00:00:00.000Z' },
+            { id: 2, eventId: 1, name: 'Drinks', icon: 'drinks', sortOrder: 1, createdAt: '2026-08-15T00:00:00.000Z' },
+          ],
+          items: [
+            {
+              id: 1,
+              eventId: 1,
+              categoryId: 1,
+              name: 'Bread Rolls',
+              description: null,
+              quantityRequired: 4,
+              status: 'open',
+              createdBy: 1,
+              createdAt: '2026-08-15T00:00:00.000Z',
+              updatedAt: '2026-08-15T00:00:00.000Z',
+              assignments: [],
+              coverage: { claimed: 0, required: 4, remaining: 4, status: 'open' },
+            },
+            {
+              id: 2,
+              eventId: 1,
+              categoryId: 2,
+              name: 'Water bottles',
+              description: null,
+              quantityRequired: 6,
+              status: 'open',
+              createdBy: 2,
+              createdAt: '2026-08-15T00:00:00.000Z',
+              updatedAt: '2026-08-15T00:00:00.000Z',
+              assignments: [],
+              coverage: { claimed: 0, required: 6, remaining: 6, status: 'open' },
+            },
+          ],
+        },
+      })
+    )
+
+    renderEventPage()
+
+    expect(screen.getByRole('tablist', { name: 'Category navigation' })).toBeInTheDocument()
+    expect(screen.getByText('Bread Rolls')).toBeInTheDocument()
+    expect(screen.queryByText('Water bottles')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Drinks' }))
+
+    expect(screen.getByText('Water bottles')).toBeInTheDocument()
+    expect(screen.queryByText('Bread Rolls')).not.toBeInTheDocument()
+  })
+
+  it('shows global search matches across all mobile categories while search is active', () => {
+    setMatchMedia(true)
+    useEventMock.mockReturnValue(
+      buildUseEventResult({
+        data: {
+          ...buildAggregateResponse(),
+          categories: [
+            { id: 1, eventId: 1, name: 'Food', icon: 'food', sortOrder: 0, createdAt: '2026-08-15T00:00:00.000Z' },
+            { id: 2, eventId: 1, name: 'Drinks', icon: 'drinks', sortOrder: 1, createdAt: '2026-08-15T00:00:00.000Z' },
+          ],
+          items: [
+            {
+              id: 1,
+              eventId: 1,
+              categoryId: 1,
+              name: 'Bread Rolls',
+              description: null,
+              quantityRequired: 4,
+              status: 'open',
+              createdBy: 1,
+              createdAt: '2026-08-15T00:00:00.000Z',
+              updatedAt: '2026-08-15T00:00:00.000Z',
+              assignments: [],
+              coverage: { claimed: 0, required: 4, remaining: 4, status: 'open' },
+            },
+            {
+              id: 2,
+              eventId: 1,
+              categoryId: 2,
+              name: 'Water bottles',
+              description: null,
+              quantityRequired: 6,
+              status: 'open',
+              createdBy: 2,
+              createdAt: '2026-08-15T00:00:00.000Z',
+              updatedAt: '2026-08-15T00:00:00.000Z',
+              assignments: [],
+              coverage: { claimed: 0, required: 6, remaining: 6, status: 'open' },
+            },
+          ],
+        },
+      })
+    )
+
+    renderEventPage()
+    fireEvent.change(screen.getByLabelText('Search items or people'), { target: { value: 'Water' } })
+
+    expect(screen.getByText('Showing matches across all categories while search is active.')).toBeInTheDocument()
+    expect(screen.getByText('Water bottles')).toBeInTheDocument()
+    expect(screen.queryByText('Bread Rolls')).not.toBeInTheDocument()
+  })
+
+  it('does not render the mobile category navigator when only one category group exists', () => {
+    setMatchMedia(true)
+
+    renderEventPage()
+
+    expect(screen.queryByRole('tablist', { name: 'Category navigation' })).not.toBeInTheDocument()
   })
 })

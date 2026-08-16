@@ -11,16 +11,16 @@ Default image names:
 
 Recommended tags:
 
-- release tag: `1.0.1`
-- immutable build tag: `git-24794bb`
+- release tag: `1.0.5`
+- immutable build tag: `git-a94779b`
 - moving tag: `latest`
 
 Build and publish from the repo root:
 
 ```bash
 DOCKERHUB_NAMESPACE=technerdx6000 \
-IMAGE_TAG=1.0.1 \
-EXTRA_TAG=git-24794bb \
+IMAGE_TAG=1.0.5 \
+EXTRA_TAG=git-a94779b \
 bash scripts/publish-dockerhub.sh
 ```
 
@@ -92,12 +92,13 @@ Important for repeated TrueNAS deploy attempts:
 - Starting with image tag `1.0.2`, the migration runner retries transient database startup/auth readiness errors before failing, which hardens slower first-boot environments like NAS deployments.
 - Starting with image tag `1.0.3`, the API normalizes DATE-backed event values at the repository boundary and includes a repository contract suite that validates event, participant, category, item, and assignment outputs against the shared Zod schemas.
 - Starting with image tag `1.0.4`, the organiser-link field includes an inline copy action in the header so the token-safe manage link is easier to capture without text selection.
+- Starting with image tag `1.0.5`, phone-sized event pages use a sticky category navigator that shows one category at a time, which reduces long vertical scrolling while keeping search global across the whole event.
 
 Values to edit inline in the TrueNAS compose:
 
 ```bash
-technerdx6000/listcollab-api:1.0.4
-technerdx6000/listcollab-web:1.0.4
+technerdx6000/listcollab-api:1.0.5
+technerdx6000/listcollab-web:1.0.5
 DB_PASSWORD=replace_with_generated_app_password
 DB_ROOT_PASSWORD=replace_with_generated_root_password
 CORS_ORIGIN=https://listcollab.example.com
