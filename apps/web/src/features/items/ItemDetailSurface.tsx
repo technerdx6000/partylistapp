@@ -85,18 +85,22 @@ export function ItemDetailSurface({
           Claim
         </Button>
       </Tooltip>
-      {isManageMode ? (
+      {onEdit || onDelete ? (
         <>
-          <Tooltip title="Edit item">
-            <Button autoFocus={mode === 'edit'} fullWidth={isSmallScreen} onClick={() => onEdit(item)} size="small" startIcon={<EditRoundedIcon />} variant="outlined">
-              Edit
-            </Button>
-          </Tooltip>
-          <Tooltip title="Delete item">
-            <Button autoFocus={mode === 'delete'} color="error" fullWidth={isSmallScreen} onClick={() => onDelete(item)} size="small" startIcon={<DeleteOutlineRoundedIcon />} variant="outlined">
-              Delete
-            </Button>
-          </Tooltip>
+          {onEdit ? (
+            <Tooltip title="Edit item">
+              <Button autoFocus={mode === 'edit'} fullWidth={isSmallScreen} onClick={() => onEdit(item)} size="small" startIcon={<EditRoundedIcon />} variant="outlined">
+                Edit
+              </Button>
+            </Tooltip>
+          ) : null}
+          {onDelete ? (
+            <Tooltip title="Delete item">
+              <Button autoFocus={mode === 'delete'} color="error" fullWidth={isSmallScreen} onClick={() => onDelete(item)} size="small" startIcon={<DeleteOutlineRoundedIcon />} variant="outlined">
+                Delete
+              </Button>
+            </Tooltip>
+          ) : null}
         </>
       ) : null}
     </>
@@ -106,7 +110,7 @@ export function ItemDetailSurface({
       claimAriaLabel={item.quantityRequired === null ? 'Claim contribution' : 'Claim item'}
       deleteAriaLabel="Delete item"
       editAriaLabel="Edit item"
-      isManageMode={isManageMode}
+      fullWidth
       item={item}
       onClaim={(selectedItem) => onOpenClaim(selectedItem)}
       onDelete={onDelete}

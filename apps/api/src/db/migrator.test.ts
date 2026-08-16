@@ -778,7 +778,7 @@ describe('migration runner', () => {
         expect(emptyCategoriesResponse.body).toEqual([])
     })
 
-    it('creates guest-owned items, allows own guest edits, and rejects share-token deletes', async () => {
+    it('creates share-link items and allows share-token edits and deletes', async () => {
         const { migrator, close } = await createMigrator()
 
         try {
@@ -831,7 +831,7 @@ describe('migration runner', () => {
         const updateItemResponse = await request(app)
             .patch(`/api/items/${item.id}`)
             .set('X-Event-Token', event.event.shareToken)
-            .send({ participantId: participant.id, name: 'Extra Tortilla Chips', description: 'Lightly salted' })
+            .send({ categoryId: null, name: 'Extra Tortilla Chips', description: 'Lightly salted' })
 
         expect(updateItemResponse.status).toBe(200)
         expect(updateItemResponse.body).toMatchObject({
@@ -845,13 +845,10 @@ describe('migration runner', () => {
             .delete(`/api/items/${item.id}`)
             .set('X-Event-Token', event.event.shareToken)
 
-        expect(deleteWithShareTokenResponse.status).toBe(403)
-        expect(deleteWithShareTokenResponse.body).toMatchObject({
-            error: { code: 'ADMIN_REQUIRED' },
-        })
+        expect(deleteWithShareTokenResponse.status).toBe(204)
     })
 
-    it('rejects guest structural item edits and cross-event item access', async () => {
+    it('allows share-token structural item edits and still rejects cross-event item access', async () => {
         const { migrator, close } = await createMigrator()
 
         try {
@@ -891,11 +888,12 @@ describe('migration runner', () => {
         const guestStructuralUpdateResponse = await request(app)
             .patch(`/api/items/${item.id}`)
             .set('X-Event-Token', secondEvent.event.shareToken)
-            .send({ participantId: participant.id, quantityRequired: 5 })
+            .send({ categoryId: null, quantityRequired: 5 })
 
-        expect(guestStructuralUpdateResponse.status).toBe(403)
+        expect(guestStructuralUpdateResponse.status).toBe(200)
         expect(guestStructuralUpdateResponse.body).toMatchObject({
-            error: { code: 'ADMIN_REQUIRED' },
+            id: item.id,
+            quantityRequired: 5,
         })
 
         const crossEventDeleteResponse = await request(app)

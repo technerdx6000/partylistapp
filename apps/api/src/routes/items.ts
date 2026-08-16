@@ -15,7 +15,7 @@ import {
 import express from 'express'
 
 import { AppError } from '../errors/AppError.js'
-import { requireAdminToken, requireEventToken } from '../middleware/eventToken.js'
+import { requireEventToken } from '../middleware/eventToken.js'
 import { listAssignmentsByEventId, listAssignmentsByItemId } from '../repositories/assignmentRepository.js'
 import { findCategoryById } from '../repositories/categoryRepository.js'
 import { createItem, deleteItem, findItemById, listItemsByEventId, updateItem } from '../repositories/itemRepository.js'
@@ -189,7 +189,6 @@ router.post(
 
 router.delete(
     '/:id',
-    requireAdminToken,
     asyncHandler(async (req, res) => {
         const itemId = parseItemId(String(req.params.id))
         const deleted = await deleteItem(req.event!.id, itemId)

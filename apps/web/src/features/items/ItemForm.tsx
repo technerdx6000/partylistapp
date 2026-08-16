@@ -109,11 +109,10 @@ export function ItemForm({
         await onCreate(parsedPayload.data)
       } else if (item) {
         const parsedPayload = UpdateItemRequestSchema.safeParse({
-          categoryId: mode === 'manage-edit' ? categoryId : undefined,
+          categoryId,
           description: description.trim() ? description.trim() : null,
           name,
-          participantId: mode === 'guest-edit' ? identity?.participantId : undefined,
-          quantityRequired: mode === 'manage-edit' ? quantityRequired : undefined,
+          quantityRequired: item.quantityRequired !== null ? quantityRequired : undefined,
         })
 
         if (!parsedPayload.success) {
@@ -135,8 +134,7 @@ export function ItemForm({
       <DialogTitle>
         {mode === 'guest-create' && 'Add your contribution'}
         {mode === 'manage-create' && 'Add requirement'}
-        {mode === 'manage-edit' && 'Edit item'}
-        {mode === 'guest-edit' && 'Edit your contribution'}
+        {(mode === 'manage-edit' || mode === 'guest-edit') && 'Edit item'}
       </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>
@@ -172,7 +170,7 @@ export function ItemForm({
               ))}
             </Select>
           </FormControl>
-          {mode !== 'guest-create' && mode !== 'guest-edit' ? (
+          {mode === 'manage-create' || (item?.quantityRequired ?? null) !== null ? (
             <TextField
               error={Boolean(fieldErrors.quantityRequired)}
               helperText={fieldErrors.quantityRequired}

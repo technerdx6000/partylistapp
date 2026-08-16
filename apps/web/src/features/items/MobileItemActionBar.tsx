@@ -7,7 +7,7 @@ type MobileItemActionBarProps = {
   claimAriaLabel: string
   deleteAriaLabel: string
   editAriaLabel: string
-  isManageMode: boolean
+  fullWidth?: boolean
   item: EventItemWithAssignments
   onClaim: (item: EventItemWithAssignments) => void
   onDelete?: ((item: EventItemWithAssignments) => void) | undefined
@@ -25,7 +25,7 @@ export function MobileItemActionBar({
   claimAriaLabel,
   deleteAriaLabel,
   editAriaLabel,
-  isManageMode,
+  fullWidth = false,
   item,
   onClaim,
   onDelete,
@@ -33,24 +33,24 @@ export function MobileItemActionBar({
   statusLabel,
 }: MobileItemActionBarProps): React.JSX.Element {
   return (
-    <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', minWidth: 0, width: '100%' }}>
-      {isManageMode && onEdit ? (
+    <Stack direction="row" spacing={0.25} sx={{ alignItems: 'center', flexShrink: 0, minWidth: 0, width: fullWidth ? '100%' : 'auto' }}>
+      {onEdit ? (
         <Tooltip title="Edit item">
-          <IconButton aria-label={editAriaLabel} onClick={() => onEdit(item)} size="small" sx={{ flexShrink: 0, p: 0.75 }}>
+          <IconButton aria-label={editAriaLabel} onClick={() => onEdit(item)} size="small" sx={{ flexShrink: 0, p: 0.5 }}>
             <EditRoundedIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       ) : null}
 
       <Tooltip title={item.quantityRequired === null ? 'Claim contribution' : 'Claim item'}>
-        <Button aria-label={claimAriaLabel} onClick={() => onClaim(item)} size="small" sx={{ flexShrink: 0, minWidth: 0, px: 1, py: 0.5, whiteSpace: 'nowrap' }} variant="text">
+        <Button aria-label={claimAriaLabel} onClick={() => onClaim(item)} size="small" sx={{ flexShrink: 0, minWidth: 0, px: 0.75, py: 0.25, whiteSpace: 'nowrap' }} variant="text">
           Claim
         </Button>
       </Tooltip>
 
-      {isManageMode && onDelete ? (
+      {onDelete ? (
         <Tooltip title="Delete item">
-          <IconButton aria-label={deleteAriaLabel} color="error" onClick={() => onDelete(item)} size="small" sx={{ flexShrink: 0, p: 0.75 }}>
+          <IconButton aria-label={deleteAriaLabel} color="error" onClick={() => onDelete(item)} size="small" sx={{ flexShrink: 0, p: 0.5 }}>
             <DeleteOutlineRoundedIcon fontSize="small" />
           </IconButton>
         </Tooltip>
@@ -60,12 +60,11 @@ export function MobileItemActionBar({
         label={statusLabel}
         size="small"
         sx={{
-          marginLeft: 'auto',
-          maxWidth: '48%',
+          ...(fullWidth ? { marginLeft: 'auto', maxWidth: '48%' } : { maxWidth: '7.5rem' }),
           minWidth: 0,
           '& .MuiChip-label': {
             overflow: 'hidden',
-            px: 1,
+            px: 0.75,
             textOverflow: 'ellipsis',
           },
         }}

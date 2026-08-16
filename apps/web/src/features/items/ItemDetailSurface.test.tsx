@@ -102,7 +102,7 @@ describe('ItemDetailSurface', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
-  it('renders the guest view without organiser actions and without interactive assignment chips', () => {
+  it('renders the guest view with the same item actions and without interactive assignment chips', () => {
     renderWithProviders(
       <ItemDetailSurface
         currentIdentity={null}
@@ -119,8 +119,8 @@ describe('ItemDetailSurface', () => {
     )
 
     expect(screen.queryByText('Edit this item from here.')).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Edit item' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Delete item' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit item' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Delete item' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Taylor ×2' })).not.toBeInTheDocument()
   })
 

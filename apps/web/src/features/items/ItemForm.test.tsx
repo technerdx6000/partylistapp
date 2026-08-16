@@ -119,7 +119,7 @@ describe('ItemForm', () => {
     })
   })
 
-  it('sends the participant id when a guest edits their own contribution', async () => {
+  it('uses the same edit form fields for non-manage item edits', async () => {
     const onUpdate = vi.fn().mockResolvedValue(undefined)
 
     renderWithProviders(
@@ -154,9 +154,9 @@ describe('ItemForm', () => {
 
     await waitFor(() => {
       expect(onUpdate).toHaveBeenCalledWith(9, {
+        categoryId: 2,
         description: 'Bluetooth',
         name: 'Speaker',
-        participantId: 2,
       })
     })
   })

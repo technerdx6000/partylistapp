@@ -1,13 +1,12 @@
 import type { EventItemAssignment, EventItemWithAssignments } from '@listcollab/shared'
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded'
 import EditRoundedIcon from '@mui/icons-material/EditRounded'
-import { Box, Button, ButtonBase, Card, Chip, IconButton, Stack, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material'
+import { Box, Button, ButtonBase, Card, Chip, IconButton, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material'
 
 import { getCompactItemStatusLabel } from './itemPresentation'
 import { MobileItemActionBar } from './MobileItemActionBar'
 
 type ItemRowProps = {
-  isManageMode: boolean
   item: EventItemWithAssignments
   onClaim: (item: EventItemWithAssignments, assignment?: EventItemAssignment) => void
   onDeleteItem?: ((item: EventItemWithAssignments) => void) | undefined
@@ -22,7 +21,6 @@ type ItemRowProps = {
  * @returns {React.JSX.Element} The rendered item row.
  */
 export function ItemRow({
-  isManageMode,
   item,
   onClaim,
   onDeleteItem,
@@ -35,7 +33,7 @@ export function ItemRow({
 
   const actionButtons = (
     <>
-      {isManageMode && onEditItem ? (
+      {onEditItem ? (
         <Tooltip title="Edit item">
           <IconButton
             aria-label={`Edit ${item.name}`}
@@ -60,7 +58,7 @@ export function ItemRow({
         </Button>
       </Tooltip>
 
-      {isManageMode && onDeleteItem ? (
+      {onDeleteItem ? (
         <Tooltip title="Delete item">
           <IconButton
             aria-label={`Delete ${item.name}`}
@@ -79,13 +77,13 @@ export function ItemRow({
   if (isSmallScreen) {
     return (
       <Card component="li" sx={{ listStyle: 'none' }} variant="outlined">
-        <Stack spacing={0.75} sx={{ p: 1 }}>
+        <Box sx={{ alignItems: 'center', display: 'flex', gap: 0.5, minHeight: 52, px: 1, py: 0.75, width: '100%' }}>
           <ButtonBase
             aria-label={`Open ${item.name} details`}
             onClick={() => onOpenDetail(item)}
-            sx={{ borderRadius: 1, display: 'flex', justifyContent: 'flex-start', px: 0.25, py: 0.25 }}
+            sx={{ borderRadius: 1, display: 'flex', flex: 1, justifyContent: 'flex-start', minWidth: 0, px: 0.25, py: 0.25 }}
           >
-            <Typography sx={{ overflow: 'hidden', textAlign: 'left', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }} title={item.name} variant="body1">
+            <Typography sx={{ minWidth: 0, overflow: 'hidden', textAlign: 'left', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }} title={item.name} variant="body1">
               {item.name}
             </Typography>
           </ButtonBase>
@@ -94,14 +92,14 @@ export function ItemRow({
             claimAriaLabel={`Claim ${item.name}`}
             deleteAriaLabel={`Delete ${item.name}`}
             editAriaLabel={`Edit ${item.name}`}
-            isManageMode={isManageMode}
+            fullWidth={false}
             item={item}
             onClaim={onClaim}
             onDelete={onDeleteItem}
             onEdit={onEditItem}
             statusLabel={compactStatus}
           />
-        </Stack>
+        </Box>
       </Card>
     )
   }

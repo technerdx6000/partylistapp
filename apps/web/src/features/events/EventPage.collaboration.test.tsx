@@ -467,6 +467,49 @@ describe('EventPage collaboration', () => {
     expect(screen.getByText('Item updated.')).toBeInTheDocument()
   }, 10000)
 
+  it('lets share-link viewers edit and delete items from the same item surfaces', async () => {
+    const apiClient = buildApiClient()
+    apiClient.updateItem.mockResolvedValue({
+      id: 1,
+      eventId: 1,
+      categoryId: 1,
+      name: 'Bread rolls updated',
+      description: null,
+      quantityRequired: 5,
+      status: 'open',
+      createdBy: 1,
+      createdAt: '2026-08-15T00:00:00.000Z',
+      updatedAt: '2026-08-15T00:00:00.000Z',
+      assignments: [{ id: 1, itemId: 1, participantId: 1, quantity: 2, note: null, createdAt: '2026-08-15T00:00:00.000Z' }],
+      coverage: { claimed: 2, required: 5, remaining: 3, status: 'open' },
+    })
+    apiClient.deleteItem.mockResolvedValue(undefined)
+    useApiClientMock.mockReturnValue(apiClient)
+
+    renderEventPage()
+
+    await screen.findByRole('heading', { name: 'Camp Weekend' })
+    fireEvent.click(screen.getByLabelText('Edit Bread Rolls'))
+    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Edit item' }))
+    await screen.findByRole('heading', { name: 'Edit item' })
+
+    fireEvent.change(screen.getByLabelText('Item name'), { target: { value: 'Bread rolls updated' } })
+    fireEvent.change(screen.getByLabelText('Quantity needed'), { target: { value: '5' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => {
+      expect(apiClient.updateItem).toHaveBeenCalledWith(1, expect.objectContaining({ categoryId: 1, name: 'Bread rolls updated', quantityRequired: 5 }))
+    })
+
+    fireEvent.click(screen.getByLabelText('Delete Bread Rolls'))
+    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Delete item' }))
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Delete item' })).getByRole('button', { name: 'Delete item' }))
+
+    await waitFor(() => {
+      expect(apiClient.deleteItem).toHaveBeenCalledWith(1)
+    })
+  }, 10000)
+
   it('supports organiser structural actions and warns before deleting the event', async () => {
     const apiClient = buildApiClient()
     apiClient.updateEvent.mockResolvedValue(buildAggregateResponse())

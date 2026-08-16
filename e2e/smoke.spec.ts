@@ -188,6 +188,32 @@ test('regression: organiser page avoids horizontal scrolling with max-length ite
     expect(managePageHasHorizontalScroll).toBeFalsy()
 }, 60000)
 
+test('regression: share-link page keeps item edit and delete visible inline on mobile', async ({ page, request }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile', 'mobile-only viewport assertion')
+
+    await waitForApiReady(request)
+    const event = await createEventFixture(request, 'Guest Layout Event')
+    await createRequirement(request, event, event.categoryId, 'Y'.repeat(120), 1)
+
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto(`${APP_URL}/e/${event.shareToken}`)
+    await expect(page.getByRole('heading', { name: 'Guest Layout Event' })).toBeVisible()
+    await expect(page.getByText('Y'.repeat(120))).toBeVisible()
+    await expect(page.getByLabel(`Edit ${'Y'.repeat(120)}`)).toBeVisible()
+    await expect(page.getByLabel(`Delete ${'Y'.repeat(120)}`)).toBeVisible()
+
+    await page.getByRole('button', { name: `Open ${'Y'.repeat(120)} details` }).click()
+    await expect(page.getByRole('button', { name: 'Edit item' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Delete item' })).toBeVisible()
+    await page.getByRole('button', { name: 'Close item details' }).click()
+
+    const guestPageHasHorizontalScroll = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth
+    )
+
+    expect(guestPageHasHorizontalScroll).toBeFalsy()
+}, 60000)
+
 test('regression: mobile category navigation shows one category at a time and keeps search global', async ({ page, request }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile', 'mobile-only viewport assertion')
 

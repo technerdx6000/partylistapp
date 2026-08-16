@@ -30,7 +30,6 @@ describe('ItemRow', () => {
     const onOpenDetail = vi.fn()
     const { container } = renderWithProviders(
       <ItemRow
-        isManageMode={false}
         item={{
           id: 5,
           eventId: 1,
@@ -46,6 +45,8 @@ describe('ItemRow', () => {
           coverage: { claimed: 0, required: null, remaining: null, status: 'open' },
         }}
         onClaim={() => undefined}
+        onDeleteItem={() => undefined}
+        onEditItem={() => undefined}
         onOpenDetail={onOpenDetail}
       />
     )
@@ -64,7 +65,6 @@ describe('ItemRow', () => {
   it('renders the minimal organiser row inline order as title, edit, claim, delete, then status', () => {
     renderWithProviders(
       <ItemRow
-        isManageMode
         item={{
           id: 6,
           eventId: 1,
@@ -109,7 +109,6 @@ describe('ItemRow', () => {
 
     renderWithProviders(
       <ItemRow
-        isManageMode
         item={{
           id: 6,
           eventId: 1,
@@ -144,12 +143,11 @@ describe('ItemRow', () => {
     expect(onOpenDetail).not.toHaveBeenCalled()
   })
 
-  it('opens details from the compact row in guest mode and only shows claim plus status inline', () => {
+  it('opens details from the compact row in guest mode and keeps edit, claim, delete, and status inline', () => {
     const onOpenDetail = vi.fn()
 
     renderWithProviders(
       <ItemRow
-        isManageMode={false}
         item={{
           id: 7,
           eventId: 1,
@@ -165,12 +163,14 @@ describe('ItemRow', () => {
           coverage: { claimed: 1, required: null, remaining: null, status: 'completed' },
         }}
         onClaim={() => undefined}
+        onDeleteItem={() => undefined}
+        onEditItem={() => undefined}
         onOpenDetail={onOpenDetail}
       />
     )
 
-    expect(screen.queryByLabelText('Edit Portable speaker')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('Delete Portable speaker')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Edit Portable speaker')).toBeInTheDocument()
+    expect(screen.getByLabelText('Delete Portable speaker')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Claim Portable speaker' })).toBeInTheDocument()
     expect(screen.getByText('Closed contribution')).toBeInTheDocument()
 
@@ -184,7 +184,6 @@ describe('ItemRow', () => {
 
     renderWithProviders(
       <ItemRow
-        isManageMode
         item={{
           id: 14,
           eventId: 1,

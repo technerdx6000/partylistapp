@@ -127,7 +127,6 @@ export function CategorySection({
         ) : (
           items.map((item) => (
             <ItemRow
-              isManageMode={isManageMode}
               item={item}
               key={item.id}
               onClaim={onClaim}
