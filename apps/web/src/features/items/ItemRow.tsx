@@ -67,7 +67,7 @@ export function ItemRow({
       : `${item.coverage.claimed} / ${item.coverage.required} covered`
 
   return (
-    <Card sx={{ borderColor: 'divider', borderStyle: 'solid', borderWidth: 1 }} variant="outlined">
+    <Card component="li" sx={{ borderColor: 'divider', borderStyle: 'solid', borderWidth: 1, listStyle: 'none' }} variant="outlined">
       <CardContent>
         <Stack spacing={1.5}>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>

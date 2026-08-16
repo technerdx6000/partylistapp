@@ -73,8 +73,8 @@
 | 6 – Collaboration | 6.6 | 🔒 Organiser mode — structural controls absent without admin token | ✅ Complete | Guest view hides structural controls, organiser view exposes them, and Playwright verifies share-token admin actions still return `403 ADMIN_REQUIRED` |
 | 6 – Collaboration | 6.7 | 🔒 Share flow — share URL, copy, admin link never leaked | ✅ Complete | Share/copy uses the guest URL only, organiser link remains separately labelled, and landing-page revisit plus e2e flow passed |
 | 7 – Polish | 7.1 | Responsive layout, touch targets, dialogs as sheets on mobile | 🔄 In Progress | Event-page loading now uses skeleton cards and the confirmation, claim, item, and identity dialogs all switch to small-screen full-screen mode through MUI breakpoints; focused web tests, type-check, and lint are green for this slice |
-| 7 – Polish | 7.2 | Skeletons and empty states | ⬜ Not Started | |
-| 7 – Polish | 7.3 | Snackbars replacing persistent error banners | ⬜ Not Started | Include requestId only |
+| 7 – Polish | 7.2 | Skeletons and empty states | 🔄 In Progress | Event-page loading now renders skeleton cards instead of a blank spinner, and focused tests cover empty-event, empty-category, no-participants, and no-search-match states; full phase validation is still pending |
+| 7 – Polish | 7.3 | Snackbars replacing persistent error banners | 🔄 In Progress | Event-page transactional feedback now uses a single dismissible snackbar with requestId-only error detail while invalid-link and unreachable-API paths remain inline retry states |
 | 7 – Polish | 7.4 | Destructive-action confirmations with stated consequences | 🔄 In Progress | Participant, item, category, event, and claim removal now route through confirmation dialogs; event deletion requires typing the event name and the updated collaboration tests cover both confirm and back-out paths |
 | 7 – Polish | 7.5 | Category icons, ordering controls, assignment display | ⬜ Not Started | Move up/down, not drag and drop |
 | 7 – Polish | 7.6 | Accessibility pass — keyboard, focus, labels, contrast, live regions | ⬜ Not Started | |
@@ -103,7 +103,7 @@
 
 | Date | Session Start | Tasks Completed | Notes |
 |------|--------------|-----------------|-------|
-| 2026-08-16 | Checked worktree diff against Phase 7 tracker, then continued Phase 7 web polish | None yet | Fixed workspace package resolution for Vitest/Vite/TypeScript on the current mounted filesystem, aligned responsive and collaboration tests with the new dialog flows, and continued 7.1/7.4 implementation without marking either task complete |
+| 2026-08-16 | Checked worktree diff against Phase 7 tracker, then continued Phase 7 web polish | None yet | Fixed workspace package resolution for Vitest/Vite/TypeScript on the current mounted filesystem, aligned responsive and collaboration tests with the new dialog flows, and continued 7.1/7.2/7.3/7.4 implementation without marking those tasks complete |
 
 ---
 

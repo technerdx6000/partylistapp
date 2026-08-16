@@ -2,7 +2,11 @@ import SentimentDissatisfiedRoundedIcon from '@mui/icons-material/SentimentDissa
 import { Button, Container, Stack, Typography } from '@mui/material'
 import { Link as RouterLink } from 'react-router-dom'
 
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+
 export default function NotFoundPage(): React.JSX.Element {
+  useDocumentTitle('Page not available | ListCollab')
+
   return (
     <Container maxWidth="sm" sx={{ py: 8 }}>
       <Stack spacing={2.5} sx={{ alignItems: 'flex-start' }}>

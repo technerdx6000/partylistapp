@@ -77,19 +77,25 @@ export function CategorySection({
           ) : null}
         </Stack>
       </Stack>
-      <Stack spacing={1.25}>
-        {items.map((item) => (
-          <ItemRow
-            currentIdentity={currentIdentity}
-            isManageMode={isManageMode}
-            item={item}
-            key={item.id}
-            onClaim={onClaim}
-            onDeleteItem={onDeleteItem}
-            onEditItem={onEditItem}
-            participants={participants}
-          />
-        ))}
+      <Stack component="ul" spacing={1.25} sx={{ listStyle: 'none', m: 0, p: 0 }}>
+        {items.length === 0 ? (
+          <Typography color="text.secondary" component="li">
+            No items in this category yet. Add the first one here.
+          </Typography>
+        ) : (
+          items.map((item) => (
+            <ItemRow
+              currentIdentity={currentIdentity}
+              isManageMode={isManageMode}
+              item={item}
+              key={item.id}
+              onClaim={onClaim}
+              onDeleteItem={onDeleteItem}
+              onEditItem={onEditItem}
+              participants={participants}
+            />
+          ))
+        )}
       </Stack>
     </Stack>
   )

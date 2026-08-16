@@ -6,9 +6,11 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom'
 
 import { EventForm } from './EventForm'
 import { recordVisitedEvent } from './visitedEvents'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { ApiClientError, createApiClient } from '../../services/apiClient'
 
 export default function CreateEventPage(): React.JSX.Element {
+  useDocumentTitle('Create event | ListCollab')
   const apiClient = createApiClient(null)
   const navigate = useNavigate()
   const [error, setError] = useState<ApiClientError | null>(null)

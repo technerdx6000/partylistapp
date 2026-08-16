@@ -123,6 +123,7 @@ describe('EventPage', () => {
     renderEventPage()
 
     expect(recordVisitedEventMock).toHaveBeenCalledWith(expect.objectContaining({ name: 'Camp Weekend' }))
+    expect(document.title).toBe('Camp Weekend | ListCollab')
     fireEvent.change(screen.getByLabelText('Search items or people'), { target: { value: 'Taylor' } })
 
     expect(screen.getByText('Bread Rolls')).toBeInTheDocument()
@@ -139,6 +140,7 @@ describe('EventPage', () => {
     renderEventPage()
 
     expect(screen.getByText("This event link isn't valid.")).toBeInTheDocument()
+    expect(document.title).toBe('Event unavailable | ListCollab')
   })
 
   it('renders the generic error state with a retry action', () => {
@@ -154,6 +156,7 @@ describe('EventPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
 
     expect(screen.getByText(/Request ID: req-2/)).toBeInTheDocument()
+    expect(document.title).toBe('Unable to load event | ListCollab')
     expect(refetch).toHaveBeenCalled()
   })
 
@@ -167,6 +170,24 @@ describe('EventPage', () => {
     renderEventPage()
 
     expect(screen.getByText('No items yet')).toBeInTheDocument()
+    expect(screen.getByText('This event does not have any items yet. Ask the organiser to add a requirement or add your own contribution.')).toBeInTheDocument()
+  })
+
+  it('renders the manage-view empty participants state', () => {
+    useStoredAdminTokenMock.mockReturnValue('a'.repeat(64))
+    useEventMock.mockReturnValue(buildUseEventResult({
+      data: {
+        ...buildAggregateResponse(),
+        items: [],
+        participants: [],
+      },
+      error: null,
+      isLoading: false,
+    }))
+
+    renderEventPage('/e/abcdefghij', true)
+
+    expect(screen.getByText('No participants yet. Claims will appear here as people identify themselves.')).toBeInTheDocument()
   })
 
   it('renders the invalid-link fallback when no event data resolves and there is no API error', () => {

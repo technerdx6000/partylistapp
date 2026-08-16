@@ -72,6 +72,7 @@ describe('CreateEventPage', () => {
     })
 
     renderCreateEventPage()
+    expect(document.title).toBe('Create event | ListCollab')
     await user.type(screen.getByLabelText(/Event name/i), 'Camp Weekend')
     await user.click(screen.getByRole('button', { name: 'Create event' }))
 

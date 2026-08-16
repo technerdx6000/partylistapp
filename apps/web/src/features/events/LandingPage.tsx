@@ -15,8 +15,10 @@ import {
 import { Link as RouterLink } from 'react-router-dom'
 
 import { getVisitedEvents } from './visitedEvents'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 
 export default function LandingPage(): React.JSX.Element {
+  useDocumentTitle('ListCollab | Shared event planning')
   const visitedEvents = getVisitedEvents()
 
   return (

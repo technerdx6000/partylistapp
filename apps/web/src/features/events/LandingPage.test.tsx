@@ -13,6 +13,7 @@ describe('LandingPage', () => {
     renderWithProviders(<LandingPage />)
 
     expect(screen.getByText('This browser has not opened any event links yet.')).toBeInTheDocument()
+    expect(document.title).toBe('ListCollab | Shared event planning')
   })
 
   it('renders visited events from localStorage', () => {

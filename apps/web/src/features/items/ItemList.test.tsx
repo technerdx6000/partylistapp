@@ -65,8 +65,11 @@ describe('ItemList', () => {
     )
 
     expect(screen.getByText('Food')).toBeInTheDocument()
+    expect(screen.getByText('Equipment')).toBeInTheDocument()
     expect(screen.getByText('Uncategorised')).toBeInTheDocument()
     expect(screen.getByText('Bread Rolls')).toBeInTheDocument()
     expect(screen.getByText('Portable speaker')).toBeInTheDocument()
+    expect(screen.getByText('No items in this category yet. Add the first one here.')).toBeInTheDocument()
+    expect(screen.getAllByRole('list')).toHaveLength(3)
   })
 })

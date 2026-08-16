@@ -13,7 +13,6 @@ import {
   Card,
   CardContent,
   Chip,
-  CircularProgress,
   Container,
   Divider,
   InputAdornment,
@@ -21,6 +20,8 @@ import {
   ListItem,
   ListItemSecondaryAction,
   ListItemText,
+  Skeleton,
+  Snackbar,
   Stack,
   TextField,
   Typography,
@@ -33,6 +34,8 @@ import { getEventCoverageSummary } from './eventCoverage'
 import { EventHeader } from './EventHeader'
 import { applyOptimisticAssignment, removeOptimisticAssignment } from './eventOptimisticUpdates'
 import { recordVisitedEvent } from './visitedEvents'
+import { ConfirmationDialog } from '../../components/ConfirmationDialog'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useEvent } from '../../hooks/useEvent'
 import { useEventIdentity, type EventIdentity } from '../../hooks/useEventIdentity'
 import { useStoredAdminToken } from '../../hooks/useEventToken'
@@ -59,10 +62,20 @@ type ItemFormState = {
 
 type FeedbackState = {
   message: string
+  requestId?: string
   severity: 'error' | 'success'
 } | null
 
 type PendingIdentityAction = ((eventIdentity: EventIdentity) => void) | null
+
+type ConfirmationDialogState = {
+  confirmButtonLabel: string
+  confirmationLabel?: string
+  confirmationValue?: string
+  description: string
+  title: string
+  onConfirm: () => Promise<void>
+} | null
 
 function isInvalidLinkError(error: ApiClientError): boolean {
   return error.code === 'EVENT_NOT_FOUND' || error.code === 'INVALID_TOKEN'
@@ -88,6 +101,45 @@ function filterItems(
   })
 }
 
+function getFeedbackMessage(feedback: Exclude<FeedbackState, null>): string {
+  if (feedback.severity === 'error' && feedback.requestId) {
+    return `${feedback.message} Request ID: ${feedback.requestId}`
+  }
+
+  return feedback.message
+}
+
+function EventPageLoadingState(): React.JSX.Element {
+  return (
+    <Container maxWidth="sm" sx={{ py: 3.5 }}>
+      <Stack aria-label="Loading event details" spacing={3}>
+        <Card>
+          <CardContent>
+            <Stack spacing={2}>
+              <Skeleton height={36} variant="rounded" width="55%" />
+              <Stack direction="row" spacing={1}>
+                <Skeleton height={32} variant="rounded" width={96} />
+                <Skeleton height={32} variant="rounded" width={160} />
+              </Stack>
+              <Skeleton height={18} variant="text" width="80%" />
+              <Skeleton height={18} variant="text" width="62%" />
+            </Stack>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent>
+            <Stack spacing={2}>
+              <Skeleton height={48} variant="rounded" />
+              <Skeleton height={52} variant="rounded" />
+              <Skeleton height={132} variant="rounded" />
+            </Stack>
+          </CardContent>
+        </Card>
+      </Stack>
+    </Container>
+  )
+}
+
 export default function EventPage({ manageMode }: EventPageProps): React.JSX.Element {
   const { shareToken: routeShareToken } = useParams<{ shareToken: string }>()
   const apiClient = useApiClient(routeShareToken, manageMode)
@@ -95,6 +147,8 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   const [searchTerm, setSearchTerm] = useState('')
   const [claimDialogState, setClaimDialogState] = useState<ClaimDialogState>(null)
   const [feedback, setFeedback] = useState<FeedbackState>(null)
+  const [confirmationDialogState, setConfirmationDialogState] = useState<ConfirmationDialogState>(null)
+  const [isConfirmingAction, setIsConfirmingAction] = useState(false)
   const [identifyDialogOpen, setIdentifyDialogOpen] = useState(false)
   const [itemFormState, setItemFormState] = useState<ItemFormState>(null)
   const [, setPendingIdentityAction] = useState<PendingIdentityAction>(null)
@@ -103,6 +157,19 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   const { clearIdentity, identity, setIdentity } = useEventIdentity(shareToken)
   const { data, error, isLoading, refetch } = useEvent(shareToken, manageMode)
   const participantNamesById = new Map((data?.participants ?? []).map((participant) => [participant.id, participant.name]))
+  const pageTitle = !shareToken
+    ? 'Event unavailable | ListCollab'
+    : isLoading
+      ? 'Loading event | ListCollab'
+      : error instanceof ApiClientError && isInvalidLinkError(error)
+        ? 'Event unavailable | ListCollab'
+        : error instanceof ApiClientError
+          ? 'Unable to load event | ListCollab'
+          : data
+            ? `${data.event.name}${manageMode ? ' - Organiser' : ''} | ListCollab`
+            : 'Event unavailable | ListCollab'
+
+  useDocumentTitle(pageTitle)
 
   useEffect(() => {
     if (data) {
@@ -112,6 +179,27 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
 
   async function refreshEvent(): Promise<void> {
     await queryClient.invalidateQueries({ queryKey: ['event', shareToken] })
+  }
+
+  async function runConfirmedAction(): Promise<void> {
+    if (!confirmationDialogState) {
+      return
+    }
+
+    setIsConfirmingAction(true)
+
+    try {
+      await confirmationDialogState.onConfirm()
+      setConfirmationDialogState(null)
+    } catch (caughtError) {
+      setFeedback({
+        message: 'We could not complete that action.',
+        severity: 'error',
+        ...(caughtError instanceof ApiClientError ? { requestId: caughtError.requestId } : {}),
+      })
+    } finally {
+      setIsConfirmingAction(false)
+    }
   }
 
   function runWithIdentity(nextAction: (eventIdentity: EventIdentity) => void): void {
@@ -234,12 +322,16 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
       }
 
       if (caughtError instanceof ApiClientError && caughtError.code === 'OVER_CLAIM') {
-        setFeedback({ message: 'Someone else claimed that amount first. The list has been refreshed.', severity: 'error' })
+        setFeedback({ message: 'Someone else claimed that amount first. The list has been refreshed.', requestId: caughtError.requestId, severity: 'error' })
         await refreshEvent()
         throw caughtError
       }
 
-      setFeedback({ message: 'We could not save that claim.', severity: 'error' })
+      setFeedback({
+        message: 'We could not save that claim.',
+        severity: 'error',
+        ...(caughtError instanceof ApiClientError ? { requestId: caughtError.requestId } : {}),
+      })
       await refreshEvent()
       throw caughtError
     }
@@ -263,7 +355,11 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
         queryClient.setQueryData(queryKey, previousData)
       }
 
-      setFeedback({ message: 'We could not remove that claim.', severity: 'error' })
+      setFeedback({
+        message: 'We could not remove that claim.',
+        severity: 'error',
+        ...(caughtError instanceof ApiClientError ? { requestId: caughtError.requestId } : {}),
+      })
       await refreshEvent()
       throw caughtError
     }
@@ -289,20 +385,12 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   }
 
   async function handleDeleteItem(item: EventItemWithAssignments): Promise<void> {
-    if (!window.confirm(`Delete ${item.name}?`)) {
-      return
-    }
-
     await apiClient.deleteItem(item.id)
     setFeedback({ message: 'Item deleted.', severity: 'success' })
     await refreshEvent()
   }
 
-  async function handleDeleteParticipant(participantId: number, displayName: string): Promise<void> {
-    if (!window.confirm(`Remove ${displayName} and their claims?`)) {
-      return
-    }
-
+  async function handleDeleteParticipant(participantId: number): Promise<void> {
     await apiClient.deleteParticipant(participantId)
     setFeedback({ message: 'Participant removed.', severity: 'success' })
     await refreshEvent()
@@ -326,11 +414,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
     await refreshEvent()
   }
 
-  async function handleDeleteCategory(categoryId: number, categoryName: string): Promise<void> {
-    if (!window.confirm(`Delete ${categoryName}? Items will become uncategorised.`)) {
-      return
-    }
-
+  async function handleDeleteCategory(categoryId: number): Promise<void> {
     await apiClient.deleteCategory(categoryId)
     setFeedback({ message: 'Category deleted.', severity: 'success' })
     await refreshEvent()
@@ -355,10 +439,6 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   }
 
   async function handleDeleteEvent(): Promise<void> {
-    if (!window.confirm('Delete this event for everyone?')) {
-      return
-    }
-
     await apiClient.deleteEvent(shareToken)
     window.location.assign('/')
   }
@@ -374,14 +454,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   const adminLink = adminToken ? `${window.location.origin}/e/${shareToken}/manage#k=${adminToken}` : null
 
   if (isLoading) {
-    return (
-      <Container maxWidth="sm" sx={{ py: 8 }}>
-        <Stack spacing={2} sx={{ alignItems: 'center' }}>
-          <CircularProgress />
-          <Typography color="text.secondary">Loading event details...</Typography>
-        </Stack>
-      </Container>
-    )
+    return <EventPageLoadingState />
   }
 
   if (error instanceof ApiClientError && isInvalidLinkError(error)) {
@@ -423,16 +496,58 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   const visibleItems = filterItems(data.items, participantNamesById, searchTerm)
   const coverageSummary = getEventCoverageSummary(data.items)
   const shareUrl = `${window.location.origin}/e/${shareToken}`
+  const event = data.event
+
+  function openDeleteItemDialog(item: EventItemWithAssignments): void {
+    setConfirmationDialogState({
+      confirmButtonLabel: 'Delete item',
+      description: `Delete ${item.name} for everyone? This removes it from the list entirely.`,
+      onConfirm: () => handleDeleteItem(item),
+      title: 'Delete item',
+    })
+  }
+
+  function openDeleteParticipantDialog(participantId: number, displayName: string): void {
+    const claimsCount = data!.items.reduce(
+      (total, item) => total + item.assignments.filter((assignment) => assignment.participantId === participantId).length,
+      0
+    )
+    const claimLabel = `${claimsCount} claim${claimsCount === 1 ? '' : 's'}`
+
+    setConfirmationDialogState({
+      confirmButtonLabel: 'Remove participant',
+      description: `Remove ${displayName}? ${claimLabel} will be removed from the list.`,
+      onConfirm: () => handleDeleteParticipant(participantId),
+      title: 'Remove participant',
+    })
+  }
+
+  function openDeleteCategoryDialog(categoryId: number, categoryName: string): void {
+    const affectedItems = data!.items.filter((item) => item.categoryId === categoryId).length
+    const itemLabel = `${affectedItems} item${affectedItems === 1 ? '' : 's'}`
+
+    setConfirmationDialogState({
+      confirmButtonLabel: 'Delete category',
+      description: `Delete ${categoryName}? ${itemLabel} will become uncategorised.`,
+      onConfirm: () => handleDeleteCategory(categoryId),
+      title: 'Delete category',
+    })
+  }
+
+  function openDeleteEventDialog(): void {
+    setConfirmationDialogState({
+      confirmButtonLabel: 'Delete event',
+      confirmationLabel: 'Type the event name to confirm',
+      confirmationValue: event.name,
+      description: 'This deletes the event, every requirement, and every claim for everyone.',
+      onConfirm: () => handleDeleteEvent(),
+      title: 'Delete event',
+    })
+  }
 
   return (
     <Container maxWidth="sm" sx={{ py: 3.5 }}>
       <Stack spacing={3}>
-        {feedback ? (
-          <Alert color={feedback.severity === 'error' ? 'error' : 'success'}>
-            {feedback.message}
-          </Alert>
-        ) : null}
-
         <Card>
           <CardContent>
             <EventHeader
@@ -484,23 +599,29 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
                     <Button onClick={() => openContributionForm(null)} startIcon={<PlaylistAddRoundedIcon />} variant="outlined">
                       Add requirement
                     </Button>
-                    <Button color="error" onClick={() => void handleDeleteEvent()} variant="outlined">
+                    <Button color="error" onClick={openDeleteEventDialog} variant="outlined">
                       Delete event
                     </Button>
                   </Stack>
                   <Stack spacing={1}>
                     <Typography variant="h4">Participants</Typography>
                     <List disablePadding>
-                      {data.participants.map((participant) => (
-                        <ListItem divider key={participant.id}>
-                          <ListItemText primary={participant.name} />
-                          <ListItemSecondaryAction>
-                            <Button color="error" onClick={() => void handleDeleteParticipant(participant.id, participant.name)} variant="text">
-                              Remove
-                            </Button>
-                          </ListItemSecondaryAction>
+                      {data.participants.length === 0 ? (
+                        <ListItem>
+                          <ListItemText secondary="No participants yet. Claims will appear here as people identify themselves." />
                         </ListItem>
-                      ))}
+                      ) : (
+                        data.participants.map((participant) => (
+                          <ListItem divider key={participant.id}>
+                            <ListItemText primary={participant.name} />
+                            <ListItemSecondaryAction>
+                              <Button color="error" onClick={() => openDeleteParticipantDialog(participant.id, participant.name)} variant="text">
+                                Remove
+                              </Button>
+                            </ListItemSecondaryAction>
+                          </ListItem>
+                        ))
+                      )}
                     </List>
                     <Button onClick={() => void handleCategoryPrompt(null)} variant="text">
                       Add category
@@ -531,7 +652,9 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
               <Stack spacing={1.5}>
                 <Typography variant="h3">No items yet</Typography>
                 <Typography color="text.secondary">
-                  This event does not have any items to bring yet. Add items in organiser mode in the next phase.
+                  {manageMode
+                    ? 'This event does not have any items yet. Add the first requirement to get the list moving.'
+                    : 'This event does not have any items yet. Ask the organiser to add a requirement or add your own contribution.'}
                 </Typography>
               </Stack>
             </CardContent>
@@ -550,8 +673,8 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
             items={visibleItems}
             onAddItem={openContributionForm}
             onClaim={openClaimDialog}
-            onDeleteCategory={(category) => void handleDeleteCategory(category.id, category.name)}
-            onDeleteItem={(item) => void handleDeleteItem(item)}
+            onDeleteCategory={(category) => openDeleteCategoryDialog(category.id, category.name)}
+            onDeleteItem={openDeleteItemDialog}
             onEditCategory={(category) => void handleCategoryPrompt(category.id, category.name)}
             onEditItem={(item) =>
               setItemFormState({
@@ -599,6 +722,41 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
         onClose={() => setItemFormState(null)}
         onCreate={handleCreateItem}
         onUpdate={handleUpdateItem}
+      />
+
+      <Snackbar
+        anchorOrigin={{ horizontal: 'center', vertical: 'bottom' }}
+        autoHideDuration={5000}
+        onClose={(_event, reason) => {
+          if (reason === 'clickaway') {
+            return
+          }
+
+          setFeedback(null)
+        }}
+        open={Boolean(feedback)}
+      >
+        <Alert color={feedback?.severity === 'error' ? 'error' : 'success'} onClose={() => setFeedback(null)} variant="filled">
+          {feedback ? getFeedbackMessage(feedback) : ''}
+        </Alert>
+      </Snackbar>
+
+      <ConfirmationDialog
+        confirmButtonLabel={confirmationDialogState?.confirmButtonLabel ?? 'Confirm'}
+        description={confirmationDialogState?.description ?? ''}
+        isConfirming={isConfirmingAction}
+        isOpen={Boolean(confirmationDialogState)}
+        onClose={() => {
+          if (!isConfirmingAction) {
+            setConfirmationDialogState(null)
+          }
+        }}
+        onConfirm={() => {
+          void runConfirmedAction()
+        }}
+        title={confirmationDialogState?.title ?? 'Confirm action'}
+        {...(confirmationDialogState?.confirmationLabel ? { confirmationLabel: confirmationDialogState.confirmationLabel } : {})}
+        {...(confirmationDialogState?.confirmationValue ? { confirmationValue: confirmationDialogState.confirmationValue } : {})}
       />
     </Container>
   )

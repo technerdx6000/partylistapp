@@ -38,7 +38,6 @@ export function ItemList({
       category,
       items: items.filter((item) => item.categoryId === category.id),
     }))
-    .filter((group) => group.items.length > 0)
 
   return (
     <Stack spacing={3}>

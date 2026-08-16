@@ -44,4 +44,27 @@ describe('CategorySection', () => {
     expect(screen.getByText('0 / 1 covered')).toBeInTheDocument()
     expect(screen.getByText('Soda cans')).toBeInTheDocument()
   })
+
+  it('renders an empty-category prompt when no items belong to the section', () => {
+    renderWithProviders(
+      <CategorySection
+        category={{
+          id: 4,
+          eventId: 1,
+          name: 'Dessert',
+          icon: 'D',
+          sortOrder: 2,
+          createdAt: '2026-08-15T00:00:00.000Z',
+        }}
+        items={[]}
+        currentIdentity={null}
+        isManageMode={true}
+        onAddItem={() => undefined}
+        onClaim={() => undefined}
+        participants={[]}
+      />
+    )
+
+    expect(screen.getByText('No items in this category yet. Add the first one here.')).toBeInTheDocument()
+  })
 })

@@ -9,6 +9,7 @@ describe('NotFoundPage', () => {
     renderWithProviders(<NotFoundPage />)
 
     expect(screen.getByRole('heading', { name: 'This page is not available.' })).toBeInTheDocument()
+    expect(document.title).toBe('Page not available | ListCollab')
     expect(screen.getByRole('link', { name: 'Go home' })).toHaveAttribute('href', '/')
   })
 })
