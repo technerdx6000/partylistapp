@@ -31,7 +31,6 @@ describe('ItemList', () => {
             createdAt: '2026-08-15T00:00:00.000Z',
           },
         ]}
-        currentIdentity={null}
         isManageMode={false}
         items={[
           {
@@ -65,6 +64,7 @@ describe('ItemList', () => {
         ]}
         onAddItem={() => undefined}
         onClaim={() => undefined}
+          onOpenItemDetail={() => undefined}
         participants={[]}
       />
     )
@@ -99,7 +99,6 @@ describe('ItemList', () => {
             createdAt: '2026-08-15T00:00:00.000Z',
           },
         ]}
-        currentIdentity={null}
         isManageMode={false}
         items={[
           {
@@ -133,6 +132,7 @@ describe('ItemList', () => {
         ]}
         onAddItem={() => undefined}
         onClaim={() => undefined}
+          onOpenItemDetail={() => undefined}
         participants={[]}
         visibleGroupKey={getCategoryGroupKey(2)}
       />

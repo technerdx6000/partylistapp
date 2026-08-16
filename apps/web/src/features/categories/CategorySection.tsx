@@ -9,7 +9,6 @@ import FolderOpenRoundedIcon from '@mui/icons-material/FolderOpenRounded'
 import { Button, Chip, IconButton, Stack, Typography } from '@mui/material'
 
 import { renderCategoryIcon } from './categoryIcons'
-import type { EventIdentity } from '../../hooks/useEventIdentity'
 import { getCategoryCoverageSummary } from '../events/eventCoverage'
 import { ItemRow } from '../items/ItemRow'
 
@@ -17,7 +16,6 @@ type CategorySectionProps = {
   canMoveDown?: boolean | undefined
   canMoveUp?: boolean | undefined
   category: EventCategory | null
-  currentIdentity: EventIdentity | null
   isManageMode: boolean
   items: readonly EventItemWithAssignments[]
   onAddItem: (categoryId: number | null) => void
@@ -26,6 +24,7 @@ type CategorySectionProps = {
   onDeleteItem?: ((item: EventItemWithAssignments) => void) | undefined
   onEditCategory?: ((category: EventCategory) => void) | undefined
   onEditItem?: ((item: EventItemWithAssignments) => void) | undefined
+  onOpenItemDetail: (item: EventItemWithAssignments) => void
   onMoveCategoryDown?: ((category: EventCategory) => void) | undefined
   onMoveCategoryUp?: ((category: EventCategory) => void) | undefined
   participants: readonly EventParticipant[]
@@ -35,7 +34,6 @@ export function CategorySection({
   canMoveDown,
   canMoveUp,
   category,
-  currentIdentity,
   isManageMode,
   items,
   onAddItem,
@@ -44,9 +42,9 @@ export function CategorySection({
   onDeleteItem,
   onEditCategory,
   onEditItem,
+  onOpenItemDetail,
   onMoveCategoryDown,
   onMoveCategoryUp,
-  participants,
 }: CategorySectionProps): React.JSX.Element {
   const name = category?.name ?? 'Uncategorised'
   const coverageSummary = getCategoryCoverageSummary(items)
@@ -129,14 +127,13 @@ export function CategorySection({
         ) : (
           items.map((item) => (
             <ItemRow
-              currentIdentity={currentIdentity}
               isManageMode={isManageMode}
               item={item}
               key={item.id}
               onClaim={onClaim}
               onDeleteItem={onDeleteItem}
               onEditItem={onEditItem}
-              participants={participants}
+              onOpenDetail={onOpenItemDetail}
             />
           ))
         )}

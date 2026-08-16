@@ -48,6 +48,7 @@ import { ApiClientError, useApiClient } from '../../services/apiClient'
 import { CategoryForm } from '../categories/CategoryForm'
 import { ClaimItemDialog } from '../items/ClaimItemDialog'
 import { groupItemsByCategory } from '../items/groupItemsByCategory'
+import { ItemDetailSurface, type ItemDetailMode } from '../items/ItemDetailSurface'
 import { ItemForm } from '../items/ItemForm'
 import { ItemList } from '../items/ItemList'
 import { IdentifyDialog } from '../participants/IdentifyDialog'
@@ -66,6 +67,11 @@ type ItemFormState = {
   categoryId: number | null
   item: EventItemWithAssignments | null
   mode: 'guest-create' | 'guest-edit' | 'manage-create' | 'manage-edit'
+} | null
+
+type ItemDetailState = {
+  itemId: number
+  mode: ItemDetailMode
 } | null
 
 type FeedbackState = {
@@ -176,6 +182,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   const [activeMobileGroupKey, setActiveMobileGroupKey] = useState<string | null>(null)
   const [isConfirmingAction, setIsConfirmingAction] = useState(false)
   const [identifyDialogOpen, setIdentifyDialogOpen] = useState(false)
+  const [itemDetailState, setItemDetailState] = useState<ItemDetailState>(null)
   const [itemFormState, setItemFormState] = useState<ItemFormState>(null)
   const [isParticipantManagerOpen, setIsParticipantManagerOpen] = useState(false)
   const [, setPendingIdentityAction] = useState<PendingIdentityAction>(null)
@@ -570,6 +577,17 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   const visibleGroupKey = isSmallScreen && !isSearchActive ? (activeMobileGroupKey ?? groupedItemSections[0]?.key) : undefined
   const shareUrl = `${window.location.origin}/e/${shareToken}`
   const event = data.event
+  const selectedDetailItem = itemDetailState
+    ? data.items.find((candidateItem) => candidateItem.id === itemDetailState.itemId) ?? null
+    : null
+
+  function openItemDetail(item: EventItemWithAssignments, mode: ItemDetailMode = 'view'): void {
+    setItemDetailState({ itemId: item.id, mode })
+  }
+
+  function closeItemDetail(): void {
+    setItemDetailState(null)
+  }
 
   function openDeleteItemDialog(item: EventItemWithAssignments): void {
     setConfirmationDialogState({
@@ -775,20 +793,15 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
         ) : (
           <ItemList
             categories={data.categories}
-            currentIdentity={identity}
             isManageMode={manageMode}
             items={visibleItems}
             onAddItem={openContributionForm}
-            onClaim={openClaimDialog}
+            onClaim={(item) => openItemDetail(item, 'claim')}
             onDeleteCategory={(category) => openDeleteCategoryDialog(category.id, category.name)}
-            onDeleteItem={openDeleteItemDialog}
+            onDeleteItem={(item) => openItemDetail(item, 'delete')}
             onEditCategory={(category) => setCategoryFormState({ category })}
-            onEditItem={(item) =>
-              setItemFormState({
-                categoryId: item.categoryId,
-                item,
-                mode: manageMode ? 'manage-edit' : 'guest-edit',
-              })}
+            onEditItem={(item) => openItemDetail(item, 'edit')}
+            onOpenItemDetail={(item) => openItemDetail(item)}
             onMoveCategoryDown={(category) => void handleMoveCategory(category.id, 1)}
             onMoveCategoryUp={(category) => void handleMoveCategory(category.id, -1)}
             participants={data.participants}
@@ -808,6 +821,32 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
         }}
         onCreateParticipant={handleCreateParticipant}
         onSelectParticipant={(participant) => handleParticipantSelection(participant.id, participant.name)}
+      />
+
+      <ItemDetailSurface
+        currentIdentity={identity}
+        isManageMode={manageMode}
+        isOpen={Boolean(itemDetailState && selectedDetailItem)}
+        item={selectedDetailItem}
+        mode={itemDetailState?.mode ?? 'view'}
+        onClose={closeItemDetail}
+        onDelete={(item) => {
+          closeItemDetail()
+          openDeleteItemDialog(item)
+        }}
+        onEdit={(item) => {
+          closeItemDetail()
+          setItemFormState({
+            categoryId: item.categoryId,
+            item,
+            mode: manageMode ? 'manage-edit' : 'guest-edit',
+          })
+        }}
+        onOpenClaim={(item, assignment) => {
+          closeItemDetail()
+          openClaimDialog(item, assignment)
+        }}
+        participants={data.participants}
       />
 
       <ClaimItemDialog

@@ -4,7 +4,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DOCKERHUB_NAMESPACE="${DOCKERHUB_NAMESPACE:-technerdx6000}"
-IMAGE_TAG="${IMAGE_TAG:-1.0.6}"
+IMAGE_TAG="${IMAGE_TAG:-1.0.7}"
 EXTRA_TAG="${EXTRA_TAG:-git-$(git -C "$REPO_ROOT" rev-parse --short HEAD)}"
 WEB_IMAGE="${DOCKERHUB_NAMESPACE}/listcollab-web"
 API_IMAGE="${DOCKERHUB_NAMESPACE}/listcollab-api"

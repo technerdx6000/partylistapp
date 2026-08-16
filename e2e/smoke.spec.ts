@@ -83,7 +83,8 @@ async function createRequirement(
 }
 
 async function createParticipantAndClaim(page: Page, displayName: string, quantity: number): Promise<void> {
-    await page.getByRole('button', { name: 'I will bring this' }).click()
+    await page.getByRole('button', { name: /Claim / }).first().click()
+    await page.getByRole('button', { name: 'Claim' }).click()
     await expect(page.getByRole('heading', { name: 'Who are you?' })).toBeVisible()
     await page.getByLabel('Add your name').fill(displayName)
     await page.getByRole('button', { name: 'Continue' }).click()
@@ -124,10 +125,10 @@ test('completes the collaborative MVP flow and avoids horizontal scrolling at mo
     await expect(secondPage.getByRole('heading', { name: 'Collaboration Flow Event' })).toBeVisible()
 
     await createParticipantAndClaim(secondPage, 'Jordan', 2)
-    await expect(secondPage.getByText('Covered · 3 / 3')).toBeVisible()
+    await expect(secondPage.getByText('Closed · 0 left')).toBeVisible()
 
     await page.reload()
-    await expect(page.getByText('Covered · 3 / 3')).toBeVisible()
+    await expect(page.getByText('Closed · 0 left')).toBeVisible()
 
     await secondPage.getByRole('button', { name: 'Add your contribution' }).click()
     await expect(secondPage.getByRole('heading', { name: 'Add your contribution' })).toBeVisible()
@@ -215,7 +216,8 @@ test('keeps the claim dialog submittable in a half-height mobile viewport', asyn
 
     await page.setViewportSize({ width: 390, height: 422 })
     await page.goto(`${APP_URL}/e/${event.shareToken}`)
-    await page.getByRole('button', { name: 'I will bring this' }).click()
+    await page.getByRole('button', { name: 'Claim Water bottles' }).click()
+    await page.getByRole('button', { name: 'Claim' }).click()
     await page.getByLabel('Add your name').fill('Taylor')
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page.getByRole('heading', { name: 'Claim item' })).toBeVisible()
@@ -240,7 +242,8 @@ test('rejects over-claims visibly without writing a partial assignment', async (
 
     await createParticipantAndClaim(page, 'Taylor', 2)
 
-    await secondPage.getByRole('button', { name: 'I will bring this' }).click()
+    await secondPage.getByRole('button', { name: 'Claim Napkins' }).click()
+    await secondPage.getByRole('button', { name: 'Claim' }).click()
     await secondPage.getByLabel('Add your name').fill('Jordan')
     await secondPage.getByRole('button', { name: 'Continue' }).click()
     await expect(secondPage.getByRole('heading', { name: 'Claim item' })).toBeVisible()

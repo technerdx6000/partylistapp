@@ -32,10 +32,10 @@ describe('CategorySection', () => {
             coverage: { claimed: 0, required: 4, remaining: 4, status: 'open' },
           },
         ]}
-        currentIdentity={null}
         isManageMode={false}
         onAddItem={() => undefined}
         onClaim={() => undefined}
+          onOpenItemDetail={() => undefined}
         participants={[]}
       />
     )
@@ -57,10 +57,10 @@ describe('CategorySection', () => {
           createdAt: '2026-08-15T00:00:00.000Z',
         }}
         items={[]}
-        currentIdentity={null}
         isManageMode={true}
         onAddItem={() => undefined}
         onClaim={() => undefined}
+          onOpenItemDetail={() => undefined}
         participants={[]}
       />
     )
@@ -85,12 +85,12 @@ describe('CategorySection', () => {
           createdAt: '2026-08-15T00:00:00.000Z',
         }}
         items={[]}
-        currentIdentity={null}
         isManageMode
         onAddItem={() => undefined}
         onClaim={() => undefined}
         onMoveCategoryDown={onMoveCategoryDown}
         onMoveCategoryUp={onMoveCategoryUp}
+          onOpenItemDetail={() => undefined}
         participants={[]}
       />
     )

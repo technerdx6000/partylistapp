@@ -2,12 +2,10 @@ import type { EventCategory, EventItemAssignment, EventItemWithAssignments, Even
 import { Stack } from '@mui/material'
 
 import { groupItemsByCategory } from './groupItemsByCategory'
-import type { EventIdentity } from '../../hooks/useEventIdentity'
 import { CategorySection } from '../categories/CategorySection'
 
 type ItemListProps = {
   categories: readonly EventCategory[]
-  currentIdentity: EventIdentity | null
   isManageMode: boolean
   items: readonly EventItemWithAssignments[]
   onAddItem: (categoryId: number | null) => void
@@ -16,6 +14,7 @@ type ItemListProps = {
   onDeleteItem?: ((item: EventItemWithAssignments) => void) | undefined
   onEditCategory?: ((category: EventCategory) => void) | undefined
   onEditItem?: ((item: EventItemWithAssignments) => void) | undefined
+  onOpenItemDetail: (item: EventItemWithAssignments) => void
   onMoveCategoryDown?: ((category: EventCategory) => void) | undefined
   onMoveCategoryUp?: ((category: EventCategory) => void) | undefined
   participants: readonly EventParticipant[]
@@ -23,7 +22,6 @@ type ItemListProps = {
 }
 export function ItemList({
   categories,
-  currentIdentity,
   isManageMode,
   items,
   onAddItem,
@@ -32,6 +30,7 @@ export function ItemList({
   onDeleteItem,
   onEditCategory,
   onEditItem,
+  onOpenItemDetail,
   onMoveCategoryDown,
   onMoveCategoryUp,
   participants,
@@ -49,7 +48,6 @@ export function ItemList({
           canMoveDown={groupedCategories.indexOf(group) < groupedCategories.length - 1}
           canMoveUp={groupedCategories.indexOf(group) > 0}
           category={group.category}
-          currentIdentity={currentIdentity}
           isManageMode={isManageMode}
           items={group.items}
           key={group.key}
@@ -59,6 +57,7 @@ export function ItemList({
           onDeleteItem={onDeleteItem}
           onEditCategory={onEditCategory}
           onEditItem={onEditItem}
+          onOpenItemDetail={onOpenItemDetail}
           onMoveCategoryDown={onMoveCategoryDown}
           onMoveCategoryUp={onMoveCategoryUp}
           participants={participants}

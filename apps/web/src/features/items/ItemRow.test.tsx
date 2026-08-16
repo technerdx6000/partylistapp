@@ -5,11 +5,11 @@ import { ItemRow } from './ItemRow'
 import { renderWithProviders } from '../../../test/renderWithProviders'
 
 describe('ItemRow', () => {
-  it('renders contribution rows and keeps attacker-controlled text inert', () => {
+  it('renders a compact contribution row, keeps attacker-controlled text inert, and opens details from the row click target', () => {
     const maliciousName = '<img src=x onerror=alert(1)>'
+    const onOpenDetail = vi.fn()
     const { container } = renderWithProviders(
       <ItemRow
-        currentIdentity={null}
         isManageMode={false}
         item={{
           id: 5,
@@ -25,139 +25,71 @@ describe('ItemRow', () => {
           assignments: [],
           coverage: { claimed: 0, required: null, remaining: null, status: 'open' },
         }}
-        participants={[
-          {
-            id: 9,
-            eventId: 1,
-            name: 'Aaron',
-            createdAt: '2026-08-15T00:00:00.000Z',
-          },
-        ]}
         onClaim={() => undefined}
+        onOpenDetail={onOpenDetail}
       />
     )
 
     expect(screen.getByText(maliciousName)).toBeInTheDocument()
-    expect(screen.getByText('Aaron added this contribution.')).toBeInTheDocument()
+    expect(screen.getByText('Open contribution')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: `Claim ${maliciousName}` })).toBeInTheDocument()
     expect(container.querySelector('img[src="x"]')).toBeNull()
     expect(container.querySelector('script')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: `Open ${maliciousName} details` }))
+
+    expect(onOpenDetail).toHaveBeenCalledWith(expect.objectContaining({ id: 5, name: maliciousName }))
   })
 
-  it('renders assignment summaries for required items and claimed contributions', () => {
-    renderWithProviders(
-      <>
-        <ItemRow
-          currentIdentity={null}
-          isManageMode={false}
-          item={{
-            id: 6,
-            eventId: 1,
-            categoryId: 2,
-            name: 'Paper plates',
-            description: null,
-            quantityRequired: 3,
-            status: 'open',
-            createdBy: null,
-            createdAt: '2026-08-15T00:00:00.000Z',
-            updatedAt: '2026-08-15T00:00:00.000Z',
-            assignments: [{ id: 1, itemId: 6, participantId: 2, quantity: 2, note: null, createdAt: '2026-08-15T00:00:00.000Z' }],
-            coverage: { claimed: 2, required: 3, remaining: 1, status: 'open' },
-          }}
-          participants={[
-            {
-              id: 2,
-              eventId: 1,
-              name: 'Jordan',
-              createdAt: '2026-08-15T00:00:00.000Z',
-            },
-          ]}
-          onClaim={() => undefined}
-        />
-        <ItemRow
-          currentIdentity={null}
-          isManageMode={false}
-          item={{
-            id: 7,
-            eventId: 1,
-            categoryId: null,
-            name: 'Portable speaker',
-            description: null,
-            quantityRequired: null,
-            status: 'open',
-            createdBy: 2,
-            createdAt: '2026-08-15T00:00:00.000Z',
-            updatedAt: '2026-08-15T00:00:00.000Z',
-            assignments: [{ id: 2, itemId: 7, participantId: 2, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' }],
-            coverage: { claimed: 1, required: null, remaining: null, status: 'completed' },
-          }}
-          participants={[
-            {
-              id: 2,
-              eventId: 1,
-              name: 'Jordan',
-              createdAt: '2026-08-15T00:00:00.000Z',
-            },
-          ]}
-          onClaim={() => undefined}
-        />
-      </>
-    )
-
-    expect(screen.getAllByText('Jordan ×2')).toHaveLength(2)
-    expect(screen.getByText('Jordan ×1 is bringing this contribution.')).toBeInTheDocument()
-    expect(screen.getByText('Completed contribution')).toBeInTheDocument()
-    expect(screen.getByText('Partly covered · 2 / 3')).toBeInTheDocument()
-    expect(screen.getByText('1 still needed')).toBeInTheDocument()
-  })
-
-  it('collapses dense assignment lists behind an expander on smaller rows', () => {
+  it('renders the minimal organiser row inline order as title, edit, claim, delete, then status', () => {
     renderWithProviders(
       <ItemRow
-        currentIdentity={null}
-        isManageMode={false}
+        isManageMode
         item={{
-          id: 8,
+          id: 6,
           eventId: 1,
           categoryId: 2,
-          name: 'Camp chairs',
-          description: null,
-          quantityRequired: 5,
+          name: 'Paper plates',
+          description: 'Disposable plates',
+          quantityRequired: 3,
           status: 'open',
           createdBy: null,
           createdAt: '2026-08-15T00:00:00.000Z',
           updatedAt: '2026-08-15T00:00:00.000Z',
-          assignments: [
-            { id: 1, itemId: 8, participantId: 1, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' },
-            { id: 2, itemId: 8, participantId: 2, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' },
-            { id: 3, itemId: 8, participantId: 3, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' },
-            { id: 4, itemId: 8, participantId: 4, quantity: 2, note: null, createdAt: '2026-08-15T00:00:00.000Z' },
-          ],
-          coverage: { claimed: 5, required: 5, remaining: 0, status: 'covered' },
+          assignments: [{ id: 1, itemId: 6, participantId: 2, quantity: 2, note: null, createdAt: '2026-08-15T00:00:00.000Z' }],
+          coverage: { claimed: 2, required: 3, remaining: 1, status: 'open' },
         }}
-        participants={[
-          { id: 1, eventId: 1, name: 'Taylor', createdAt: '2026-08-15T00:00:00.000Z' },
-          { id: 2, eventId: 1, name: 'Jordan', createdAt: '2026-08-15T00:00:00.000Z' },
-          { id: 3, eventId: 1, name: 'Avery', createdAt: '2026-08-15T00:00:00.000Z' },
-          { id: 4, eventId: 1, name: 'Morgan', createdAt: '2026-08-15T00:00:00.000Z' },
-        ]}
         onClaim={() => undefined}
+        onDeleteItem={() => undefined}
+        onEditItem={() => undefined}
+        onOpenDetail={() => undefined}
       />
     )
 
-    expect(screen.queryByText('Morgan ×2')).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Show 1 more claim' }))
+    const rowTrigger = screen.getByRole('button', { name: 'Open Paper plates details' })
+    const title = screen.getByText('Paper plates')
+    const edit = screen.getByLabelText('Edit Paper plates')
+    const claim = screen.getByRole('button', { name: 'Claim Paper plates' })
+    const deleteButton = screen.getByLabelText('Delete Paper plates')
+    const status = screen.getByText('Open · 1 left')
 
-    expect(screen.getByText('Morgan ×2')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Show fewer claims' })).toBeInTheDocument()
+    expect(screen.queryByText('Disposable plates')).not.toBeInTheDocument()
+    expect(rowTrigger.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_CONTAINED_BY).toBeTruthy()
+    expect(title.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(edit.compareDocumentPosition(claim) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(claim.compareDocumentPosition(deleteButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(deleteButton.compareDocumentPosition(status) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
-  it('only exposes other people\'s claim chips as display-only in guest mode', () => {
+  it('routes inline actions without triggering the row detail click target', () => {
     const onClaim = vi.fn()
+    const onDeleteItem = vi.fn()
+    const onEditItem = vi.fn()
+    const onOpenDetail = vi.fn()
 
     renderWithProviders(
       <ItemRow
-        currentIdentity={{ displayName: 'Jordan', participantId: 2 }}
-        isManageMode={false}
+        isManageMode
         item={{
           id: 6,
           eventId: 1,
@@ -175,20 +107,55 @@ describe('ItemRow', () => {
           ],
           coverage: { claimed: 2, required: 3, remaining: 1, status: 'open' },
         }}
-        participants={[
-          { id: 1, eventId: 1, name: 'Taylor', createdAt: '2026-08-15T00:00:00.000Z' },
-          { id: 2, eventId: 1, name: 'Jordan', createdAt: '2026-08-15T00:00:00.000Z' },
-        ]}
         onClaim={onClaim}
+        onDeleteItem={onDeleteItem}
+        onEditItem={onEditItem}
+        onOpenDetail={onOpenDetail}
       />
     )
 
-    expect(screen.queryByRole('button', { name: 'Taylor ×1' })).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Jordan ×1' }))
+    fireEvent.click(screen.getByLabelText('Edit Paper plates'))
+    fireEvent.click(screen.getByRole('button', { name: 'Claim Paper plates' }))
+    fireEvent.click(screen.getByLabelText('Delete Paper plates'))
 
-    expect(onClaim).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 6, name: 'Paper plates' }),
-      expect.objectContaining({ id: 2, participantId: 2 })
+    expect(onEditItem).toHaveBeenCalledWith(expect.objectContaining({ id: 6, name: 'Paper plates' }))
+    expect(onClaim).toHaveBeenCalledWith(expect.objectContaining({ id: 6, name: 'Paper plates' }))
+    expect(onDeleteItem).toHaveBeenCalledWith(expect.objectContaining({ id: 6, name: 'Paper plates' }))
+    expect(onOpenDetail).not.toHaveBeenCalled()
+  })
+
+  it('opens details from the compact row in guest mode and only shows claim plus status inline', () => {
+    const onOpenDetail = vi.fn()
+
+    renderWithProviders(
+      <ItemRow
+        isManageMode={false}
+        item={{
+          id: 7,
+          eventId: 1,
+          categoryId: null,
+          name: 'Portable speaker',
+          description: null,
+          quantityRequired: null,
+          status: 'open',
+          createdBy: 2,
+          createdAt: '2026-08-15T00:00:00.000Z',
+          updatedAt: '2026-08-15T00:00:00.000Z',
+          assignments: [{ id: 2, itemId: 7, participantId: 2, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' }],
+          coverage: { claimed: 1, required: null, remaining: null, status: 'completed' },
+        }}
+        onClaim={() => undefined}
+        onOpenDetail={onOpenDetail}
+      />
     )
+
+    expect(screen.queryByLabelText('Edit Portable speaker')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Delete Portable speaker')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Claim Portable speaker' })).toBeInTheDocument()
+    expect(screen.getByText('Closed contribution')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open Portable speaker details' }))
+
+    expect(onOpenDetail).toHaveBeenCalledWith(expect.objectContaining({ id: 7, name: 'Portable speaker' }))
   })
 })
