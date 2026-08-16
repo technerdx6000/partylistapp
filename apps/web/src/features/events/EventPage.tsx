@@ -30,7 +30,7 @@ import {
   useTheme,
 } from '@mui/material'
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { getEventCoverageSummary } from './eventCoverage'
@@ -186,6 +186,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   const [itemFormState, setItemFormState] = useState<ItemFormState>(null)
   const [isParticipantManagerOpen, setIsParticipantManagerOpen] = useState(false)
   const [, setPendingIdentityAction] = useState<PendingIdentityAction>(null)
+  const hasTransientOverlayHistoryEntryRef = useRef(false)
   const shareToken = routeShareToken ?? ''
   const adminToken = useStoredAdminToken(shareToken)
   const { clearIdentity, identity, setIdentity } = useEventIdentity(shareToken)
@@ -234,6 +235,84 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
 
     setActiveMobileGroupKey(groupedItemSections[0]?.key ?? null)
   }, [activeMobileGroupKey, groupedItemSections, isSmallScreen])
+
+  const hasTransientOverlay = Boolean(
+    claimDialogState ||
+      confirmationDialogState ||
+      categoryFormState ||
+      identifyDialogOpen ||
+      itemDetailState ||
+      itemFormState ||
+      isParticipantManagerOpen
+  )
+
+  const closeTopTransientOverlay = useCallback((): void => {
+    if (confirmationDialogState) {
+      if (!isConfirmingAction) {
+        setConfirmationDialogState(null)
+      }
+      return
+    }
+
+    if (itemFormState) {
+      setItemFormState(null)
+      return
+    }
+
+    if (claimDialogState) {
+      setClaimDialogState(null)
+      return
+    }
+
+    if (itemDetailState) {
+      setItemDetailState(null)
+      return
+    }
+
+    if (identifyDialogOpen) {
+      setIdentifyDialogOpen(false)
+      setPendingIdentityAction(null)
+      return
+    }
+
+    if (categoryFormState) {
+      setCategoryFormState(null)
+      return
+    }
+
+    if (isParticipantManagerOpen) {
+      setIsParticipantManagerOpen(false)
+    }
+  }, [categoryFormState, claimDialogState, confirmationDialogState, identifyDialogOpen, isConfirmingAction, isParticipantManagerOpen, itemDetailState, itemFormState])
+
+  useEffect(() => {
+    if (hasTransientOverlay && !hasTransientOverlayHistoryEntryRef.current) {
+      window.history.pushState({ listcollabOverlay: true }, '', window.location.href)
+      hasTransientOverlayHistoryEntryRef.current = true
+      return
+    }
+
+    if (!hasTransientOverlay) {
+      hasTransientOverlayHistoryEntryRef.current = false
+    }
+  }, [hasTransientOverlay])
+
+  useEffect(() => {
+    function handlePopState(): void {
+      if (!hasTransientOverlay) {
+        return
+      }
+
+      hasTransientOverlayHistoryEntryRef.current = false
+      closeTopTransientOverlay()
+    }
+
+    window.addEventListener('popstate', handlePopState)
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [closeTopTransientOverlay, hasTransientOverlay])
 
   async function refreshEvent(): Promise<void> {
     await queryClient.invalidateQueries({ queryKey: ['event', shareToken] })
@@ -589,6 +668,14 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
     setItemDetailState(null)
   }
 
+  function openItemEditForm(item: EventItemWithAssignments): void {
+    setItemFormState({
+      categoryId: item.categoryId,
+      item,
+      mode: manageMode ? 'manage-edit' : 'guest-edit',
+    })
+  }
+
   function openDeleteItemDialog(item: EventItemWithAssignments): void {
     setConfirmationDialogState({
       confirmButtonLabel: 'Delete item',
@@ -796,11 +883,11 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
             isManageMode={manageMode}
             items={visibleItems}
             onAddItem={openContributionForm}
-            onClaim={(item) => openItemDetail(item, 'claim')}
+            onClaim={openClaimDialog}
             onDeleteCategory={(category) => openDeleteCategoryDialog(category.id, category.name)}
-            onDeleteItem={(item) => openItemDetail(item, 'delete')}
+            onDeleteItem={openDeleteItemDialog}
             onEditCategory={(category) => setCategoryFormState({ category })}
-            onEditItem={(item) => openItemDetail(item, 'edit')}
+            onEditItem={openItemEditForm}
             onOpenItemDetail={(item) => openItemDetail(item)}
             onMoveCategoryDown={(category) => void handleMoveCategory(category.id, 1)}
             onMoveCategoryUp={(category) => void handleMoveCategory(category.id, -1)}
@@ -836,11 +923,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
         }}
         onEdit={(item) => {
           closeItemDetail()
-          setItemFormState({
-            categoryId: item.categoryId,
-            item,
-            mode: manageMode ? 'manage-edit' : 'guest-edit',
-          })
+          openItemEditForm(item)
         }}
         onOpenClaim={(item, assignment) => {
           closeItemDetail()

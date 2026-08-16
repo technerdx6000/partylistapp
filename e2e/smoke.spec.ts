@@ -84,7 +84,6 @@ async function createRequirement(
 
 async function createParticipantAndClaim(page: Page, displayName: string, quantity: number): Promise<void> {
     await page.getByRole('button', { name: /Claim / }).first().click()
-    await page.getByRole('button', { name: 'Claim' }).click()
     await expect(page.getByRole('heading', { name: 'Who are you?' })).toBeVisible()
     await page.getByLabel('Add your name').fill(displayName)
     await page.getByRole('button', { name: 'Continue' }).click()
@@ -176,6 +175,14 @@ test('regression: organiser page avoids horizontal scrolling with max-length ite
     await expect(page.getByLabel(`Edit ${'X'.repeat(120)}`)).toBeVisible()
     await expect(page.getByLabel(`Delete ${'X'.repeat(120)}`)).toBeVisible()
 
+    await page.getByLabel(`Edit ${'X'.repeat(120)}`).click()
+    await expect(page.getByRole('heading', { name: 'Edit item' })).toBeVisible()
+    await page.getByRole('button', { name: 'Cancel' }).click()
+
+    await page.getByLabel(`Delete ${'X'.repeat(120)}`).click()
+    await expect(page.getByRole('dialog', { name: 'Delete item' })).toBeVisible()
+    await page.getByRole('button', { name: 'Cancel' }).click()
+
     await page.getByRole('button', { name: `Open ${'X'.repeat(120)} details` }).click()
     await expect(page.getByRole('button', { name: 'Edit item' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Delete item' })).toBeVisible()
@@ -201,6 +208,14 @@ test('regression: share-link page keeps item edit and delete visible inline on m
     await expect(page.getByText('Y'.repeat(120))).toBeVisible()
     await expect(page.getByLabel(`Edit ${'Y'.repeat(120)}`)).toBeVisible()
     await expect(page.getByLabel(`Delete ${'Y'.repeat(120)}`)).toBeVisible()
+
+    await page.getByLabel(`Edit ${'Y'.repeat(120)}`).click()
+    await expect(page.getByRole('heading', { name: 'Edit item' })).toBeVisible()
+    await page.getByRole('button', { name: 'Cancel' }).click()
+
+    await page.getByLabel(`Delete ${'Y'.repeat(120)}`).click()
+    await expect(page.getByRole('dialog', { name: 'Delete item' })).toBeVisible()
+    await page.getByRole('button', { name: 'Cancel' }).click()
 
     await page.getByRole('button', { name: `Open ${'Y'.repeat(120)} details` }).click()
     await expect(page.getByRole('button', { name: 'Edit item' })).toBeVisible()
@@ -250,7 +265,6 @@ test('keeps the claim dialog submittable in a half-height mobile viewport', asyn
     await page.setViewportSize({ width: 390, height: 422 })
     await page.goto(`${APP_URL}/e/${event.shareToken}`)
     await page.getByRole('button', { name: 'Claim Water bottles' }).click()
-    await page.getByRole('button', { name: 'Claim' }).click()
     await page.getByLabel('Add your name').fill('Taylor')
     await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page.getByRole('heading', { name: 'Claim item' })).toBeVisible()
@@ -276,7 +290,6 @@ test('rejects over-claims visibly without writing a partial assignment', async (
     await createParticipantAndClaim(page, 'Taylor', 2)
 
     await secondPage.getByRole('button', { name: 'Claim Napkins' }).click()
-    await secondPage.getByRole('button', { name: 'Claim' }).click()
     await secondPage.getByLabel('Add your name').fill('Jordan')
     await secondPage.getByRole('button', { name: 'Continue' }).click()
     await expect(secondPage.getByRole('heading', { name: 'Claim item' })).toBeVisible()

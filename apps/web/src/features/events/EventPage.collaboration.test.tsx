@@ -154,7 +154,6 @@ describe('EventPage collaboration', () => {
     expect(screen.queryByRole('button', { name: 'Edit event' })).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Claim Bread Rolls' }))
-    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Claim item' }))
 
     await screen.findByRole('heading', { name: 'Who are you?' })
     fireEvent.click(screen.getByRole('button', { name: 'Jordan' }))
@@ -218,7 +217,6 @@ describe('EventPage collaboration', () => {
 
     await screen.findByRole('heading', { name: 'Camp Weekend' })
     fireEvent.click(screen.getByRole('button', { name: 'Claim Bread Rolls' }))
-    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Claim item' }))
     await screen.findByRole('heading', { name: 'Claim item' })
 
     fireEvent.change(screen.getByLabelText('Optional note'), { target: { value: ' Ready ' } })
@@ -249,7 +247,6 @@ describe('EventPage collaboration', () => {
     await screen.findByRole('heading', { name: 'Camp Weekend' })
 
     fireEvent.click(screen.getByRole('button', { name: 'Claim Bread Rolls' }))
-    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Claim item' }))
     await screen.findByRole('heading', { name: 'Claim item' })
 
     fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '1' } })
@@ -283,7 +280,6 @@ describe('EventPage collaboration', () => {
 
     await screen.findByRole('heading', { name: 'Camp Weekend' })
     fireEvent.click(screen.getByRole('button', { name: 'Claim Bread Rolls' }))
-    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Claim item' }))
     await screen.findByRole('heading', { name: 'Claim item' })
     fireEvent.click(screen.getByRole('button', { name: 'Claim item' }))
 
@@ -454,7 +450,6 @@ describe('EventPage collaboration', () => {
 
     await screen.findByRole('heading', { name: 'Camp Weekend' })
     fireEvent.click(screen.getByLabelText('Edit Bread Rolls'))
-    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Edit item' }))
     await screen.findByRole('heading', { name: 'Edit item' })
 
     fireEvent.change(screen.getByLabelText('Item name'), { target: { value: 'Bread rolls updated' } })
@@ -490,7 +485,6 @@ describe('EventPage collaboration', () => {
 
     await screen.findByRole('heading', { name: 'Camp Weekend' })
     fireEvent.click(screen.getByLabelText('Edit Bread Rolls'))
-    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Edit item' }))
     await screen.findByRole('heading', { name: 'Edit item' })
 
     fireEvent.change(screen.getByLabelText('Item name'), { target: { value: 'Bread rolls updated' } })
@@ -502,7 +496,6 @@ describe('EventPage collaboration', () => {
     })
 
     fireEvent.click(screen.getByLabelText('Delete Bread Rolls'))
-    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Delete item' }))
     fireEvent.click(within(await screen.findByRole('dialog', { name: 'Delete item' })).getByRole('button', { name: 'Delete item' }))
 
     await waitFor(() => {
@@ -534,7 +527,6 @@ describe('EventPage collaboration', () => {
     })
 
     fireEvent.click(screen.getByLabelText('Delete Bread Rolls'))
-    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Delete item' }))
     fireEvent.click(within(await screen.findByRole('dialog', { name: 'Delete item' })).getByRole('button', { name: 'Delete item' }))
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -585,7 +577,6 @@ describe('EventPage collaboration', () => {
     })
 
     fireEvent.click(screen.getByLabelText('Delete Bread Rolls'))
-    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Delete item' }))
     fireEvent.click(within(await screen.findByRole('dialog', { name: 'Delete item' })).getByRole('button', { name: 'Cancel' }))
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -619,7 +610,6 @@ describe('EventPage collaboration', () => {
 
     await screen.findByRole('heading', { name: 'Camp Weekend' })
     fireEvent.click(screen.getByRole('button', { name: 'Claim Bread Rolls' }))
-    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Claim item' }))
     await screen.findByRole('heading', { name: 'Who are you?' })
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
@@ -642,7 +632,6 @@ describe('EventPage collaboration', () => {
 
     claimTrigger.focus()
     fireEvent.click(claimTrigger)
-    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Claim item' }))
 
     await screen.findByRole('heading', { name: 'Who are you?' })
     await user.keyboard('{Escape}')
@@ -726,6 +715,22 @@ describe('EventPage collaboration', () => {
       expect(screen.queryByRole('dialog', { name: 'Delete event' })).not.toBeInTheDocument()
     })
     expect(apiClient.deleteEvent).not.toHaveBeenCalled()
+  })
+
+  it('closes a direct item overlay when browser back fires', async () => {
+    useApiClientMock.mockReturnValue(buildApiClient())
+
+    renderEventPage()
+
+    await screen.findByRole('heading', { name: 'Camp Weekend' })
+    fireEvent.click(screen.getByLabelText('Edit Bread Rolls'))
+    await screen.findByRole('heading', { name: 'Edit item' })
+
+    window.dispatchEvent(new PopStateEvent('popstate'))
+
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: 'Edit item' })).not.toBeInTheDocument()
+    })
   })
 
   it('surfaces share and copy errors when those browser APIs fail', async () => {

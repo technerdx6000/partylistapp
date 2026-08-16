@@ -24,6 +24,7 @@ vi.mock('../../hooks/useEventToken', async () => {
   }
 })
 
+
 vi.mock('./visitedEvents', () => ({
   recordVisitedEvent: vi.fn(),
 }))
@@ -424,5 +425,20 @@ describe('EventPage', () => {
       expect(screen.queryByRole('dialog', { name: 'Participants' })).not.toBeInTheDocument()
     })
     expect(participantsTrigger).toHaveFocus()
+  })
+
+  it('closes the mobile detail dialog when browser back fires', async () => {
+    setMatchMedia(true)
+
+    renderEventPage()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Open Bread Rolls details' }))
+    await screen.findByRole('dialog')
+
+    window.dispatchEvent(new PopStateEvent('popstate'))
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
   })
 })
