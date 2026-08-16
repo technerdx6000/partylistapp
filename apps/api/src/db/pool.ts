@@ -1,8 +1,8 @@
 import mysql, { type PoolConnection } from 'mysql2/promise'
 
-import { getEnv } from '../config/env.js'
+import { getDbEnv } from '../config/env.js'
 
-const env = getEnv()
+const env = getDbEnv()
 
 export const pool = mysql.createPool({
     host: env.DB_HOST,

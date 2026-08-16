@@ -14,6 +14,7 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "build": "turbo run build",
+    "docker:publish": "bash scripts/publish-dockerhub.sh",
     "test": "vitest run --config vitest.config.ts",
     "test:security": "vitest run --maxWorkers 1 --config vitest.config.ts apps/api/logger.test.ts apps/api/server.test.ts apps/api/src/middleware/errorHandler.test.ts apps/api/src/middleware/eventToken.test.ts apps/api/src/middleware/requestLogger.test.ts apps/api/src/services/assignmentService.test.ts apps/api/src/services/tokenService.test.ts apps/api/src/routes/assignments.test.ts apps/api/src/routes/categories.test.ts apps/api/src/routes/events.test.ts apps/api/src/routes/items.test.ts apps/api/src/routes/participants.test.ts apps/api/src/routes/events.rate-limit.test.ts apps/api/src/routes/participants.rate-limit.test.ts apps/api/src/db/migrator.test.ts apps/api/src/db/migratorPaths.test.ts apps/api/src/security/security.test.ts apps/web/src/features/items/ItemRow.test.tsx",
     "test:watch": "vitest --config vitest.config.ts",

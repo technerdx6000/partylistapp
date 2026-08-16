@@ -1,0 +1,91 @@
+# Edit these header values inline before pasting this file into TrueNAS:
+# - API image tag
+# - web image tag
+# - DB_PASSWORD
+# - DB_ROOT_PASSWORD
+# - CORS_ORIGIN
+# - published web port mapping
+# Everything else is intentionally fixed for this TrueNAS deployment.
+# CORS_ORIGIN must be a full origin including the scheme, for example
+# https://listcollab.example.com or http://truenas.local:8080.
+# IMPORTANT: MariaDB only applies MYSQL_* credentials the first time it initializes
+# /mnt/tank/apps/appdata/listcollab/db. If you change DB_PASSWORD or
+# DB_ROOT_PASSWORD after first boot, either restore the original values or delete
+# that db directory before redeploying a fresh install.
+
+x-editable-values:
+  api-image: &api-image technerdx6000/listcollab-api:1.0.2
+  web-image: &web-image technerdx6000/listcollab-web:1.0.2
+  db-password: &db-password replace_with_generated_app_password
+  db-root-password: &db-root-password replace_with_generated_root_password
+  cors-origin: &cors-origin https://listcollab.example.com
+  web-port-mapping: &web-port-mapping "8082:8080"
+
+x-api-environment: &api-environment
+  NODE_ENV: production
+  PORT: 3002
+  DB_HOST: db
+  DB_PORT: 3306
+  DB_NAME: listcollab
+  DB_USER: listcollab_user
+  DB_PASSWORD: *db-password
+  CORS_ORIGIN: *cors-origin
+  LOG_LEVEL: info
+
+services:
+  db:
+    image: mariadb:11@sha256:d9f7eb2637296652f24b484afd5d246f759f49f5babcadc6a9e344c9acb75fbf
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: *db-root-password
+      MYSQL_DATABASE: listcollab
+      MYSQL_USER: listcollab_user
+      MYSQL_PASSWORD: *db-password
+    volumes:
+      - /mnt/tank/apps/appdata/listcollab/db:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD-SHELL", "mariadb-admin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD" ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  migrate:
+    image: *api-image
+    restart: "no"
+    environment: *api-environment
+    depends_on:
+      db:
+        condition: service_healthy
+    command: [ "npm", "run", "--workspace", "@listcollab/api", "db:migrate:prod" ]
+
+  api:
+    image: *api-image
+    restart: unless-stopped
+    environment: *api-environment
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3002/api/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  web:
+    image: *web-image
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - *web-port-mapping
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s

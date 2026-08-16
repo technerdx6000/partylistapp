@@ -7,7 +7,20 @@ import mysql from 'mysql2/promise'
 import { Umzug } from 'umzug'
 
 import logger from '../../logger.js'
-import { getEnv } from '../config/env.js'
+import { getDbEnv } from '../config/env.js'
+
+const DATABASE_STARTUP_MAX_ATTEMPTS = 30
+const DATABASE_STARTUP_RETRY_DELAY_MS = 2_000
+
+const RETRYABLE_DATABASE_ERROR_CODES = new Set([
+  'ECONNREFUSED',
+  'ECONNRESET',
+  'EHOSTUNREACH',
+  'ENOTFOUND',
+  'ETIMEDOUT',
+  'PROTOCOL_CONNECTION_LOST',
+  'ER_ACCESS_DENIED_ERROR',
+])
 
 type MigrationRecord = RowDataPacket & {
   name: string
@@ -22,12 +35,16 @@ type LegacyImportSummaryRow = RowDataPacket & {
   assignment_count: number
 }
 
+type RetryableDatabaseError = Error & {
+  code?: string
+}
+
 function resolveDatabaseHost(): string {
-  return getEnv().DB_HOST
+  return getDbEnv().DB_HOST
 }
 
 function createPool(): Pool {
-  const env = getEnv()
+  const env = getDbEnv()
 
   return mysql.createPool({
     host: resolveDatabaseHost(),
@@ -40,6 +57,56 @@ function createPool(): Pool {
     queueLimit: 0,
     multipleStatements: true,
   })
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+export function isRetryableDatabaseError(error: unknown): error is RetryableDatabaseError {
+  if (!(error instanceof Error)) {
+    return false
+  }
+
+  const errorCode = (error as RetryableDatabaseError).code
+  return typeof errorCode === 'string' && RETRYABLE_DATABASE_ERROR_CODES.has(errorCode)
+}
+
+export async function runWithDatabaseStartupRetry<T>(
+  operation: () => Promise<T>,
+  options?: {
+    maxAttempts?: number
+    delayMs?: number
+    sleep?: (ms: number) => Promise<void>
+  }
+): Promise<T> {
+  const maxAttempts = options?.maxAttempts ?? DATABASE_STARTUP_MAX_ATTEMPTS
+  const delayMs = options?.delayMs ?? DATABASE_STARTUP_RETRY_DELAY_MS
+  const sleep = options?.sleep ?? wait
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      return await operation()
+    } catch (error) {
+      if (!isRetryableDatabaseError(error) || attempt === maxAttempts) {
+        throw error
+      }
+
+      logger.warn(
+        {
+          attempt,
+          maxAttempts,
+          delayMs,
+          code: error.code,
+        },
+        'Database not ready for migrations yet; retrying'
+      )
+
+      await sleep(delayMs)
+    }
+  }
+
+  throw new Error('Database startup retry loop exited unexpectedly')
 }
 
 async function ensureMigrationTable(pool: Pool): Promise<void> {
@@ -159,7 +226,7 @@ export async function createMigrator() {
   const pool = createPool()
   const migrationsPath = path.resolve(repoRoot, 'apps/api/migrations')
 
-  await ensureMigrationTable(pool)
+  await runWithDatabaseStartupRetry(() => ensureMigrationTable(pool))
 
   const migrator = new Umzug({
     migrations: {

@@ -1,8 +1,8 @@
 import { createMigrator } from './migrator.js'
 import logger, { configureLogger } from '../../logger.js'
-import { getEnv } from '../config/env.js'
+import { getDbEnv } from '../config/env.js'
 
-configureLogger(getEnv().LOG_LEVEL)
+configureLogger(getDbEnv().LOG_LEVEL)
 
 async function main() {
   const { migrator, seedBaselineMigrationIfNeeded, close } = await createMigrator()

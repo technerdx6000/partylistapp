@@ -2,7 +2,7 @@ import mysql from 'mysql2/promise'
 import request from 'supertest'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { loadEnv } from '../config/env.js'
+import { loadDbEnv, loadEnv } from '../config/env.js'
 import { createMigrator } from '../db/migrator.js'
 
 const testDatabaseConfig = {
@@ -324,5 +324,27 @@ describe('security suite', () => {
             exitSpy.mockRestore()
             stderrSpy.mockRestore()
         }
+    })
+
+    it('regression: migration env validation ignores unrelated runtime web config', () => {
+        const dbEnv = loadDbEnv({
+            NODE_ENV: 'production',
+            DB_HOST: 'db',
+            DB_PORT: '3306',
+            DB_USER: 'listcollab_user',
+            DB_PASSWORD: 'app_password',
+            DB_NAME: 'listcollab',
+            LOG_LEVEL: 'info',
+        })
+
+        expect(dbEnv).toMatchObject({
+            DB_HOST: 'db',
+            DB_PORT: 3306,
+            DB_USER: 'listcollab_user',
+            DB_PASSWORD: 'app_password',
+            DB_NAME: 'listcollab',
+            LOG_LEVEL: 'info',
+            NODE_ENV: 'production',
+        })
     })
 })
