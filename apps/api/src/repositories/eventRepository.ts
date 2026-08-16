@@ -1,14 +1,14 @@
 import type { CreateEventRequest, Event, EventWithAdminToken, UpdateEventRequest } from '@listcollab/shared'
 import type { ResultSetHeader } from 'mysql2/promise'
 
-import { type EventRow, queryable, type Queryable, toIsoString } from './shared.js'
+import { type EventRow, queryable, type Queryable, toDateOnlyString, toIsoString } from './shared.js'
 
 function mapEventRow(row: EventRow): EventWithAdminToken {
     return {
         id: row.id,
         name: row.name,
         description: row.description,
-        eventDate: row.event_date,
+        eventDate: toDateOnlyString(row.event_date),
         location: row.location,
         shareToken: row.share_token,
         adminToken: row.admin_token,

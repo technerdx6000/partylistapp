@@ -141,6 +141,25 @@ test('completes the collaborative MVP flow and avoids horizontal scrolling at mo
     await secondContext.close()
 }, 60000)
 
+test('regression: organiser page avoids horizontal scrolling with max-length item names on mobile', async ({ page, request }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile', 'mobile-only viewport assertion')
+
+    await waitForApiReady(request)
+    const event = await createEventFixture(request, 'Manage Layout Event')
+    await createRequirement(request, event, 'X'.repeat(120), 1)
+
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto(`${APP_URL}/e/${event.shareToken}/manage#k=${event.adminToken}`)
+    await expect(page.getByRole('heading', { name: 'Manage Layout Event' })).toBeVisible()
+    await expect(page.getByText('X'.repeat(120))).toBeVisible()
+
+    const managePageHasHorizontalScroll = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth
+    )
+
+    expect(managePageHasHorizontalScroll).toBeFalsy()
+}, 60000)
+
 test('keeps the claim dialog submittable in a half-height mobile viewport', async ({ page, request }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile', 'mobile-only viewport assertion')
 

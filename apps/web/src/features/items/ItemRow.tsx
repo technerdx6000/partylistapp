@@ -158,7 +158,11 @@ export function ItemRow({
     <Card component="li" sx={{ borderColor: 'divider', borderStyle: 'solid', borderWidth: 1, listStyle: 'none' }} variant="outlined">
       <CardContent>
         <Stack spacing={1.5}>
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1}
+            sx={{ alignItems: { xs: 'stretch', sm: 'flex-start' }, justifyContent: 'space-between' }}
+          >
             <Box sx={{ minWidth: 0 }}>
               <Typography sx={{ overflowWrap: 'anywhere' }} title={item.name} variant="h4">
                 {item.name}
@@ -169,7 +173,18 @@ export function ItemRow({
                 </Typography>
               ) : null}
             </Box>
-            <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', flexShrink: 0 }}>
+            <Stack
+              direction="row"
+              spacing={0.5}
+              sx={{
+                alignItems: 'center',
+                flexShrink: 0,
+                flexWrap: 'wrap',
+                gap: 0.5,
+                justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+                width: { xs: '100%', sm: 'auto' },
+              }}
+            >
               {isManageMode && onEditItem ? (
                 <IconButton aria-label={`Edit ${item.name}`} onClick={() => onEditItem(item)} size="small" sx={{ minHeight: 44, minWidth: 44 }}>
                   <EditRoundedIcon fontSize="small" />
@@ -184,7 +199,7 @@ export function ItemRow({
                 color={item.coverage.status === 'covered' || item.coverage.status === 'completed' || item.status === 'completed' ? 'success' : 'secondary'}
                 icon={item.quantityRequired === null ? <CampaignRoundedIcon /> : <Inventory2RoundedIcon />}
                 label={stateMeta.statusLabel}
-                sx={{ maxWidth: '100%' }}
+                sx={{ maxWidth: '100%', minWidth: 0, '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' } }}
               />
             </Stack>
           </Stack>

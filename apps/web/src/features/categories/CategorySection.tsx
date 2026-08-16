@@ -59,19 +59,33 @@ export function CategorySection({
 
   return (
     <Stack spacing={1.5}>
-      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
-        <Stack spacing={0.75}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1}
+        sx={{ alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between' }}
+      >
+        <Stack spacing={0.75} sx={{ minWidth: 0 }}>
           <Typography variant="h3">
-            <Stack component="span" direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-              <Typography component="span">{category ? renderCategoryIcon(category.icon) : <FolderOpenRoundedIcon fontSize="small" />}</Typography>
-              <Typography component="span" variant="inherit">
+            <Stack component="span" direction="row" spacing={1} sx={{ alignItems: 'center', minWidth: 0 }}>
+              <Typography component="span" sx={{ flexShrink: 0 }}>{category ? renderCategoryIcon(category.icon) : <FolderOpenRoundedIcon fontSize="small" />}</Typography>
+              <Typography component="span" sx={{ minWidth: 0, overflowWrap: 'anywhere' }} variant="inherit">
                 {name}
               </Typography>
             </Stack>
           </Typography>
-          <Chip icon={<CheckCircleRoundedIcon />} label={coverageLabel} size="small" variant="outlined" />
+          <Chip
+            icon={<CheckCircleRoundedIcon />}
+            label={coverageLabel}
+            size="small"
+            sx={{ alignSelf: 'flex-start', maxWidth: '100%', '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' } }}
+            variant="outlined"
+          />
         </Stack>
-        <Stack direction="row" spacing={0.5}>
+        <Stack
+          direction="row"
+          spacing={0.5}
+          sx={{ flexWrap: 'wrap', gap: 0.5, justifyContent: { xs: 'flex-start', sm: 'flex-end' }, width: { xs: '100%', sm: 'auto' } }}
+        >
           <Button onClick={() => onAddItem(category?.id ?? null)} size="small" startIcon={<AddRoundedIcon />} variant="text">
             {isManageMode ? 'Add item' : 'Add yours'}
           </Button>

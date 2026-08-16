@@ -8,7 +8,7 @@ export type EventRow = RowDataPacket & {
     id: number
     name: string
     description: string | null
-    event_date: string | null
+    event_date: string | Date | null
     location: string | null
     share_token: string
     admin_token: string
@@ -56,6 +56,21 @@ export type EventItemAssignmentRow = RowDataPacket & {
 
 export function toIsoString(value: string | Date): string {
     return value instanceof Date ? value.toISOString() : value
+}
+
+/**
+ * Normalizes a MariaDB DATE column value into the shared yyyy-mm-dd API format.
+ */
+export function toDateOnlyString(value: string | Date | null): string | null {
+    if (value === null) {
+        return null
+    }
+
+    if (value instanceof Date) {
+        return value.toISOString().slice(0, 10)
+    }
+
+    return value.slice(0, 10)
 }
 
 export function queryable(connection?: Queryable): Queryable {

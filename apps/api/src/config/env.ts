@@ -30,7 +30,7 @@ export type DbEnv = Readonly<z.infer<typeof DbEnvSchema>>
 let cachedEnv: AppEnv | undefined
 let cachedDbEnv: DbEnv | undefined
 
-function parseEnv<T extends z.ZodTypeAny>(schema: T, rawEnv: NodeJS.ProcessEnv): z.infer<T> {
+function parseEnv<TOutput>(schema: z.ZodType<TOutput>, rawEnv: NodeJS.ProcessEnv): Readonly<TOutput> {
     const result = schema.safeParse(rawEnv)
 
     if (!result.success) {
