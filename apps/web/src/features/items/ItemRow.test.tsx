@@ -105,8 +105,50 @@ describe('ItemRow', () => {
 
     expect(screen.getAllByText('Jordan ×2')).toHaveLength(2)
     expect(screen.getByText('Jordan ×1 is bringing this contribution.')).toBeInTheDocument()
-    expect(screen.getByText('Contribution ready')).toBeInTheDocument()
+    expect(screen.getByText('Completed contribution')).toBeInTheDocument()
+    expect(screen.getByText('Partly covered · 2 / 3')).toBeInTheDocument()
     expect(screen.getByText('1 still needed')).toBeInTheDocument()
+  })
+
+  it('collapses dense assignment lists behind an expander on smaller rows', () => {
+    renderWithProviders(
+      <ItemRow
+        currentIdentity={null}
+        isManageMode={false}
+        item={{
+          id: 8,
+          eventId: 1,
+          categoryId: 2,
+          name: 'Camp chairs',
+          description: null,
+          quantityRequired: 5,
+          status: 'open',
+          createdBy: null,
+          createdAt: '2026-08-15T00:00:00.000Z',
+          updatedAt: '2026-08-15T00:00:00.000Z',
+          assignments: [
+            { id: 1, itemId: 8, participantId: 1, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' },
+            { id: 2, itemId: 8, participantId: 2, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' },
+            { id: 3, itemId: 8, participantId: 3, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' },
+            { id: 4, itemId: 8, participantId: 4, quantity: 2, note: null, createdAt: '2026-08-15T00:00:00.000Z' },
+          ],
+          coverage: { claimed: 5, required: 5, remaining: 0, status: 'covered' },
+        }}
+        participants={[
+          { id: 1, eventId: 1, name: 'Taylor', createdAt: '2026-08-15T00:00:00.000Z' },
+          { id: 2, eventId: 1, name: 'Jordan', createdAt: '2026-08-15T00:00:00.000Z' },
+          { id: 3, eventId: 1, name: 'Avery', createdAt: '2026-08-15T00:00:00.000Z' },
+          { id: 4, eventId: 1, name: 'Morgan', createdAt: '2026-08-15T00:00:00.000Z' },
+        ]}
+        onClaim={() => undefined}
+      />
+    )
+
+    expect(screen.queryByText('Morgan ×2')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Show 1 more claim' }))
+
+    expect(screen.getByText('Morgan ×2')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Show fewer claims' })).toBeInTheDocument()
   })
 
   it('only exposes other people\'s claim chips as display-only in guest mode', () => {

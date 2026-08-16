@@ -76,7 +76,7 @@
 | 7 – Polish | 7.2 | Skeletons and empty states | 🔄 In Progress | Event-page loading now renders skeleton cards instead of a blank spinner, and focused tests cover empty-event, empty-category, no-participants, and no-search-match states; full phase validation is still pending |
 | 7 – Polish | 7.3 | Snackbars replacing persistent error banners | 🔄 In Progress | Event-page transactional feedback now uses a single dismissible snackbar with requestId-only error detail while invalid-link and unreachable-API paths remain inline retry states |
 | 7 – Polish | 7.4 | Destructive-action confirmations with stated consequences | 🔄 In Progress | Participant, item, category, event, and claim removal now route through confirmation dialogs; event deletion requires typing the event name and the updated collaboration tests cover both confirm and back-out paths |
-| 7 – Polish | 7.5 | Category icons, ordering controls, assignment display | ⬜ Not Started | Move up/down, not drag and drop |
+| 7 – Polish | 7.5 | Category icons, ordering controls, assignment display | 🔄 In Progress | Item rows now expose text-based open/partly-covered/covered/completed states, enlarge mobile touch targets, and collapse dense assignment chips behind an expander; icon-picking and reorder controls are still outstanding |
 | 7 – Polish | 7.6 | Accessibility pass — keyboard, focus, labels, contrast, live regions | ⬜ Not Started | |
 | 7 – Polish | 7.7 | Mobile E2E + axe accessibility checks | ⬜ Not Started | |
 | 8 – Deploy | 8.1 | 🔒 Consolidate the security test suite (`test:security`) | ⬜ Not Started | Full IDOR matrix + enumeration checks |
@@ -103,7 +103,7 @@
 
 | Date | Session Start | Tasks Completed | Notes |
 |------|--------------|-----------------|-------|
-| 2026-08-16 | Checked worktree diff against Phase 7 tracker, then continued Phase 7 web polish | None yet | Fixed workspace package resolution for Vitest/Vite/TypeScript on the current mounted filesystem, aligned responsive and collaboration tests with the new dialog flows, and continued 7.1/7.2/7.3/7.4 implementation without marking those tasks complete |
+| 2026-08-16 | Checked worktree diff against Phase 7 tracker, then continued Phase 7 web polish | None yet | Fixed workspace package resolution for Vitest/Vite/TypeScript on the current mounted filesystem, aligned responsive and collaboration tests with the new dialog flows, committed the loading/snackbar slice, and started 7.5 with mobile-safe assignment overflow and text-based item states |
 
 ---
 
