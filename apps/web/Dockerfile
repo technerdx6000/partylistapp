@@ -1,5 +1,4 @@
-# Multi-stage build for React frontend
-FROM node:22-alpine AS build
+FROM node:22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32 AS build
 
 # Set working directory
 WORKDIR /app
@@ -20,25 +19,22 @@ COPY packages/shared packages/shared
 # Build the application
 RUN npm run --workspace @listcollab/web build
 
-# Production stage
-FROM nginx:alpine AS production
+FROM nginxinc/nginx-unprivileged:stable-alpine AS production
 
-# Copy custom nginx configuration
+USER root
+
 COPY apps/web/nginx.conf /etc/nginx/nginx.conf
 
-# Copy built application from build stage
 COPY --from=build /app/apps/web/dist /usr/share/nginx/html
 
-# Ensure dirs exist and are writable
-RUN mkdir -p /var/cache/nginx /var/run && \
-    chmod -R 755 /usr/share/nginx/html
+RUN mkdir -p /var/cache/nginx /var/run/nginx && \
+    chown -R 101:101 /usr/share/nginx/html /var/cache/nginx /var/run/nginx /etc/nginx
 
-# Expose port 80
-EXPOSE 80
+USER 101
 
-# Healthcheck that TrueNAS will use
+EXPOSE 8080
+
 HEALTHCHECK --interval=60s --timeout=10s --start-period=20s --retries=5 \
-    CMD wget -qO- http://127.0.0.1/health || exit 1
+    CMD wget -qO- http://127.0.0.1:8080/health || exit 1
 
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]

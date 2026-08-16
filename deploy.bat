@@ -1,32 +1,12 @@
 @echo off
-REM Build and deploy the Party List application for Windows
+setlocal
 
-echo 🚀 Building and deploying Party List application...
+if "%LISTCOLLAB_ENV_FILE%"=="" set "LISTCOLLAB_ENV_FILE=C:\listcollab\listcollab.env"
 
-REM Stop existing containers
-echo ⏹️  Stopping existing containers...
-docker compose down
+if not exist "%LISTCOLLAB_ENV_FILE%" (
+	echo Expected production env file at %LISTCOLLAB_ENV_FILE%
+	exit /b 1
+)
 
-REM Build images
-echo 🔨 Building Docker images...
-docker compose build --no-cache
-
-REM Start services
-echo ▶️  Starting services...
-docker compose up -d
-
-REM Wait for services to be healthy
-echo ⏳ Waiting for services to be healthy...
-timeout /t 30 /nobreak > nul
-
-REM Check service health
-echo 🏥 Checking service health...
-docker compose ps
-
-echo ✅ Deployment complete!
-echo 🌐 Application available at: http://localhost
-echo 📊 API health check: http://localhost/api/health
-
-REM Show logs
-echo 📝 Recent logs:
-docker compose logs --tail=50
+docker compose --env-file "%LISTCOLLAB_ENV_FILE%" -f docker-compose.prod.yml up -d --build --remove-orphans
+docker compose --env-file "%LISTCOLLAB_ENV_FILE%" -f docker-compose.prod.yml ps

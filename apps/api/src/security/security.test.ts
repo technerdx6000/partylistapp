@@ -2,8 +2,8 @@ import mysql from 'mysql2/promise'
 import request from 'supertest'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { createMigrator } from '../db/migrator.js'
 import { loadEnv } from '../config/env.js'
+import { createMigrator } from '../db/migrator.js'
 
 const testDatabaseConfig = {
     host: '127.0.0.1',
@@ -24,6 +24,14 @@ type ParticipantResponse = { id: number }
 type ItemResponse = { id: number }
 
 type AssignmentResponse = { id: number }
+
+type ErrorResponse = {
+    error: {
+        code: string
+        message: string
+        requestId?: string
+    }
+}
 
 function applyTestEnvironment(): void {
     process.env.NODE_ENV = 'test'
@@ -117,22 +125,25 @@ describe('security suite', () => {
             .get('/api/events/QWERTY1234')
             .set('X-Event-Token', event.event.shareToken)
         const unknownEventDurationMs = performance.now() - unknownEventStartedAt
+        const malformedTokenBody = malformedTokenResponse.body as ErrorResponse
+        const invalidTokenBody = invalidTokenResponse.body as ErrorResponse
+        const unknownEventBody = unknownEventResponse.body as ErrorResponse
 
         expect(malformedTokenResponse.status).toBe(404)
         expect(invalidTokenResponse.status).toBe(404)
         expect(unknownEventResponse.status).toBe(404)
-        expect(malformedTokenResponse.body).toMatchObject({
+        expect(malformedTokenBody).toMatchObject({
             error: { code: 'EVENT_NOT_FOUND', message: 'Event not found' },
         })
-        expect(invalidTokenResponse.body).toMatchObject({
+        expect(invalidTokenBody).toMatchObject({
             error: { code: 'EVENT_NOT_FOUND', message: 'Event not found' },
         })
-        expect(unknownEventResponse.body).toMatchObject({
+        expect(unknownEventBody).toMatchObject({
             error: { code: 'EVENT_NOT_FOUND', message: 'Event not found' },
         })
-        expect(malformedTokenResponse.body.error.requestId).toEqual(expect.any(String))
-        expect(invalidTokenResponse.body.error.requestId).toEqual(expect.any(String))
-        expect(unknownEventResponse.body.error.requestId).toEqual(expect.any(String))
+        expect(malformedTokenBody.error.requestId).toEqual(expect.any(String))
+        expect(invalidTokenBody.error.requestId).toEqual(expect.any(String))
+        expect(unknownEventBody.error.requestId).toEqual(expect.any(String))
         expect(Math.abs(malformedTokenDurationMs - unknownEventDurationMs)).toBeLessThan(150)
         expect(Math.abs(invalidTokenDurationMs - unknownEventDurationMs)).toBeLessThan(150)
     })
@@ -266,14 +277,15 @@ describe('security suite', () => {
             .post('/api/items')
             .set('X-Event-Token', event.event.adminToken)
             .send({ name: injectionValue, quantityRequired: 1 })
+        const item = itemResponse.body as ItemResponse
 
         expect(itemResponse.status).toBe(201)
         expect(itemResponse.body).toMatchObject({ name: injectionValue })
 
         const assignmentResponse = await request(app)
-            .post(`/api/items/${itemResponse.body.id as number}/assignments`)
+            .post(`/api/items/${item.id}/assignments`)
             .set('X-Event-Token', event.event.shareToken)
-            .send({ participantId: participantResponse.body.id as number, quantity: 1, note: injectionValue })
+            .send({ participantId: (participantResponse.body as ParticipantResponse).id, quantity: 1, note: injectionValue })
 
         expect(assignmentResponse.status).toBe(201)
         expect(assignmentResponse.body).toMatchObject({ note: injectionValue })

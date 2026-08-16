@@ -1,86 +1,82 @@
-# Development Setup
+# Development
 
 ## Prerequisites
 
-- Docker Engine with the `docker compose` plugin available
-- Node.js 22.x if you want to run frontend tooling outside the containers
+- Docker Engine with the `docker compose` plugin
+- Node.js 22.x
+- npm 10+
 
-## Environment Setup
-
-1. Copy the root example file.
+## Environment files
 
 ```bash
 cp .env.example .env
+cp apps/api/.env.example apps/api/.env
 ```
 
-2. Copy the API example file if you plan to run the API directly outside Docker.
+Update the placeholder DB passwords before starting either stack. The root `.env` controls Docker Compose values; `apps/api/.env` is only for direct API execution outside the container.
 
-```bash
-cp api/.env.example api/.env
-```
-
-3. Update the generated placeholder passwords in both files before starting the stack.
-
-## Start The Full Stack
-
-Run the application from the repository root:
-
-```bash
-docker compose up --build
-```
-
-The API container now runs `npm run db:migrate` before starting, so a fresh database is created from numbered migrations rather than ad-hoc SQL bootstrap files.
-
-Services:
-
-- Frontend: http://localhost
-- API health endpoint: http://localhost/api/health
-- MariaDB: localhost:3306
-
-## Run The Local Monorepo Dev Servers
+## Local app workflow
 
 ```bash
 npm install
 npm run dev
 ```
 
-The root dev wrapper starts the MariaDB container, waits for it to become healthy, runs `npm run db:migrate`, and then launches the web and API dev servers.
+The dev wrapper:
 
-Local development endpoints:
+- starts the local MariaDB container from `docker-compose.yml`
+- waits for it to become healthy
+- runs `npm run db:migrate`
+- starts the Vite dev server on `127.0.0.1:4273`
+- starts the API on `127.0.0.1:4301`
 
-- Frontend dev server: http://127.0.0.1:4273
-- API dev server: http://127.0.0.1:4301/api/health
-
-## Run In The Background
-
-```bash
-docker compose up --build -d
-docker compose ps
-```
-
-## Stop The Stack
+## Docker dev workflow
 
 ```bash
-docker compose down
+docker compose up --build
 ```
 
-## Reset The Database
+This is the easier path when you want nginx in front of the API locally.
 
-This removes the MariaDB volume and recreates the schema from the SQL init scripts.
+## Tests
+
+Run these serially in this repository. The unit/integration suite, coverage run, and Playwright stack all share local DB/server resources.
+
+```bash
+npm run test
+npm run test:coverage
+npm run test:security
+npm run test:e2e
+npm run test:e2e:dev
+npm run lint
+npm run type-check
+```
+
+Notes:
+
+- `npm run test:e2e` uses a compiled production-style harness and runs on `127.0.0.1:4274` and `127.0.0.1:4302`.
+- `npm run test:e2e:dev` uses the dev-server harness on `127.0.0.1:4273` and `127.0.0.1:4301`.
+- `npm run test:security` is intentionally single-worker because it contains DB-resetting integration files.
+
+## Database reset
 
 ```bash
 docker compose down -v
-docker compose up --build -d
+docker compose up -d db
+npm run db:migrate
 ```
 
-## Migration Notes
+## Production-stack smoke check
 
-- `npm run db:migrate` now runs the numbered migration runner from `apps/api/migrations`.
-- On an existing legacy database with no `schema_migrations` rows, the runner seeds `001_initial_schema` as already applied instead of replaying the baseline migration.
-- `npm run db:rollback` currently rolls back only tracked migrations; once later Phase 3 migrations exist, it will revert the newest applied migration.
+```bash
+DB_NAME=listcollab \
+DB_USER=listcollab_user \
+DB_PASSWORD=replace_with_generated_app_password \
+DB_ROOT_PASSWORD=replace_with_generated_root_password \
+CORS_ORIGIN=http://127.0.0.1:8080 \
+WEB_PORT=8080 \
+LOG_LEVEL=info \
+docker compose -f docker-compose.prod.yml up -d --build
+```
 
-## Notes
-
-- The root `.env` file controls Docker Compose startup values, including the `listcollab` database name.
-- The API routes are exposed through nginx under `/api/*`; use `http://localhost/api/health` to verify end-to-end connectivity.
-- `src/App.jsx` now reads required items from the live API instead of mock data, so startup issues are most visible in `docker compose logs api` and `docker compose logs frontend`.
+This brings up the hardened stack with a separate migration service and localhost-only web binding.

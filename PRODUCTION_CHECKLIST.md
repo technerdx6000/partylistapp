@@ -1,64 +1,46 @@
-# Production Deployment Checklist
+# Production Checklist
 
-## Pre-Deployment
+## Stack
 
-- [ ] Docker and Docker Compose installed on server
-- [ ] Server has adequate resources (2GB+ RAM, 5GB+ disk)
-- [ ] Firewall configured to allow HTTP traffic (port 80)
-- [ ] SSL certificate obtained (if using HTTPS)
+- [ ] `/etc/listcollab/listcollab.env` exists outside the repository
+- [ ] `LISTCOLLAB_ENV_FILE` points at the external env file
+- [ ] `docker compose -f docker-compose.prod.yml up -d --build` reaches healthy on `db`, `api`, and `web`
+- [ ] `migrate` exits successfully before the API starts
+- [ ] the database container exposes no host port
 
-## Security Configuration
+## Security
 
-- [ ] Changed default passwords in `.env` file
-- [ ] Updated `DB_PASSWORD` with strong password
-- [ ] Updated `DB_ROOT_PASSWORD` with strong password
-- [ ] Reviewed nginx security headers in `nginx.conf`
-- [ ] Disabled unnecessary ports in `docker-compose.yml`
+- [ ] reverse proxy redirects HTTP to HTTPS
+- [ ] reverse proxy sets HSTS
+- [ ] the live hostname returns `Referrer-Policy: no-referrer`
+- [ ] the live web response returns the CSP from `apps/web/nginx.conf`
+- [ ] CORS `Access-Control-Allow-Origin` matches only the configured production origin
+- [ ] `npm audit --audit-level=high` is clean
+- [ ] `npm run test:security` passes
+- [ ] no source maps are shipped in the web image
+- [ ] no dev-only tooling is shipped in the API image
 
-## Environment Setup
+## Verification
 
-- [ ] Copied `.env.example` to `.env`
-- [ ] Updated environment variables for production
-- [ ] Verified database connection settings
-- [ ] Set `NODE_ENV=production`
+- [ ] `npm run test`
+- [ ] `npm run test:coverage`
+- [ ] `npm run test:e2e`
+- [ ] `npm run lint`
+- [ ] `npm run type-check`
+- [ ] create one real event on the live host and complete the full guest claim flow
+- [ ] verify organiser reload on `/manage#k=...`
 
-## Initial Deployment
+## Operations
 
-- [ ] Cloned repository to server
-- [ ] Made deployment scripts executable (`chmod +x *.sh`)
-- [ ] Run deployment: `./deploy.sh` or `deploy.bat`
-- [ ] Verified all containers are healthy: `docker compose ps`
-- [ ] Tested application access: `http://server-ip`
-- [ ] Tested API health: `http://server-ip/api/health`
+- [ ] install `deploy/systemd/listcollab-backup.service`
+- [ ] install `deploy/systemd/listcollab-backup.timer`
+- [ ] confirm backups are written outside the repo
+- [ ] run `scripts/restore-prod-backup.sh` against a scratch DB before go-live
+- [ ] confirm `OPERATIONS.md` is enough for deploy, rollback, and recovery from cold
 
-## Post-Deployment Testing
+## Handoff
 
-- [ ] Create a test person
-- [ ] Add test items to person
-- [ ] Create test categories
-- [ ] Add required items
-- [ ] Assign required items to people
-- [ ] Test toggle functionality (hide/show assigned)
-- [ ] Verify data persistence after container restart
-
-## Monitoring Setup
-
-- [ ] Set up log rotation for Docker containers
-- [ ] Configure monitoring/alerting for container health
-- [ ] Set up database backup schedule
-- [ ] Document recovery procedures
-
-## Optional Enhancements
-
-- [ ] Set up reverse proxy with SSL (nginx/traefik)
-- [ ] Configure domain name and DNS
-- [ ] Set up automated backups
-- [ ] Configure log aggregation
-- [ ] Set up monitoring dashboard
-
-## Maintenance
-
-- [ ] Document update procedure
-- [ ] Schedule regular security updates
-- [ ] Plan database maintenance windows
-- [ ] Test backup/restore procedures
+- [ ] README reflects the final stack and commands
+- [ ] SECURITY.md records the accepted trade-offs
+- [ ] OPERATIONS.md records backup, restore, rollback, and organiser-link recovery
+- [ ] tracker is updated for every completed or blocked Phase 8 task

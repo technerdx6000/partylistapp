@@ -1,159 +1,74 @@
-# Party List App - Docker Deployment
+# Deployment
 
-This guide will help you deploy the Party List application using Docker and Docker Compose.
+## Production assumptions
 
-## Prerequisites
+- The application is deployed on a Linux host with Docker and the Compose plugin.
+- The web container binds only to `127.0.0.1:${WEB_PORT}`.
+- A separate host reverse proxy terminates TLS and forwards to the local web container.
+- Production env values live outside the repository, for example at `/etc/listcollab/listcollab.env`.
 
-- Docker installed on your server
-- Docker Compose installed
-- At least 2GB RAM and 5GB disk space
+## External env file
 
-## Quick Start
-
-1. **Clone the repository to your server**
-2. **Configure environment variables**
-3. **Deploy the application**
-
-### 1. Environment Configuration
-
-Copy the production environment template:
+Create `/etc/listcollab/listcollab.env` with at least:
 
 ```bash
-cp .env.example .env
-```
-
-Edit `.env` file and update the passwords:
-
-```bash
-# Database Configuration
 DB_NAME=listcollab
 DB_USER=listcollab_user
-DB_PASSWORD=your_secure_password_here
-DB_ROOT_PASSWORD=your_secure_root_password_here
+DB_PASSWORD=replace_with_generated_app_password
+DB_ROOT_PASSWORD=replace_with_generated_root_password
+CORS_ORIGIN=https://listcollab.example.com
+WEB_PORT=8080
+LOG_LEVEL=info
 ```
 
-### 2. Deploy
+Do not place this file in the repository.
 
-#### Option A: Using the deployment script (Linux/Mac)
+## Deploy
 
 ```bash
-chmod +x deploy.sh
+git pull
+export LISTCOLLAB_ENV_FILE=/etc/listcollab/listcollab.env
 ./deploy.sh
 ```
 
-#### Option B: Using the deployment script (Windows)
+The production stack includes:
 
-```cmd
-deploy.bat
-```
+- `db`: MariaDB 11.8.8 pinned by digest, private Docker network only
+- `migrate`: one-shot schema migration step that must exit successfully before the API starts
+- `api`: compiled Node 22 API container, non-root runtime
+- `web`: nginx-unprivileged static web container on localhost only
 
-#### Option C: Manual deployment
+## Reverse proxy
 
-```bash
-# Build and start services
-docker compose up -d --build
+Use `deploy/nginx/listcollab-atlas.conf` as the starting point for the host reverse proxy. It includes:
 
-# Check status
-docker compose ps
+- HTTP to HTTPS redirect
+- HSTS
+- `Referrer-Policy: no-referrer`
+- proxying to `127.0.0.1:${WEB_PORT}`
 
-# View logs
-docker compose logs -f
-```
+## Local validation already performed
 
-## Services
+The hardened local production stack was validated with:
 
-The application consists of three services:
+- `docker compose -f docker-compose.prod.yml up -d --build`
+- web CSP and referrer-policy headers present on `http://127.0.0.1:8080/`
+- API CORS restricted to the configured origin by header mismatch on disallowed origins
+- API and web containers running as non-root users
+- no source maps shipped in the web image
+- compiled API image does not contain `tsx` or Playwright
 
-- **Frontend (Port 80)**: React application served by Nginx
-- **API (Internal)**: Node.js API server
-- **Database (Port 3306)**: MariaDB database
+## Rollback
 
-## URLs
+1. Check out the previous known-good git revision or release tag.
+2. Re-run `./deploy.sh` with the same external env file.
+3. Verify with `./health-check.sh`.
+4. Only roll back database schema manually if the older app version is incompatible with the current schema; otherwise prefer forward-only schema compatibility.
 
-- **Application**: http://your-server-ip
-- **API Health Check**: http://your-server-ip/api/health
+## Live-production tasks still requiring the host
 
-## Management Commands
+This repository now contains the stack, scripts, and proxy reference needed for atlas deployment. The final host-specific actions still have to be performed on atlas itself:
 
-### View logs
-
-```bash
-docker compose logs -f [service_name]
-```
-
-### Restart a service
-
-```bash
-docker compose restart [service_name]
-```
-
-### Stop all services
-
-```bash
-docker compose down
-```
-
-### Update application
-
-```bash
-# Pull latest changes
-git pull
-
-# Rebuild and restart
-docker compose up -d --build
-```
-
-### Backup database
-
-```bash
-docker compose exec db mysqldump -u root -p listcollab > backup.sql
-```
-
-### Restore database
-
-```bash
-docker compose exec -T db mysql -u root -p listcollab < backup.sql
-```
-
-## Troubleshooting
-
-### Check service health
-
-```bash
-docker compose ps
-```
-
-### View service logs
-
-```bash
-docker compose logs api
-docker compose logs frontend
-docker compose logs db
-```
-
-### Access database directly
-
-```bash
-docker compose exec db mysql -u root -p listcollab
-```
-
-### Reset everything
-
-```bash
-docker-compose down -v
-docker system prune -f
-docker-compose up -d --build
-```
-
-## Security Notes
-
-- Change default passwords in `.env` file
-- Consider setting up SSL/TLS with a reverse proxy (nginx/traefik)
-- Regularly update Docker images
-- Monitor logs for suspicious activity
-
-## Performance Tuning
-
-- Adjust database memory settings in `docker-compose.yml`
-- Monitor container resource usage with `docker stats`
-- Consider using Docker Swarm or Kubernetes for scaling
+- install the reverse-proxy config with the real hostname and certificate paths
+- verify HTTPS redirect and HSTS on the live hostname
+- confirm the app is reachable from outside the LAN as intended

@@ -22,7 +22,7 @@ describe('event token middleware', () => {
         app.get('/check', requireEventToken, (_req, res) => res.json({ ok: true }))
 
         const response = await request(app).get('/check')
-        const body = response.body as { error: { code: string } }
+        const body = response.body as { error: { code: string; requestId: string } }
 
         expect(response.status).toBe(401)
         expect(body.error.code).toBe('INVALID_TOKEN')
@@ -37,7 +37,7 @@ describe('event token middleware', () => {
         app.get('/check', requireEventToken, (_req, res) => res.json({ ok: true }))
 
         const response = await request(app).get('/check').set('X-Event-Token', 'abcdefghij')
-        const body = response.body as { error: { code: string } }
+        const body = response.body as { error: { code: string; requestId: string } }
 
         expect(response.status).toBe(404)
         expect(body.error.code).toBe('EVENT_NOT_FOUND')
@@ -91,7 +91,7 @@ describe('event token middleware', () => {
         }, requireAdminToken, (_req, res) => res.json({ ok: true }))
 
         const response = await request(app).get('/check')
-        const body = response.body as { error: { code: string } }
+        const body = response.body as { error: { code: string; requestId: string } }
 
         expect(response.status).toBe(403)
         expect(body.error.code).toBe('ADMIN_REQUIRED')

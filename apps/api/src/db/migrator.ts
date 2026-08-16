@@ -114,7 +114,22 @@ function getMigrationName(fileName: string): string {
   return fileName.replace(/\.up\.sql$/, '')
 }
 
-const repoRoot = path.resolve(__dirname, '..', '..', '..', '..')
+/**
+ * Resolves the repository root from either the source tree or the compiled dist tree.
+ */
+export function resolveRepoRoot(currentDir: string): string {
+  const sourceCandidate = path.resolve(currentDir, '..', '..', '..', '..')
+  const distCandidate = path.resolve(currentDir, '..', '..', '..', '..', '..')
+  const candidates = [sourceCandidate, distCandidate]
+
+  const matched = candidates.find((candidate) =>
+    existsSync(path.resolve(candidate, 'apps/api/migrations'))
+  )
+
+  return matched ?? sourceCandidate
+}
+
+const repoRoot = resolveRepoRoot(__dirname)
 
 async function seedBaselineMigrationIfNeeded(pool: Pool, baselineName: string): Promise<boolean> {
   const [existingMigrations] = await pool.query<MigrationRecord[]>(

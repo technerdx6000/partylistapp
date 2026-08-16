@@ -1,40 +1,39 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Transfer script for deploying to remote server
-# Usage: ./transfer-to-server.sh user@server-ip
+set -euo pipefail
 
-if [ $# -eq 0 ]; then
-    echo "Usage: $0 user@server-ip"
-    echo "Example: $0 admin@192.168.1.100"
+if [[ $# -lt 1 ]]; then
+    echo "Usage: $0 user@server [/opt/listcollab]" >&2
     exit 1
 fi
 
-SERVER=$1
-REMOTE_DIR="/opt/partylist"
+SERVER="$1"
+REMOTE_DIR="${2:-/opt/listcollab}"
 
-echo "🚀 Transferring Party List application to $SERVER"
+echo "Transferring ListCollab to $SERVER:$REMOTE_DIR"
 
-# Create remote directory
-ssh $SERVER "sudo mkdir -p $REMOTE_DIR && sudo chown \$(whoami):\$(whoami) $REMOTE_DIR"
+ssh "$SERVER" "mkdir -p '$REMOTE_DIR'"
 
-# Transfer files
-rsync -avz --progress \
-  --exclude 'node_modules' \
+rsync -avz --delete \
   --exclude '.git' \
+  --exclude 'node_modules' \
+  --exclude '.turbo' \
+  --exclude 'coverage' \
   --exclude 'dist' \
+  --exclude 'playwright-report' \
+  --exclude 'test-results' \
   --exclude '.env' \
-  --exclude '*.log' \
-  ./ $SERVER:$REMOTE_DIR/
+  --exclude '.env.*' \
+  ./ "$SERVER:$REMOTE_DIR/"
 
-echo "📁 Files transferred to $SERVER:$REMOTE_DIR"
+ssh "$SERVER" "chmod +x '$REMOTE_DIR'/*.sh '$REMOTE_DIR'/scripts/*.sh 2>/dev/null || true"
 
-# Make scripts executable
-ssh $SERVER "chmod +x $REMOTE_DIR/*.sh"
+cat <<EOF
+Transfer complete.
 
-echo "✅ Transfer complete!"
-echo ""
-echo "Next steps:"
-echo "1. SSH to your server: ssh $SERVER"
-echo "2. Navigate to app directory: cd $REMOTE_DIR"
-echo "3. Configure environment: cp .env.example .env && nano .env"
-echo "4. Deploy application: ./deploy.sh"
+Next steps on the server:
+1. Create an external env file such as /etc/listcollab/listcollab.env.
+2. Set LISTCOLLAB_ENV_FILE=/etc/listcollab/listcollab.env.
+3. Run $REMOTE_DIR/deploy.sh.
+4. Place the reverse-proxy config from deploy/nginx/ in your TLS proxy.
+EOF

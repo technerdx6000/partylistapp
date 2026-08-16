@@ -16,7 +16,7 @@
 | 5 | Frontend restructure | ✅ Complete | 8 / 8 |
 | 6 | Collaborative UX | ✅ Complete | 7 / 7 |
 | 7 | Responsive polish and accessibility | ✅ Complete | 7 / 7 |
-| 8 | Hardening, deployment and handoff | 🔄 In Progress | 1 / 9 |
+| 8 | Hardening, deployment and handoff | ⛔ Blocked | 7 / 9 |
 
 ---
 
@@ -80,14 +80,14 @@
 | 7 – Polish | 7.6 | Accessibility pass — keyboard, focus, labels, contrast, live regions | ✅ Complete | The app root now sets `document.documentElement.lang = 'en'`, event-page snackbars expose explicit polite/assertive live-region semantics, the shared theme applies visible focus treatment to keyboard-focused buttons/links/chips/inputs, and collaboration tests verify Escape-close plus focus return on the identify, category, and delete-event dialogs; only manual keyboard-only and screen-reader signoff remains |
 | 7 – Polish | 7.7 | Mobile E2E + axe accessibility checks | ✅ Complete | The full Playwright suite now passes, including the collaborative mobile flow, the no-horizontal-scroll assertions at 390px/320px, and axe checks on the landing, event, and manage routes; the prior high-severity `nanoid` advisory is patched, and only optional real-phone follow-up remains outside automation |
 | 8 – Deploy | 8.1 | 🔒 Consolidate the security test suite (`test:security`) | ✅ Complete | Added root `npm run test:security` as a serial Vitest suite covering 17 security-focused files and 105 passing tests, including the explicit IDOR matrix for item/category/participant/assignment, malformed-vs-unknown-token enumeration checks, full request-cycle log redaction, token-source/timing assertions, route validation edges, generic production error envelopes, and XSS rendering coverage |
-| 8 – Deploy | 8.2 | 🔒 CSP, HSTS, Referrer-Policy, CORS verified on the build | ⬜ Not Started | |
-| 8 – Deploy | 8.3 | 🔒 Dependency audit, pinning, Dependabot, slim prod images | ⬜ Not Started | |
-| 8 – Deploy | 8.4 | Production Compose stack with health checks and boot migrations | ⬜ Not Started | Non-root containers, DB not published |
-| 8 – Deploy | 8.5 | Backups + an actual restore drill | ⬜ Not Started | An untested backup is a hypothesis |
-| 8 – Deploy | 8.6 | Full verification pass against the production build | ⬜ Not Started | |
-| 8 – Deploy | 8.7 | README, DEVELOPMENT, OPERATIONS, SECURITY docs | ⬜ Not Started | Include admin-token recovery procedure |
-| 8 – Deploy | 8.8 | Deploy to atlas behind TLS and verify the live flow | ⬜ Not Started | |
-| 8 – Deploy | 8.9 | Merge to `main`, tag `v1.0.0`, record deferred scope | ⬜ Not Started | |
+| 8 – Deploy | 8.2 | 🔒 CSP, HSTS, Referrer-Policy, CORS verified on the build | ✅ Complete | Added production nginx headers (`Content-Security-Policy`, `Referrer-Policy`, `X-Content-Type-Options`, `X-Frame-Options`) in the web image, verified local prod responses with `curl -I`, confirmed API `helmet` headers on the compiled build, disabled web source maps, and added a host reverse-proxy reference config with HTTP→HTTPS redirect plus HSTS for atlas |
+| 8 – Deploy | 8.3 | 🔒 Dependency audit, pinning, Dependabot, slim prod images | ✅ Complete | Pinned `nanoid`, pinned the validated Node and MariaDB runtime images by digest, added `.github/dependabot.yml`, confirmed `npm audit --audit-level=high` reports no high/critical issues, and verified the prod API image runs without `tsx` or Playwright while the web image ships as `nginx-unprivileged` |
+| 8 – Deploy | 8.4 | Production Compose stack with health checks and boot migrations | ✅ Complete | Added `docker-compose.prod.yml` on its own Compose project name with localhost-only web binding, no DB host exposure, separate `migrate` service, health checks for all services, `restart: unless-stopped`, and non-root runtime containers; fixed built-migration path resolution so the prod schema actually applies on cold start |
+| 8 – Deploy | 8.5 | Backups + an actual restore drill | ✅ Complete | Added `scripts/backup-prod.sh`, `scripts/restore-prod-backup.sh`, and a daily systemd timer/service with 14-day retention; verified a real local restore drill on 2026-08-16 from `/tmp/listcollab-backups/listcollab-20260816T050426Z.sql.gz` into `listcollab_restore_drill` in 2 seconds and confirmed the `Backup Drill Event` fixture plus its participant/category/item/assignment data were present |
+| 8 – Deploy | 8.6 | Full verification pass against the production build | ✅ Complete | Verified `npm run test`, `npm run test:coverage`, `npm run test:security`, `npm run test:e2e`, `npm run lint`, `npm run type-check`, `npm audit --audit-level=high`, and `./health-check.sh`; `npm run test:e2e` now runs against a compiled production-style harness by default, `test:coverage` now enforces thresholds, and the local prod aggregate endpoint returned a 200 response for an event with 50 items and 20 participants in 10 ms |
+| 8 – Deploy | 8.7 | README, DEVELOPMENT, OPERATIONS, SECURITY docs | ✅ Complete | Rewrote the root README, DEVELOPMENT, DEPLOYMENT, and PRODUCTION_CHECKLIST docs for the rebuilt app, added OPERATIONS.md with deploy/rollback/backup/restore/requestId/admin-link recovery procedures, and added SECURITY.md with the threat model, token capability model, accepted trade-offs, and the rotated-credentials git-history note |
+| 8 – Deploy | 8.8 | Deploy to atlas behind TLS and verify the live flow | ⛔ Blocked | Requires atlas host access, live hostname, reverse-proxy certificate paths, and off-box verification that are not available from this workspace; the repo now contains the prod stack, health checks, reverse-proxy config, backup timer, and docs needed for that host-side rollout |
+| 8 – Deploy | 8.9 | Merge to `main`, tag `v1.0.0`, record deferred scope | ⛔ Blocked | Depends on completing 8.8 on the real host and also requires an explicit user request to perform git commit/merge/tag operations in this workspace |
 
 ---
 
@@ -95,7 +95,8 @@
 
 | Date | Phase | Task | Blocker Description | Resolution |
 |------|-------|------|---------------------|-----------|
-| | | | | |
+| 2026-08-16 | 8 | 8.8 | Atlas deployment and live TLS verification require host access, real certificate paths, and an external-network/manual phone check that are not available from this workspace | Repo-side implementation complete; deploy on atlas using `docker-compose.prod.yml`, `deploy/nginx/listcollab-atlas.conf`, and `OPERATIONS.md` |
+| 2026-08-16 | 8 | 8.9 | Merge to `main` and tag `v1.0.0` depend on successful live deployment verification and are disallowed here without an explicit user request for git operations | Pending after atlas rollout and explicit user approval |
 
 ---
 
@@ -105,6 +106,7 @@
 |------|--------------|-----------------|-------|
 | 2026-08-16 | Checked worktree diff against Phase 7 tracker, then continued Phase 7 web polish | 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7 | Fixed workspace package resolution for Vitest/Vite/TypeScript on the current mounted filesystem, committed the loading/snackbar slice, completed 7.5 category controls, completed the sticky condensed header for 7.1, completed snackbars/confirmations for 7.3 and 7.4, completed 7.6 with document language/live-region announcements plus explicit theme focus rings and dialog focus-return checks, completed 7.7 with full Playwright plus axe coverage, cleared the prior high-severity `nanoid` advisory, and fixed three browser-manual-review regressions: overlong item names now show inline validation instead of crashing, duplicate category names now return a clean conflict error, and organiser access now survives reloads within the current browser session; remaining screen-reader and phone checks were explicitly deferred by the user so Phase 7 is signed off and Phase 8 is now active |
 | 2026-08-16 | Continued Phase 8 hardening from the active deploy plan | 8.1 | Consolidated the security checklist into `npm run test:security`, added missing malformed-token, participant/category/item/assignment IDOR, share-token admin denial, request-cycle log redaction, production-safe error envelope, quantity-edge, legacy `person_id`, SQL-injection literal-storage, and token-source/timing assertions, and fixed the middleware error envelope so scoped auth failures now include request ids consistently |
+| 2026-08-16 | Continued Phase 8 from the production/deployment slice | 8.2, 8.3, 8.4, 8.5, 8.6, 8.7 | Added a hardened `docker-compose.prod.yml` with a separate migration service, pinned runtime images by digest, slimmed the API and web production images, wired `npm run test:e2e` to a compiled production-style harness, enforced source-only coverage thresholds, added backup/restore scripts plus a systemd timer, completed a 2-second local restore drill to a scratch DB, rewrote the deployment and handoff docs, validated the local prod headers/CORS/non-root/runtime contents, and confirmed the aggregate event endpoint stayed responsive with 50 items and 20 participants; atlas-only TLS deployment, live-host verification, merge, and release tagging remain external blockers |
 
 ---
 

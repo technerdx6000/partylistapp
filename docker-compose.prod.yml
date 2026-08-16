@@ -1,0 +1,97 @@
+name: listcollab-prod
+
+services:
+  db:
+    image: mariadb:11@sha256:d9f7eb2637296652f24b484afd5d246f759f49f5babcadc6a9e344c9acb75fbf
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME:?Set DB_NAME}
+      MYSQL_USER: ${DB_USER:?Set DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
+    volumes:
+      - prod_db_data:/var/lib/mysql
+    networks:
+      - prod
+    healthcheck:
+      test: [ "CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: "no"
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:?Set DB_NAME}
+      DB_USER: ${DB_USER:?Set DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
+      CORS_ORIGIN: ${CORS_ORIGIN:?Set CORS_ORIGIN}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: [ "npm", "run", "--workspace", "@listcollab/api", "db:migrate:prod" ]
+    networks:
+      - prod
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:?Set DB_NAME}
+      DB_USER: ${DB_USER:?Set DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
+      CORS_ORIGIN: ${CORS_ORIGIN:?Set CORS_ORIGIN}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - prod
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3002/api/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8080}:8080"
+    networks:
+      - prod
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+volumes:
+  prod_db_data:
+
+networks:
+  prod:

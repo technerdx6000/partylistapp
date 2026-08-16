@@ -1,45 +1,41 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Health check script for Party List application
+set -euo pipefail
 
-echo "🏥 Party List Application Health Check"
-echo "====================================="
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+COMPOSE_FILE="$REPO_ROOT/docker-compose.prod.yml"
+ENV_FILE="${LISTCOLLAB_ENV_FILE:-/etc/listcollab/listcollab.env}"
 
-# Check if containers are running
-echo "📦 Container Status:"
-docker compose ps
-
-echo ""
-
-# Check frontend health
-echo "🌐 Frontend Health:"
-if curl -f -s http://localhost/health > /dev/null; then
-    echo "✅ Frontend: Healthy"
-else
-    echo "❌ Frontend: Unhealthy"
+if [[ ! -f "$ENV_FILE" ]]; then
+    echo "Expected production env file at $ENV_FILE" >&2
+    exit 1
 fi
 
-# Check API health
-echo ""
-echo "🔧 API Health:"
-if curl -f -s http://localhost/api/health > /dev/null; then
-    echo "✅ API: Healthy"
-    echo "📊 API Response:"
-    curl -s http://localhost/api/health | jq .
-else
-    echo "❌ API: Unhealthy"
-fi
+set -a
+source "$ENV_FILE"
+set +a
 
-# Check database connectivity
-echo ""
-echo "🗄️  Database Health:"
-if docker compose exec -T db mariadb-admin ping -h localhost --silent; then
-    echo "✅ Database: Healthy"
-else
-    echo "❌ Database: Unhealthy"
-fi
+compose() {
+    docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" "$@"
+}
 
-echo ""
-echo "📝 Recent logs:"
-echo "---------------"
-docker compose logs --tail=10
+web_port="${WEB_PORT:-8080}"
+
+echo "ListCollab production health check"
+compose ps
+echo
+
+echo "Web health"
+curl -fsS "http://127.0.0.1:${web_port}/health"
+echo
+
+echo "API health"
+curl -fsS "http://127.0.0.1:${web_port}/api/health"
+echo
+
+echo "Database health"
+compose exec -T db mariadb-admin ping -h localhost -u root "-p${DB_ROOT_PASSWORD}" --silent
+echo
+
+echo "Recent logs"
+compose logs --tail=20

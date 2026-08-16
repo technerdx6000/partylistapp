@@ -1,8 +1,8 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
-const API_URL = 'http://127.0.0.1:4301'
-const APP_URL = 'http://127.0.0.1:4273'
+const APP_URL = process.env.LISTCOLLAB_E2E_APP_URL ?? 'http://127.0.0.1:4274'
+const API_URL = process.env.LISTCOLLAB_E2E_API_URL ?? 'http://127.0.0.1:4302'
 
 type CreatedEvent = {
     adminToken: string
@@ -19,7 +19,7 @@ async function waitForApiReady(request: APIRequestContext): Promise<void> {
             } catch {
                 return 0
             }
-        })
+        }, { timeout: 20000 })
         .toBe(200)
 }
 

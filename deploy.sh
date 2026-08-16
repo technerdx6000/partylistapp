@@ -1,33 +1,53 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Build and deploy the Party List application
+set -euo pipefail
 
-echo "🚀 Building and deploying Party List application..."
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+COMPOSE_FILE="$REPO_ROOT/docker-compose.prod.yml"
+ENV_FILE="${LISTCOLLAB_ENV_FILE:-/etc/listcollab/listcollab.env}"
 
-# Stop existing containers
-echo "⏹️  Stopping existing containers..."
-docker compose down
+if [[ ! -f "$ENV_FILE" ]]; then
+	echo "Expected production env file at $ENV_FILE" >&2
+	exit 1
+fi
 
-# Build images
-echo "🔨 Building Docker images..."
-docker compose build --no-cache
+compose() {
+	docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" "$@"
+}
 
-# Start services
-echo "▶️  Starting services..."
-docker compose up -d
+wait_for_health() {
+	local service="$1"
+	local container_id
+	container_id="$(compose ps -q "$service")"
 
-# Wait for services to be healthy
-echo "⏳ Waiting for services to be healthy..."
-sleep 30
+	if [[ -z "$container_id" ]]; then
+		echo "Could not find container for service $service" >&2
+		exit 1
+	fi
 
-# Check service health
-echo "🏥 Checking service health..."
-docker compose ps
+	for _ in {1..90}; do
+		local status
+		status="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$container_id")"
 
-echo "✅ Deployment complete!"
-echo "🌐 Application available at: http://localhost"
-echo "📊 API health check: http://localhost/api/health"
+		if [[ "$status" == "healthy" || "$status" == "running" || "$status" == "exited" ]]; then
+			return 0
+		fi
 
-# Show logs
-echo "📝 Recent logs:"
-docker compose logs --tail=50
+		sleep 2
+	done
+
+	echo "Timed out waiting for $service to become ready" >&2
+	compose logs "$service" --tail=100
+	exit 1
+}
+
+echo "Deploying ListCollab with docker-compose.prod.yml"
+compose up -d --build --remove-orphans
+
+wait_for_health db
+wait_for_health migrate
+wait_for_health api
+wait_for_health web
+
+compose ps
+echo "Deployment finished. Web is bound to localhost on the configured WEB_PORT and should be reached through the reverse proxy."

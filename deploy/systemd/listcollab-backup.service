@@ -1,0 +1,12 @@
+[Unit]
+Description=ListCollab database backup
+Wants=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/listcollab
+Environment=LISTCOLLAB_ENV_FILE=/etc/listcollab/listcollab.env
+Environment=LISTCOLLAB_BACKUP_DIR=/var/backups/listcollab
+Environment=LISTCOLLAB_BACKUP_RETENTION_DAYS=14
+ExecStart=/opt/listcollab/scripts/backup-prod.sh
