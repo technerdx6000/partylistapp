@@ -18,6 +18,8 @@ import {
   Select,
   Stack,
   TextField,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { useEffect, useState } from 'react'
 
@@ -48,6 +50,8 @@ export function ItemForm({
   onCreate,
   onUpdate,
 }: ItemFormProps): React.JSX.Element {
+  const theme = useTheme()
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'))
   const [categoryId, setCategoryId] = useState<number | null>(item?.categoryId ?? initialCategoryId)
   const [description, setDescription] = useState(item?.description ?? '')
   const [isSaving, setIsSaving] = useState(false)
@@ -92,7 +96,7 @@ export function ItemForm({
   }
 
   return (
-    <Dialog fullScreen={typeof window !== 'undefined' && window.innerWidth < 600} fullWidth maxWidth="sm" onClose={onClose} open={isOpen}>
+    <Dialog fullScreen={isSmallScreen} fullWidth maxWidth="sm" onClose={onClose} open={isOpen}>
       <DialogTitle>
         {mode === 'guest-create' && 'Add your contribution'}
         {mode === 'manage-create' && 'Add requirement'}

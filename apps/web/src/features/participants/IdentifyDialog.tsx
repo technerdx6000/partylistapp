@@ -12,6 +12,8 @@ import {
   Stack,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { useState } from 'react'
 
@@ -32,6 +34,8 @@ export function IdentifyDialog({
   onCreateParticipant,
   onSelectParticipant,
 }: IdentifyDialogProps): React.JSX.Element {
+  const theme = useTheme()
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'))
   const [displayName, setDisplayName] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -57,7 +61,7 @@ export function IdentifyDialog({
   }
 
   return (
-    <Dialog fullWidth maxWidth="xs" onClose={onClose} open={isOpen}>
+    <Dialog fullScreen={isSmallScreen} fullWidth maxWidth="xs" onClose={onClose} open={isOpen}>
       <DialogTitle>Who are you?</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>

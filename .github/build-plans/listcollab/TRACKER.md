@@ -15,7 +15,7 @@
 | 4 | Event-centred API | ✅ Complete | 10 / 10 |
 | 5 | Frontend restructure | ✅ Complete | 8 / 8 |
 | 6 | Collaborative UX | ✅ Complete | 7 / 7 |
-| 7 | Responsive polish and accessibility | ⬜ Not Started | 0 / 7 |
+| 7 | Responsive polish and accessibility | 🔄 In Progress | 0 / 7 |
 | 8 | Hardening, deployment and handoff | ⬜ Not Started | 0 / 9 |
 
 ---
@@ -72,10 +72,10 @@
 | 6 – Collaboration | 6.5 | Coverage indicators at item, category and event level | ✅ Complete | Added per-item progress, per-category covered counts, and tests proving ad-hoc contributions stay out of denominators |
 | 6 – Collaboration | 6.6 | 🔒 Organiser mode — structural controls absent without admin token | ✅ Complete | Guest view hides structural controls, organiser view exposes them, and Playwright verifies share-token admin actions still return `403 ADMIN_REQUIRED` |
 | 6 – Collaboration | 6.7 | 🔒 Share flow — share URL, copy, admin link never leaked | ✅ Complete | Share/copy uses the guest URL only, organiser link remains separately labelled, and landing-page revisit plus e2e flow passed |
-| 7 – Polish | 7.1 | Responsive layout, touch targets, dialogs as sheets on mobile | ⬜ Not Started | Refinement only — restructuring here means Phase 5 regressed |
+| 7 – Polish | 7.1 | Responsive layout, touch targets, dialogs as sheets on mobile | 🔄 In Progress | Event-page loading now uses skeleton cards and the confirmation, claim, item, and identity dialogs all switch to small-screen full-screen mode through MUI breakpoints; focused web tests, type-check, and lint are green for this slice |
 | 7 – Polish | 7.2 | Skeletons and empty states | ⬜ Not Started | |
 | 7 – Polish | 7.3 | Snackbars replacing persistent error banners | ⬜ Not Started | Include requestId only |
-| 7 – Polish | 7.4 | Destructive-action confirmations with stated consequences | ⬜ Not Started | Event delete requires typing the name |
+| 7 – Polish | 7.4 | Destructive-action confirmations with stated consequences | 🔄 In Progress | Participant, item, category, event, and claim removal now route through confirmation dialogs; event deletion requires typing the event name and the updated collaboration tests cover both confirm and back-out paths |
 | 7 – Polish | 7.5 | Category icons, ordering controls, assignment display | ⬜ Not Started | Move up/down, not drag and drop |
 | 7 – Polish | 7.6 | Accessibility pass — keyboard, focus, labels, contrast, live regions | ⬜ Not Started | |
 | 7 – Polish | 7.7 | Mobile E2E + axe accessibility checks | ⬜ Not Started | |
@@ -103,8 +103,8 @@
 
 | Date | Session Start | Tasks Completed | Notes |
 |------|--------------|-----------------|-------|
-| | | | |
+| 2026-08-16 | Checked worktree diff against Phase 7 tracker, then continued Phase 7 web polish | None yet | Fixed workspace package resolution for Vitest/Vite/TypeScript on the current mounted filesystem, aligned responsive and collaboration tests with the new dialog flows, and continued 7.1/7.4 implementation without marking either task complete |
 
 ---
 
-*Last updated: 14 August 2026 (generated)*
+*Last updated: 16 August 2026*

@@ -13,9 +13,12 @@ import {
   Stack,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { useEffect, useMemo, useState } from 'react'
 
+import { ConfirmationDialog } from '../../components/ConfirmationDialog'
 import type { EventIdentity } from '../../hooks/useEventIdentity'
 
 type ClaimItemDialogProps = {
@@ -61,8 +64,11 @@ export function ClaimItemDialog({
   onSave,
   participants,
 }: ClaimItemDialogProps): React.JSX.Element {
+  const theme = useTheme()
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'))
   const existingAssignment = useMemo(() => assignment ?? null, [assignment])
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [note, setNote] = useState(existingAssignment?.note ?? '')
   const [participantId, setParticipantId] = useState<number | ''>(identity?.participantId ?? '')
@@ -97,7 +103,7 @@ export function ClaimItemDialog({
   }
 
   async function handleDelete(): Promise<void> {
-    if (!existingAssignment || !window.confirm('Remove this claim?')) {
+    if (!existingAssignment) {
       return
     }
 
@@ -106,6 +112,7 @@ export function ClaimItemDialog({
 
     try {
       await onDeleteAssignment(existingAssignment.id, existingAssignment.participantId)
+      setIsRemoveDialogOpen(false)
     } catch {
       setErrorMessage('That claim could not be removed. Refresh and try again.')
     } finally {
@@ -116,58 +123,76 @@ export function ClaimItemDialog({
   const remainingLabel = item?.coverage.remaining === null ? 'Open contribution' : `${item?.coverage.remaining ?? 0} remaining`
 
   return (
-    <Dialog fullScreen={typeof window !== 'undefined' && window.innerWidth < 600} fullWidth maxWidth="xs" onClose={onClose} open={isOpen}>
-      <DialogTitle>{existingAssignment ? 'Adjust claim' : 'Claim item'}</DialogTitle>
-      <DialogContent>
-        <Stack spacing={2} sx={{ pt: 1 }}>
-          <Typography color="text.secondary">{item?.name ?? 'Item'} · {remainingLabel}</Typography>
+    <>
+      <Dialog fullScreen={isSmallScreen} fullWidth maxWidth="xs" onClose={onClose} open={isOpen}>
+        <DialogTitle>{existingAssignment ? 'Adjust claim' : 'Claim item'}</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            <Typography color="text.secondary">{item?.name ?? 'Item'} · {remainingLabel}</Typography>
 
-          {errorMessage ? <Alert color="error">{errorMessage}</Alert> : null}
+            {errorMessage ? <Alert color="error">{errorMessage}</Alert> : null}
 
-          <FormControl fullWidth>
-            <InputLabel>Who are you?</InputLabel>
-            <Select
-              disabled={!isManageMode && Boolean(identity?.participantId)}
-              label="Who are you?"
-              onChange={(event) => setParticipantId(Number(event.target.value))}
-              value={participantId}
-            >
-              {participants.map((participant) => (
-                <MenuItem key={participant.id} value={participant.id}>
-                  {participant.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+            <FormControl fullWidth>
+              <InputLabel>Who are you?</InputLabel>
+              <Select
+                disabled={!isManageMode && Boolean(identity?.participantId)}
+                label="Who are you?"
+                onChange={(event) => setParticipantId(Number(event.target.value))}
+                value={participantId}
+              >
+                {participants.map((participant) => (
+                  <MenuItem key={participant.id} value={participant.id}>
+                    {participant.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-          <TextField
-            inputProps={{ min: 1, max: item?.coverage.remaining ?? undefined }}
-            label="Quantity"
-            onChange={(event) => setQuantity(Math.max(Number(event.target.value) || 1, 1))}
-            type="number"
-            value={quantity}
-          />
+            <TextField
+              inputProps={{ min: 1, max: item?.coverage.remaining ?? undefined }}
+              label="Quantity"
+              onChange={(event) => setQuantity(Math.max(Number(event.target.value) || 1, 1))}
+              type="number"
+              value={quantity}
+            />
 
-          <TextField
-            label="Optional note"
-            multiline
-            minRows={2}
-            onChange={(event) => setNote(event.target.value)}
-            value={note}
-          />
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        {existingAssignment ? (
-          <Button color="error" disabled={isSaving} onClick={() => void handleDelete()}>
-            Remove claim
+            <TextField
+              label="Optional note"
+              multiline
+              minRows={2}
+              onChange={(event) => setNote(event.target.value)}
+              value={note}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          {existingAssignment ? (
+            <Button color="error" disabled={isSaving} onClick={() => setIsRemoveDialogOpen(true)}>
+              Remove claim
+            </Button>
+          ) : null}
+          <Button onClick={onClose}>Cancel</Button>
+          <Button disabled={isSaving || !participantId} onClick={() => void handleSave()} variant="contained">
+            {isSaving ? 'Saving…' : existingAssignment ? 'Update claim' : 'Claim item'}
           </Button>
-        ) : null}
-        <Button onClick={onClose}>Cancel</Button>
-        <Button disabled={isSaving || !participantId} onClick={() => void handleSave()} variant="contained">
-          {isSaving ? 'Saving…' : existingAssignment ? 'Update claim' : 'Claim item'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+        </DialogActions>
+      </Dialog>
+
+      <ConfirmationDialog
+        confirmButtonLabel="Remove claim"
+        description="Remove this claim? This frees the quantity for someone else to bring."
+        isConfirming={isSaving}
+        isOpen={isRemoveDialogOpen}
+        onClose={() => {
+          if (!isSaving) {
+            setIsRemoveDialogOpen(false)
+          }
+        }}
+        onConfirm={() => {
+          void handleDelete()
+        }}
+        title="Remove claim"
+      />
+    </>
   )
 }

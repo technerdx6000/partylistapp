@@ -1,5 +1,5 @@
 import type { AggregateEventResponse } from '@listcollab/shared'
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -255,7 +255,7 @@ describe('EventPage collaboration', () => {
     deferredClaim.reject(new ApiClientError('Too late', 'OVER_CLAIM', 'req-9'))
 
     await waitFor(() => {
-      expect(screen.getByText('Someone else claimed that amount first. The list has been refreshed.')).toBeInTheDocument()
+      expect(screen.getByText(/Someone else claimed that amount first\. The list has been refreshed\./)).toBeInTheDocument()
     })
     await waitFor(() => {
       expect(screen.getByText('2 / 4 covered')).toBeInTheDocument()
@@ -280,7 +280,7 @@ describe('EventPage collaboration', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Claim item' }))
 
     await waitFor(() => {
-      expect(screen.getByText('We could not save that claim.')).toBeInTheDocument()
+      expect(screen.getByText(/We could not save that claim\./)).toBeInTheDocument()
     })
   })
 
@@ -358,7 +358,6 @@ describe('EventPage collaboration', () => {
     })
     apiClient.deleteAssignment.mockResolvedValue(undefined)
     useApiClientMock.mockReturnValue(apiClient)
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
 
     renderEventPage()
 
@@ -383,7 +382,6 @@ describe('EventPage collaboration', () => {
     const apiClient = buildApiClient()
     apiClient.deleteAssignment.mockResolvedValue(undefined)
     useApiClientMock.mockReturnValue(apiClient)
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
 
     renderEventPage()
 
@@ -392,6 +390,7 @@ describe('EventPage collaboration', () => {
     await screen.findByRole('heading', { name: 'Adjust claim' })
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove claim' }))
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Remove claim' })).getByRole('button', { name: 'Remove claim' }))
 
     await waitFor(() => {
       expect(apiClient.deleteAssignment).toHaveBeenCalledWith(2, { participantId: 2 })
@@ -407,7 +406,6 @@ describe('EventPage collaboration', () => {
     const apiClient = buildApiClient()
     apiClient.deleteAssignment.mockRejectedValue(new ApiClientError('Nope', 'INTERNAL_ERROR', 'req-6'))
     useApiClientMock.mockReturnValue(apiClient)
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
 
     renderEventPage()
 
@@ -415,9 +413,10 @@ describe('EventPage collaboration', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Jordan ×1' }))
     await screen.findByRole('heading', { name: 'Adjust claim' })
     fireEvent.click(screen.getByRole('button', { name: 'Remove claim' }))
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Remove claim' })).getByRole('button', { name: 'Remove claim' }))
 
     await waitFor(() => {
-      expect(screen.getByText('We could not remove that claim.')).toBeInTheDocument()
+      expect(screen.getByText(/We could not remove that claim\./)).toBeInTheDocument()
     })
   })
 
@@ -487,7 +486,6 @@ describe('EventPage collaboration', () => {
       .mockReturnValueOnce('Camp Weekend Updated')
       .mockReturnValueOnce('Dessert')
       .mockReturnValueOnce('Meals')
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
 
     renderEventPage('/e/abcdefghij', true)
 
@@ -495,9 +493,35 @@ describe('EventPage collaboration', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Edit event' }))
     fireEvent.click(screen.getByRole('button', { name: 'Add category' }))
     fireEvent.click(screen.getByLabelText('Edit Food'))
+
     fireEvent.click(screen.getAllByRole('button', { name: 'Remove' })[0] as HTMLButtonElement)
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Remove participant' })).getByRole('button', { name: 'Remove participant' }))
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+
     fireEvent.click(screen.getByLabelText('Delete Bread Rolls'))
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Delete item' })).getByRole('button', { name: 'Delete item' }))
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+
     fireEvent.click(screen.getByLabelText('Delete Food'))
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Delete category' })).getByRole('button', { name: 'Delete category' }))
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete event' }))
+    const deleteEventDialog = await screen.findByRole('dialog', { name: 'Delete event' })
+    const deleteEventButton = within(deleteEventDialog).getByRole('button', { name: 'Delete event' })
+
+    expect(screen.getByText('This deletes the event, every requirement, and every claim for everyone.')).toBeInTheDocument()
+    expect(deleteEventButton).toBeDisabled()
+
+    fireEvent.change(screen.getByLabelText('Type the event name to confirm'), { target: { value: 'Camp Weekend' } })
+
+    expect(deleteEventButton).toBeEnabled()
 
     await waitFor(() => {
       expect(promptMock).toHaveBeenNthCalledWith(1, 'Event name', 'Camp Weekend')
@@ -516,7 +540,6 @@ describe('EventPage collaboration', () => {
     useApiClientMock.mockReturnValue(apiClient)
 
     vi.spyOn(window, 'prompt').mockReturnValue('   ')
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
 
     renderEventPage('/e/abcdefghij', true)
 
@@ -524,10 +547,30 @@ describe('EventPage collaboration', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Edit event' }))
     fireEvent.click(screen.getByRole('button', { name: 'Add category' }))
     fireEvent.click(screen.getByLabelText('Edit Food'))
+
     fireEvent.click(screen.getAllByRole('button', { name: 'Remove' })[0] as HTMLButtonElement)
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Remove participant' })).getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+
     fireEvent.click(screen.getByLabelText('Delete Bread Rolls'))
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Delete item' })).getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+
     fireEvent.click(screen.getByLabelText('Delete Food'))
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Delete category' })).getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+
     fireEvent.click(screen.getByRole('button', { name: 'Delete event' }))
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Delete event' })).getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
 
     expect(apiClient.updateEvent).not.toHaveBeenCalled()
     expect(apiClient.createCategory).not.toHaveBeenCalled()
@@ -555,19 +598,32 @@ describe('EventPage collaboration', () => {
     expect(screen.queryByRole('heading', { name: 'Claim item' })).not.toBeInTheDocument()
   })
 
-  it('warns before deleting the event and aborts when the warning is declined', async () => {
+  it('requires the event name before deleting the event and lets organisers back out', async () => {
     const apiClient = buildApiClient()
     useStoredAdminTokenMock.mockReturnValue('a'.repeat(64))
     useApiClientMock.mockReturnValue(apiClient)
-
-    const confirmMock = vi.spyOn(window, 'confirm').mockReturnValue(false)
 
     renderEventPage('/e/abcdefghij', true)
 
     await screen.findByRole('heading', { name: 'Camp Weekend' })
     fireEvent.click(screen.getByRole('button', { name: 'Delete event' }))
 
-    expect(confirmMock).toHaveBeenCalledWith('Delete this event for everyone?')
+    const dialog = await screen.findByRole('dialog', { name: 'Delete event' })
+    const deleteEventButton = within(dialog).getByRole('button', { name: 'Delete event' })
+
+    expect(deleteEventButton).toBeDisabled()
+
+    fireEvent.change(screen.getByLabelText('Type the event name to confirm'), { target: { value: 'Camp' } })
+    expect(deleteEventButton).toBeDisabled()
+
+    fireEvent.change(screen.getByLabelText('Type the event name to confirm'), { target: { value: 'Camp Weekend' } })
+    expect(deleteEventButton).toBeEnabled()
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Delete event' })).not.toBeInTheDocument()
+    })
     expect(apiClient.deleteEvent).not.toHaveBeenCalled()
   })
 

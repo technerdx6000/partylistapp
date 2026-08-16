@@ -85,9 +85,8 @@ describe('ClaimItemDialog', () => {
     })
   })
 
-  it('allows an existing claim to be removed after confirmation', async () => {
+  it('opens a confirmation dialog before removing an existing claim', async () => {
     const onDeleteAssignment = vi.fn().mockResolvedValue(undefined)
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
 
     renderWithProviders(
       <ClaimItemDialog
@@ -117,6 +116,7 @@ describe('ClaimItemDialog', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove claim' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Remove claim' }))
 
     await waitFor(() => {
       expect(onDeleteAssignment).toHaveBeenCalledWith(11, 2)

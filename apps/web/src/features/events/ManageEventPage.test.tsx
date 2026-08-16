@@ -16,7 +16,7 @@ describe('ManageEventPage', () => {
       { route: '/e/abcdefghij/manage' }
     )
 
-    expect(screen.getByText(/Loading event details/)).toBeInTheDocument()
+      expect(screen.getByLabelText('Loading event details')).toBeInTheDocument()
   })
 
   it('falls back to the invalid-page screen when the route has no share token param', () => {
