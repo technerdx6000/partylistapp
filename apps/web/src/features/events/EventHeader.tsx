@@ -7,22 +7,33 @@ import { Alert, Chip, Divider, Stack, TextField, Typography } from '@mui/materia
 
 type EventHeaderProps = {
   adminLink: string | null
+  isCondensed?: boolean
   event: Event
   isManageMode: boolean
   participantsCount: number
   coverageSummary: CoverageSummary
 }
 
+/**
+ * Renders the event summary header for guest and organiser views.
+ *
+ * The header supports a condensed mode for scrolled mobile layouts so the
+ * item list stays in focus without losing the key event summary.
+ *
+ * @param {EventHeaderProps} props - Event summary data and organiser context.
+ * @returns {React.JSX.Element} The rendered event header.
+ */
 export function EventHeader({
   adminLink,
+  isCondensed = false,
   event,
   isManageMode,
   participantsCount,
   coverageSummary,
 }: EventHeaderProps): React.JSX.Element {
   return (
-    <Stack spacing={2.5}>
-      {isManageMode && adminLink ? (
+    <Stack spacing={isCondensed ? 1.5 : 2.5}>
+      {isManageMode && adminLink && !isCondensed ? (
         <Alert color="warning" icon={<ShieldRoundedIcon fontSize="inherit" />}>
           <Stack spacing={1.5}>
             <Typography variant="body2">
@@ -51,8 +62,8 @@ export function EventHeader({
         {isManageMode ? <Chip icon={<ShieldRoundedIcon />} label="Organiser mode" variant="outlined" /> : null}
       </Stack>
 
-      <Stack spacing={1.25}>
-        <Typography variant="h2">{event.name}</Typography>
+      <Stack spacing={isCondensed ? 0.75 : 1.25}>
+        <Typography variant={isCondensed ? 'h3' : 'h2'}>{event.name}</Typography>
         <Stack direction="row" spacing={2} sx={{ color: 'text.secondary', flexWrap: 'wrap', gap: 1 }}>
           {event.eventDate ? (
             <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
@@ -66,14 +77,16 @@ export function EventHeader({
               <Typography variant="body2">{event.location}</Typography>
             </Stack>
           ) : null}
-          <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
-            <LinkRoundedIcon fontSize="small" />
-            <Typography variant="body2">Share token: {event.shareToken}</Typography>
-          </Stack>
+          {!isCondensed ? (
+            <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
+              <LinkRoundedIcon fontSize="small" />
+              <Typography variant="body2">Share token: {event.shareToken}</Typography>
+            </Stack>
+          ) : null}
         </Stack>
       </Stack>
 
-      {event.description ? (
+      {event.description && !isCondensed ? (
         <>
           <Divider />
           <Typography color="text.secondary">{event.description}</Typography>

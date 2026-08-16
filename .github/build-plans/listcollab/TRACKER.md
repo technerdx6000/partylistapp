@@ -15,7 +15,7 @@
 | 4 | Event-centred API | ✅ Complete | 10 / 10 |
 | 5 | Frontend restructure | ✅ Complete | 8 / 8 |
 | 6 | Collaborative UX | ✅ Complete | 7 / 7 |
-| 7 | Responsive polish and accessibility | 🔄 In Progress | 1 / 7 |
+| 7 | Responsive polish and accessibility | 🔄 In Progress | 4 / 7 |
 | 8 | Hardening, deployment and handoff | ⬜ Not Started | 0 / 9 |
 
 ---
@@ -72,13 +72,13 @@
 | 6 – Collaboration | 6.5 | Coverage indicators at item, category and event level | ✅ Complete | Added per-item progress, per-category covered counts, and tests proving ad-hoc contributions stay out of denominators |
 | 6 – Collaboration | 6.6 | 🔒 Organiser mode — structural controls absent without admin token | ✅ Complete | Guest view hides structural controls, organiser view exposes them, and Playwright verifies share-token admin actions still return `403 ADMIN_REQUIRED` |
 | 6 – Collaboration | 6.7 | 🔒 Share flow — share URL, copy, admin link never leaked | ✅ Complete | Share/copy uses the guest URL only, organiser link remains separately labelled, and landing-page revisit plus e2e flow passed |
-| 7 – Polish | 7.1 | Responsive layout, touch targets, dialogs as sheets on mobile | 🔄 In Progress | Event-page loading now uses skeleton cards and the confirmation, claim, item, and identity dialogs all switch to small-screen full-screen mode through MUI breakpoints; focused web tests, type-check, and lint are green for this slice |
+| 7 – Polish | 7.1 | Responsive layout, touch targets, dialogs as sheets on mobile | ✅ Complete | Event-page loading now uses skeleton cards, the confirmation/claim/item/identity/category dialogs all switch to small-screen full-screen mode through MUI breakpoints, touch targets were raised to 44px on the dense item controls, long item text wraps safely, and the event header now condenses inside a sticky card while scrolling |
 | 7 – Polish | 7.2 | Skeletons and empty states | 🔄 In Progress | Event-page loading now renders skeleton cards instead of a blank spinner, and focused tests cover empty-event, empty-category, no-participants, and no-search-match states; full phase validation is still pending |
-| 7 – Polish | 7.3 | Snackbars replacing persistent error banners | 🔄 In Progress | Event-page transactional feedback now uses a single dismissible snackbar with requestId-only error detail while invalid-link and unreachable-API paths remain inline retry states |
-| 7 – Polish | 7.4 | Destructive-action confirmations with stated consequences | 🔄 In Progress | Participant, item, category, event, and claim removal now route through confirmation dialogs; event deletion requires typing the event name and the updated collaboration tests cover both confirm and back-out paths |
+| 7 – Polish | 7.3 | Snackbars replacing persistent error banners | ✅ Complete | Event-page transactional feedback now uses a single dismissible snackbar with requestId-only error detail and explicit live-region semantics, while invalid-link and unreachable-API paths remain inline retry states |
+| 7 – Polish | 7.4 | Destructive-action confirmations with stated consequences | ✅ Complete | Participant, item, category, event, and claim removal now route through explicit consequence-first confirmation dialogs; the destructive action is visually distinct, and event deletion requires typing the event name |
 | 7 – Polish | 7.5 | Category icons, ordering controls, assignment display | ✅ Complete | Item rows now expose text-based open/partly-covered/covered/completed states, enlarge mobile touch targets, and collapse dense assignment chips behind an expander; category create/edit now uses a fixed MUI icon set with legacy emoji normalization, and organisers can move categories up and down through sort_order updates |
 | 7 – Polish | 7.6 | Accessibility pass — keyboard, focus, labels, contrast, live regions | 🔄 In Progress | The app root now sets `document.documentElement.lang = 'en'`, and event-page snackbars expose explicit polite/assertive live-region semantics; broader keyboard/focus/contrast verification is still outstanding |
-| 7 – Polish | 7.7 | Mobile E2E + axe accessibility checks | ⬜ Not Started | |
+| 7 – Polish | 7.7 | Mobile E2E + axe accessibility checks | 🔄 In Progress | Playwright now checks the full collaborative flow plus no-horizontal-scroll assertions at 390px/320px and runs axe over the landing, event, and manage routes; automated checks are green, while real-phone/manual follow-up and the pre-existing `nanoid` audit issue remain outstanding |
 | 8 – Deploy | 8.1 | 🔒 Consolidate the security test suite (`test:security`) | ⬜ Not Started | Full IDOR matrix + enumeration checks |
 | 8 – Deploy | 8.2 | 🔒 CSP, HSTS, Referrer-Policy, CORS verified on the build | ⬜ Not Started | |
 | 8 – Deploy | 8.3 | 🔒 Dependency audit, pinning, Dependabot, slim prod images | ⬜ Not Started | |
@@ -103,7 +103,7 @@
 
 | Date | Session Start | Tasks Completed | Notes |
 |------|--------------|-----------------|-------|
-| 2026-08-16 | Checked worktree diff against Phase 7 tracker, then continued Phase 7 web polish | 7.5 | Fixed workspace package resolution for Vitest/Vite/TypeScript on the current mounted filesystem, committed the loading/snackbar slice, completed the category-icon / reorder / assignment-presentation work for 7.5, and started 7.6 with document language plus snackbar live-region announcements while keeping 7.1/7.2/7.3/7.4 in progress |
+| 2026-08-16 | Checked worktree diff against Phase 7 tracker, then continued Phase 7 web polish | 7.1, 7.3, 7.4, 7.5 | Fixed workspace package resolution for Vitest/Vite/TypeScript on the current mounted filesystem, committed the loading/snackbar slice, completed 7.5 category controls, completed the sticky condensed header for 7.1, completed snackbars/confirmations for 7.3 and 7.4, started 7.6 with document language plus live-region announcements, and started 7.7 with mobile Playwright plus axe coverage |
 
 ---
 

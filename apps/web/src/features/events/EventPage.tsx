@@ -25,6 +25,7 @@ import {
   Stack,
   TextField,
   Typography,
+  useScrollTrigger,
 } from '@mui/material'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
@@ -118,7 +119,13 @@ function EventPageLoadingState(): React.JSX.Element {
   return (
     <Container maxWidth="sm" sx={{ py: 3.5 }}>
       <Stack aria-label="Loading event details" spacing={3}>
-        <Card>
+        <Card
+          sx={{
+            position: 'sticky',
+            top: 12,
+            zIndex: 2,
+          }}
+        >
           <CardContent>
             <Stack spacing={2}>
               <Skeleton height={36} variant="rounded" width="55%" />
@@ -146,6 +153,10 @@ function EventPageLoadingState(): React.JSX.Element {
 }
 
 export default function EventPage({ manageMode }: EventPageProps): React.JSX.Element {
+  const isHeaderCondensed = useScrollTrigger({
+    disableHysteresis: true,
+    threshold: 96,
+  })
   const { shareToken: routeShareToken } = useParams<{ shareToken: string }>()
   const apiClient = useApiClient(routeShareToken, manageMode)
   const queryClient = useQueryClient()
@@ -574,11 +585,18 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
     <Container maxWidth="sm" sx={{ py: 3.5 }}>
       <Stack spacing={3}>
         <Card>
-          <CardContent>
+          <CardContent
+            sx={{
+              backdropFilter: isHeaderCondensed ? 'blur(14px)' : 'none',
+              py: isHeaderCondensed ? 2 : 3,
+              transition: 'padding 180ms ease, backdrop-filter 180ms ease',
+            }}
+          >
             <EventHeader
               adminLink={adminLink}
               coverageSummary={coverageSummary}
               event={data.event}
+              isCondensed={isHeaderCondensed}
               isManageMode={manageMode}
               participantsCount={data.participants.length}
             />

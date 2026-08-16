@@ -55,4 +55,32 @@ describe('EventHeader', () => {
     expect(screen.queryByLabelText('Organiser link')).not.toBeInTheDocument()
     expect(screen.queryByText('Organiser mode')).not.toBeInTheDocument()
   })
+
+  it('renders a condensed summary on scroll without the organiser link or extended metadata', () => {
+    renderWithProviders(
+      <EventHeader
+        adminLink="https://example.com/e/share/manage#k=abc"
+        coverageSummary={{ claimed: 6, required: 8, remaining: 2, status: 'open' }}
+        event={{
+          id: 1,
+          name: 'Camp Weekend',
+          description: 'Bring the essentials',
+          eventDate: '2026-08-20',
+          location: 'Lakeside',
+          shareToken: 'abcdefghij',
+          createdAt: '2026-08-15T00:00:00.000Z',
+          updatedAt: '2026-08-15T00:00:00.000Z',
+        }}
+        isCondensed
+        isManageMode
+        participantsCount={12}
+      />
+    )
+
+    expect(screen.getByRole('heading', { name: 'Camp Weekend' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Organiser link')).not.toBeInTheDocument()
+    expect(screen.queryByText('Bring the essentials')).not.toBeInTheDocument()
+    expect(screen.queryByText('Share token: abcdefghij')).not.toBeInTheDocument()
+    expect(screen.getByText('Lakeside')).toBeInTheDocument()
+  })
 })
