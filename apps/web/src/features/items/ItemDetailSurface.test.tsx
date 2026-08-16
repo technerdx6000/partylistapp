@@ -167,5 +167,6 @@ describe('ItemDetailSurface', () => {
     expect(screen.getByRole('button', { name: 'Claim item' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Edit item' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Delete item' })).toBeInTheDocument()
+    expect(screen.getAllByText('Bread Rolls')).toHaveLength(1)
   })
 })

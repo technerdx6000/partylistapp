@@ -4,6 +4,7 @@ import EditRoundedIcon from '@mui/icons-material/EditRounded'
 import { Box, Button, ButtonBase, Card, Chip, IconButton, Stack, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material'
 
 import { getCompactItemStatusLabel } from './itemPresentation'
+import { MobileItemActionBar } from './MobileItemActionBar'
 
 type ItemRowProps = {
   isManageMode: boolean
@@ -78,23 +79,28 @@ export function ItemRow({
   if (isSmallScreen) {
     return (
       <Card component="li" sx={{ listStyle: 'none' }} variant="outlined">
-        <Stack spacing={1} sx={{ p: 1.25 }}>
+        <Stack spacing={0.75} sx={{ p: 1 }}>
           <ButtonBase
             aria-label={`Open ${item.name} details`}
             onClick={() => onOpenDetail(item)}
-            sx={{ borderRadius: 1, display: 'flex', justifyContent: 'flex-start', px: 0.5, py: 0.5 }}
+            sx={{ borderRadius: 1, display: 'flex', justifyContent: 'flex-start', px: 0.25, py: 0.25 }}
           >
             <Typography sx={{ overflow: 'hidden', textAlign: 'left', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }} title={item.name} variant="body1">
               {item.name}
             </Typography>
           </ButtonBase>
 
-          <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 0.75, justifyContent: 'space-between' }}>
-            <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}>
-              {actionButtons}
-            </Stack>
-            <Chip label={compactStatus} size="small" sx={{ flexShrink: 0, maxWidth: '100%' }} />
-          </Stack>
+          <MobileItemActionBar
+            claimAriaLabel={`Claim ${item.name}`}
+            deleteAriaLabel={`Delete ${item.name}`}
+            editAriaLabel={`Edit ${item.name}`}
+            isManageMode={isManageMode}
+            item={item}
+            onClaim={onClaim}
+            onDelete={onDeleteItem}
+            onEdit={onEditItem}
+            statusLabel={compactStatus}
+          />
         </Stack>
       </Card>
     )

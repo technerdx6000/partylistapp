@@ -7,6 +7,8 @@ import Inventory2RoundedIcon from '@mui/icons-material/Inventory2Rounded'
 import { Box, Button, Chip, Dialog, DialogContent, DialogTitle, Drawer, IconButton, LinearProgress, Stack, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material'
 
 import { canEditAssignment, getContributionSummary, getItemStateMeta } from './itemPresentation'
+import { getCompactItemStatusLabel } from './itemPresentation'
+import { MobileItemActionBar } from './MobileItemActionBar'
 import type { EventIdentity } from '../../hooks/useEventIdentity'
 
 export type ItemDetailMode = 'view' | 'claim' | 'delete' | 'edit'
@@ -66,6 +68,7 @@ export function ItemDetailSurface({
 
   const participantsById = new Map(participants.map((participant) => [participant.id, participant.name]))
   const stateMeta = getItemStateMeta(item)
+  const compactStatus = getCompactItemStatusLabel(item)
   const hint = getModeHint(mode)
   const assignments = item.assignments
   const actionButtons = (
@@ -98,33 +101,47 @@ export function ItemDetailSurface({
       ) : null}
     </>
   )
+  const mobileActionBar = (
+    <MobileItemActionBar
+      claimAriaLabel={item.quantityRequired === null ? 'Claim contribution' : 'Claim item'}
+      deleteAriaLabel="Delete item"
+      editAriaLabel="Edit item"
+      isManageMode={isManageMode}
+      item={item}
+      onClaim={(selectedItem) => onOpenClaim(selectedItem)}
+      onDelete={onDelete}
+      onEdit={onEdit}
+      statusLabel={compactStatus}
+    />
+  )
   const content = (
-    <Stack spacing={2.5} sx={{ p: isSmallScreen ? 0 : 2.5, pt: isSmallScreen ? 0 : 1 }}>
-      <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
-        <Stack spacing={0.75} sx={{ minWidth: 0 }}>
-          <Typography sx={{ overflowWrap: 'anywhere' }} variant="h3">
-            {item.name}
-          </Typography>
+    <Stack spacing={isSmallScreen ? 1.5 : 2.5} sx={{ p: isSmallScreen ? 0 : 2.5, pt: isSmallScreen ? 0.5 : 1 }}>
+      {isSmallScreen ? null : (
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+            <Typography sx={{ overflowWrap: 'anywhere' }} variant="h3">
+              {item.name}
+            </Typography>
+            {hint ? (
+              <Typography color="text.secondary" variant="body2">
+                {hint}
+              </Typography>
+            ) : null}
+          </Stack>
+          <IconButton aria-label="Close item details" onClick={onClose}>
+            <CloseRoundedIcon />
+          </IconButton>
+        </Stack>
+      )}
+
+      {isSmallScreen ? (
+        <Stack spacing={1}>
+          {mobileActionBar}
           {hint ? (
             <Typography color="text.secondary" variant="body2">
               {hint}
             </Typography>
           ) : null}
-        </Stack>
-        <IconButton aria-label="Close item details" onClick={onClose}>
-          <CloseRoundedIcon />
-        </IconButton>
-      </Stack>
-
-      {isSmallScreen ? (
-        <Stack spacing={1.25}>
-          <Stack spacing={1}>{actionButtons}</Stack>
-          <Chip
-            color={item.coverage.status === 'covered' || item.coverage.status === 'completed' || item.status === 'completed' ? 'success' : 'secondary'}
-            icon={item.quantityRequired === null ? <CampaignRoundedIcon /> : <Inventory2RoundedIcon />}
-            label={stateMeta.statusLabel}
-            sx={{ alignSelf: 'flex-start', maxWidth: '100%', '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' } }}
-          />
         </Stack>
       ) : (
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
@@ -191,7 +208,16 @@ export function ItemDetailSurface({
   if (isSmallScreen) {
     return (
       <Dialog fullScreen onClose={onClose} open={isOpen}>
-        <DialogTitle sx={{ pb: 1 }}>{item.name}</DialogTitle>
+        <DialogTitle sx={{ pb: 1, pt: 1.25 }}>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
+            <Typography sx={{ overflowWrap: 'anywhere' }} variant="h3">
+              {item.name}
+            </Typography>
+            <IconButton aria-label="Close item details" edge="end" onClick={onClose} sx={{ alignSelf: 'flex-start', mt: -0.5, mr: -0.5 }}>
+              <CloseRoundedIcon />
+            </IconButton>
+          </Stack>
+        </DialogTitle>
         <DialogContent>{content}</DialogContent>
       </Dialog>
     )
