@@ -1,15 +1,17 @@
 import type { CoverageSummary, Event } from '@listcollab/shared'
 import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded'
+import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded'
 import LinkRoundedIcon from '@mui/icons-material/LinkRounded'
 import PlaceRoundedIcon from '@mui/icons-material/PlaceRounded'
 import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded'
-import { Alert, Chip, Divider, Stack, TextField, Typography } from '@mui/material'
+import { Alert, Chip, Divider, IconButton, InputAdornment, Stack, TextField, Typography } from '@mui/material'
 
 type EventHeaderProps = {
   adminLink: string | null
   isCondensed?: boolean
   event: Event
   isManageMode: boolean
+  onCopyAdminLink?: (() => void) | undefined
   participantsCount: number
   coverageSummary: CoverageSummary
 }
@@ -28,6 +30,7 @@ export function EventHeader({
   isCondensed = false,
   event,
   isManageMode,
+  onCopyAdminLink,
   participantsCount,
   coverageSummary,
 }: EventHeaderProps): React.JSX.Element {
@@ -40,7 +43,16 @@ export function EventHeader({
               Keep this organiser link safe. It is the only way to keep organiser access for this event.
             </Typography>
             <TextField
-              InputProps={{ readOnly: true }}
+              InputProps={{
+                readOnly: true,
+                endAdornment: onCopyAdminLink ? (
+                  <InputAdornment position="end">
+                    <IconButton aria-label="Copy organiser link" edge="end" onClick={onCopyAdminLink} size="small">
+                      <ContentCopyRoundedIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ) : undefined,
+              }}
               label="Organiser link"
               size="small"
               value={adminLink}

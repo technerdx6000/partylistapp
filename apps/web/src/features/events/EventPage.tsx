@@ -598,6 +598,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
               event={data.event}
               isCondensed={isHeaderCondensed}
               isManageMode={manageMode}
+              onCopyAdminLink={adminLink ? () => void handleCopy(adminLink, 'Organiser link copied.') : undefined}
               participantsCount={data.participants.length}
             />
           </CardContent>

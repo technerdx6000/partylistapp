@@ -1,11 +1,13 @@
-import { screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { fireEvent, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
 
 import { EventHeader } from './EventHeader'
 import { renderWithProviders } from '../../../test/renderWithProviders'
 
 describe('EventHeader', () => {
   it('renders event details, coverage summary, and organiser link details', () => {
+    const onCopyAdminLink = vi.fn()
+
     renderWithProviders(
       <EventHeader
         adminLink="https://example.com/e/share/manage#k=abc"
@@ -21,6 +23,7 @@ describe('EventHeader', () => {
           updatedAt: '2026-08-15T00:00:00.000Z',
         }}
         isManageMode
+        onCopyAdminLink={onCopyAdminLink}
         participantsCount={12}
       />
     )
@@ -29,6 +32,35 @@ describe('EventHeader', () => {
     expect(screen.getByText('12 people')).toBeInTheDocument()
     expect(screen.getByText('6 / 8 items covered')).toBeInTheDocument()
     expect(screen.getByDisplayValue('https://example.com/e/share/manage#k=abc')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Copy organiser link' })).toBeInTheDocument()
+  })
+
+  it('calls the organiser link copy action from the text field adornment', () => {
+    const onCopyAdminLink = vi.fn()
+
+    renderWithProviders(
+      <EventHeader
+        adminLink="https://example.com/e/share/manage#k=abc"
+        coverageSummary={{ claimed: 6, required: 8, remaining: 2, status: 'open' }}
+        event={{
+          id: 1,
+          name: 'Camp Weekend',
+          description: 'Bring the essentials',
+          eventDate: '2026-08-20',
+          location: 'Lakeside',
+          shareToken: 'abcdefghij',
+          createdAt: '2026-08-15T00:00:00.000Z',
+          updatedAt: '2026-08-15T00:00:00.000Z',
+        }}
+        isManageMode
+        onCopyAdminLink={onCopyAdminLink}
+        participantsCount={12}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy organiser link' }))
+
+    expect(onCopyAdminLink).toHaveBeenCalledTimes(1)
   })
 
   it('renders compact summary without optional event metadata when those fields are absent', () => {
