@@ -211,20 +211,20 @@ export function ItemRow({
             <Stack spacing={1}>
               <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
                 {visibleAssignments.map((assignment) => {
-                const label = `${participantsById.get(assignment.participantId) ?? 'Someone'} ×${assignment.quantity}`
-                const interactive = canEditAssignment(assignment, currentIdentity, isManageMode)
+                  const label = `${participantsById.get(assignment.participantId) ?? 'Someone'} ×${assignment.quantity}`
+                  const interactive = canEditAssignment(assignment, currentIdentity, isManageMode)
 
-                return (
-                  <Chip
-                    clickable={interactive}
-                    key={assignment.id}
-                    label={label}
-                    onClick={interactive ? () => onClaim(item, assignment) : undefined}
-                    sx={{ maxWidth: '100%', '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' } }}
-                    title={label}
-                    variant={interactive ? 'filled' : 'outlined'}
-                  />
-                )
+                  return (
+                    <Chip
+                      clickable={interactive}
+                      key={assignment.id}
+                      label={label}
+                      onClick={interactive ? () => onClaim(item, assignment) : undefined}
+                      sx={{ maxWidth: '100%', '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' } }}
+                      title={label}
+                      variant={interactive ? 'filled' : 'outlined'}
+                    />
+                  )
                 })}
               </Stack>
 

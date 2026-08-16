@@ -11,23 +11,23 @@ import type { ComponentType } from 'react'
 export const DEFAULT_CATEGORY_ICON = 'other'
 
 const LEGACY_CATEGORY_ICON_ALIASES: Readonly<Record<string, string>> = {
-  '🍽️': 'food',
-  '🥤': 'drinks',
+    '🍽️': 'food',
+    '🥤': 'drinks',
 }
 
 export type CategoryIconOption = {
-  readonly Icon: ComponentType<SvgIconProps>
-  readonly label: string
-  readonly value: string
+    readonly Icon: ComponentType<SvgIconProps>
+    readonly label: string
+    readonly value: string
 }
 
 export const CATEGORY_ICON_OPTIONS: readonly CategoryIconOption[] = [
-  { Icon: RestaurantRoundedIcon, label: 'Food', value: 'food' },
-  { Icon: LocalDrinkRoundedIcon, label: 'Drinks', value: 'drinks' },
-  { Icon: ChecklistRoundedIcon, label: 'Supplies', value: 'supplies' },
-  { Icon: SportsEsportsRoundedIcon, label: 'Games', value: 'games' },
-  { Icon: ParkRoundedIcon, label: 'Outdoors', value: 'outdoors' },
-  { Icon: FolderRoundedIcon, label: 'Other', value: DEFAULT_CATEGORY_ICON },
+    { Icon: RestaurantRoundedIcon, label: 'Food', value: 'food' },
+    { Icon: LocalDrinkRoundedIcon, label: 'Drinks', value: 'drinks' },
+    { Icon: ChecklistRoundedIcon, label: 'Supplies', value: 'supplies' },
+    { Icon: SportsEsportsRoundedIcon, label: 'Games', value: 'games' },
+    { Icon: ParkRoundedIcon, label: 'Outdoors', value: 'outdoors' },
+    { Icon: FolderRoundedIcon, label: 'Other', value: DEFAULT_CATEGORY_ICON },
 ] as const
 
 /**
@@ -37,7 +37,7 @@ export const CATEGORY_ICON_OPTIONS: readonly CategoryIconOption[] = [
  * @returns {string | null | undefined} The normalised icon key when one is known.
  */
 export function normalizeCategoryIconValue(value: string | null | undefined): string | null | undefined {
-  return value ? LEGACY_CATEGORY_ICON_ALIASES[value] ?? value : value
+    return value ? LEGACY_CATEGORY_ICON_ALIASES[value] ?? value : value
 }
 
 /**
@@ -47,9 +47,9 @@ export function normalizeCategoryIconValue(value: string | null | undefined): st
  * @returns {CategoryIconOption | undefined} The matching fixed icon option, if one exists.
  */
 export function getCategoryIconOption(value: string | null | undefined): CategoryIconOption | undefined {
-  const normalizedValue = normalizeCategoryIconValue(value)
+    const normalizedValue = normalizeCategoryIconValue(value)
 
-  return CATEGORY_ICON_OPTIONS.find((option) => option.value === normalizedValue)
+    return CATEGORY_ICON_OPTIONS.find((option) => option.value === normalizedValue)
 }
 
 /**
@@ -59,7 +59,7 @@ export function getCategoryIconOption(value: string | null | undefined): Categor
  * @returns {boolean} True when the value belongs to the fixed icon set.
  */
 export function isKnownCategoryIcon(value: string | null | undefined): boolean {
-  return Boolean(getCategoryIconOption(value))
+    return Boolean(getCategoryIconOption(value))
 }
 
 /**
@@ -71,15 +71,15 @@ export function isKnownCategoryIcon(value: string | null | undefined): boolean {
  * @returns {React.JSX.Element} The rendered icon node.
  */
 export function renderCategoryIcon(value: string | null | undefined): React.JSX.Element {
-  const option = getCategoryIconOption(value)
+    const option = getCategoryIconOption(value)
 
-  if (option) {
-    const Icon = option.Icon
+    if (option) {
+        const Icon = option.Icon
 
-    return <Icon fontSize="small" />
-  }
+        return <Icon fontSize="small" />
+    }
 
-  return <Typography component="span">{value?.trim() || '•'}</Typography>
+    return <Typography component="span">{value?.trim() || '•'}</Typography>
 }
 
 /**
@@ -89,12 +89,12 @@ export function renderCategoryIcon(value: string | null | undefined): React.JSX.
  * @returns {React.JSX.Element} The option display node.
  */
 export function renderCategoryIconOption(option: CategoryIconOption): React.JSX.Element {
-  const Icon = option.Icon
+    const Icon = option.Icon
 
-  return (
-    <Stack component="span" direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-      <Icon fontSize="small" />
-      <Typography component="span">{option.label}</Typography>
-    </Stack>
-  )
+    return (
+        <Stack component="span" direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+            <Icon fontSize="small" />
+            <Typography component="span">{option.label}</Typography>
+        </Stack>
+    )
 }
