@@ -78,7 +78,7 @@
 | 7 – Polish | 7.4 | Destructive-action confirmations with stated consequences | ✅ Complete | Participant, item, category, event, and claim removal now route through explicit consequence-first confirmation dialogs; the destructive action is visually distinct, and event deletion requires typing the event name |
 | 7 – Polish | 7.5 | Category icons, ordering controls, assignment display | ✅ Complete | Item rows now expose text-based open/partly-covered/covered/completed states, enlarge mobile touch targets, and collapse dense assignment chips behind an expander; category create/edit now uses a fixed MUI icon set with legacy emoji normalization, and organisers can move categories up and down through sort_order updates |
 | 7 – Polish | 7.6 | Accessibility pass — keyboard, focus, labels, contrast, live regions | 🔄 In Progress | The app root now sets `document.documentElement.lang = 'en'`, and event-page snackbars expose explicit polite/assertive live-region semantics; broader keyboard/focus/contrast verification is still outstanding |
-| 7 – Polish | 7.7 | Mobile E2E + axe accessibility checks | 🔄 In Progress | Playwright now checks the full collaborative flow plus no-horizontal-scroll assertions at 390px/320px and runs axe over the landing, event, and manage routes; automated checks are green, while real-phone/manual follow-up and the pre-existing `nanoid` audit issue remain outstanding |
+| 7 – Polish | 7.7 | Mobile E2E + axe accessibility checks | 🔄 In Progress | Playwright now checks the full collaborative flow plus no-horizontal-scroll assertions at 390px/320px and runs axe over the landing, event, and manage routes; automated checks are green, the prior high-severity `nanoid` advisory is patched, and only the manual real-phone follow-up remains outside automation |
 | 8 – Deploy | 8.1 | 🔒 Consolidate the security test suite (`test:security`) | ⬜ Not Started | Full IDOR matrix + enumeration checks |
 | 8 – Deploy | 8.2 | 🔒 CSP, HSTS, Referrer-Policy, CORS verified on the build | ⬜ Not Started | |
 | 8 – Deploy | 8.3 | 🔒 Dependency audit, pinning, Dependabot, slim prod images | ⬜ Not Started | |
@@ -103,7 +103,7 @@
 
 | Date | Session Start | Tasks Completed | Notes |
 |------|--------------|-----------------|-------|
-| 2026-08-16 | Checked worktree diff against Phase 7 tracker, then continued Phase 7 web polish | 7.1, 7.3, 7.4, 7.5 | Fixed workspace package resolution for Vitest/Vite/TypeScript on the current mounted filesystem, committed the loading/snackbar slice, completed 7.5 category controls, completed the sticky condensed header for 7.1, completed snackbars/confirmations for 7.3 and 7.4, started 7.6 with document language plus live-region announcements, and started 7.7 with mobile Playwright plus axe coverage |
+| 2026-08-16 | Checked worktree diff against Phase 7 tracker, then continued Phase 7 web polish | 7.1, 7.3, 7.4, 7.5 | Fixed workspace package resolution for Vitest/Vite/TypeScript on the current mounted filesystem, committed the loading/snackbar slice, completed 7.5 category controls, completed the sticky condensed header for 7.1, completed snackbars/confirmations for 7.3 and 7.4, started 7.6 with document language plus live-region announcements, started 7.7 with mobile Playwright plus axe coverage, and cleared the prior high-severity `nanoid` advisory |
 
 ---
 
