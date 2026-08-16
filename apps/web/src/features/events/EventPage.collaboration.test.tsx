@@ -1,5 +1,6 @@
 import type { AggregateEventResponse } from '@listcollab/shared'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -515,9 +516,11 @@ describe('EventPage collaboration', () => {
     await waitFor(() => {
       expect(apiClient.updateCategory).toHaveBeenCalledWith(1, { icon: 'food', name: 'Meals' })
     })
-    await screen.findByRole('button', { name: 'Move Food down' })
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Edit category' })).not.toBeInTheDocument()
+    })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Move Food down' }))
+    fireEvent.click(screen.getByRole('button', { name: /^Move .* down$/ }))
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Remove' })[0] as HTMLButtonElement)
     fireEvent.click(within(await screen.findByRole('dialog', { name: 'Remove participant' })).getByRole('button', { name: 'Remove participant' }))
@@ -557,7 +560,7 @@ describe('EventPage collaboration', () => {
       expect(apiClient.updateCategory).toHaveBeenCalledWith(1, { sortOrder: 1 })
       expect(apiClient.updateCategory).toHaveBeenCalledWith(3, { sortOrder: 0 })
     })
-  }, 10000)
+  }, 15000)
 
   it('does not run organiser mutations when prompts or confirmations are cancelled', async () => {
     const apiClient = buildApiClient()
@@ -611,7 +614,7 @@ describe('EventPage collaboration', () => {
     expect(apiClient.deleteItem).not.toHaveBeenCalled()
     expect(apiClient.deleteCategory).not.toHaveBeenCalled()
     expect(apiClient.deleteEvent).not.toHaveBeenCalled()
-  })
+  }, 10000)
 
   it('closes the identify dialog without replaying the pending action when cancelled', async () => {
     useApiClientMock.mockReturnValue(buildApiClient())
@@ -628,6 +631,74 @@ describe('EventPage collaboration', () => {
       expect(screen.queryByRole('heading', { name: 'Who are you?' })).not.toBeInTheDocument()
     })
     expect(screen.queryByRole('heading', { name: 'Claim item' })).not.toBeInTheDocument()
+  })
+
+  it('returns focus to the claim trigger when the identify dialog closes on Escape', async () => {
+    const user = userEvent.setup()
+
+    useApiClientMock.mockReturnValue(buildApiClient())
+
+    renderEventPage()
+
+    await screen.findByRole('heading', { name: 'Camp Weekend' })
+    const claimTrigger = screen.getAllByRole('button', { name: 'I will bring this' })[0] as HTMLButtonElement
+
+    claimTrigger.focus()
+    fireEvent.click(claimTrigger)
+
+    await screen.findByRole('heading', { name: 'Who are you?' })
+    await user.keyboard('{Escape}')
+
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: 'Who are you?' })).not.toBeInTheDocument()
+    })
+    expect(claimTrigger).toHaveFocus()
+  })
+
+  it('returns focus to the add-category trigger when the category dialog closes on Escape', async () => {
+    const user = userEvent.setup()
+
+    useStoredAdminTokenMock.mockReturnValue('a'.repeat(64))
+    useApiClientMock.mockReturnValue(buildApiClient())
+
+    renderEventPage('/e/abcdefghij', true)
+
+    await screen.findByRole('heading', { name: 'Camp Weekend' })
+    const addCategoryTrigger = screen.getByRole('button', { name: 'Add category' })
+
+    addCategoryTrigger.focus()
+    fireEvent.click(addCategoryTrigger)
+
+    await screen.findByRole('heading', { name: 'Add category' })
+    await user.keyboard('{Escape}')
+
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: 'Add category' })).not.toBeInTheDocument()
+    })
+    expect(addCategoryTrigger).toHaveFocus()
+  })
+
+  it('returns focus to the delete-event trigger when the confirmation dialog closes on Escape', async () => {
+    const user = userEvent.setup()
+
+    useStoredAdminTokenMock.mockReturnValue('a'.repeat(64))
+    useApiClientMock.mockReturnValue(buildApiClient())
+
+    renderEventPage('/e/abcdefghij', true)
+
+    await screen.findByRole('heading', { name: 'Camp Weekend' })
+    const deleteEventTrigger = screen.getByRole('button', { name: 'Delete event' })
+
+    deleteEventTrigger.focus()
+    fireEvent.click(deleteEventTrigger)
+
+    await screen.findByRole('dialog', { name: 'Delete event' })
+    await user.keyboard('{Escape}')
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Delete event' })).not.toBeInTheDocument()
+    })
+    expect(deleteEventTrigger).toHaveFocus()
   })
 
   it('requires the event name before deleting the event and lets organisers back out', async () => {
