@@ -5,6 +5,11 @@
         "checkJs": false,
         "noEmit": false,
         "outDir": "dist",
+        "paths": {
+            "@listcollab/shared": [
+                "../../packages/shared/dist/index.d.ts"
+            ]
+        },
         "rootDir": "."
     },
     "include": [
