@@ -68,6 +68,36 @@ export function ItemDetailSurface({
   const stateMeta = getItemStateMeta(item)
   const hint = getModeHint(mode)
   const assignments = item.assignments
+  const actionButtons = (
+    <>
+      <Tooltip title={item.quantityRequired === null ? 'Claim contribution' : 'Claim item'}>
+        <Button
+          autoFocus={mode === 'claim'}
+          fullWidth={isSmallScreen}
+          onClick={() => onOpenClaim(item)}
+          size="small"
+          startIcon={item.quantityRequired === null ? <CampaignRoundedIcon /> : <Inventory2RoundedIcon />}
+          variant="contained"
+        >
+          Claim
+        </Button>
+      </Tooltip>
+      {isManageMode ? (
+        <>
+          <Tooltip title="Edit item">
+            <Button autoFocus={mode === 'edit'} fullWidth={isSmallScreen} onClick={() => onEdit(item)} size="small" startIcon={<EditRoundedIcon />} variant="outlined">
+              Edit
+            </Button>
+          </Tooltip>
+          <Tooltip title="Delete item">
+            <Button autoFocus={mode === 'delete'} color="error" fullWidth={isSmallScreen} onClick={() => onDelete(item)} size="small" startIcon={<DeleteOutlineRoundedIcon />} variant="outlined">
+              Delete
+            </Button>
+          </Tooltip>
+        </>
+      ) : null}
+    </>
+  )
   const content = (
     <Stack spacing={2.5} sx={{ p: isSmallScreen ? 0 : 2.5, pt: isSmallScreen ? 0 : 1 }}>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
@@ -86,39 +116,27 @@ export function ItemDetailSurface({
         </IconButton>
       </Stack>
 
-      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-        <Tooltip title={item.quantityRequired === null ? 'Claim contribution' : 'Claim item'}>
-          <Button
-            autoFocus={mode === 'claim'}
-            onClick={() => onOpenClaim(item)}
-            size="small"
-            startIcon={item.quantityRequired === null ? <CampaignRoundedIcon /> : <Inventory2RoundedIcon />}
-            variant="contained"
-          >
-            Claim
-          </Button>
-        </Tooltip>
-        {isManageMode ? (
-          <>
-            <Tooltip title="Edit item">
-              <Button autoFocus={mode === 'edit'} onClick={() => onEdit(item)} size="small" startIcon={<EditRoundedIcon />} variant="outlined">
-                Edit
-              </Button>
-            </Tooltip>
-            <Tooltip title="Delete item">
-              <Button autoFocus={mode === 'delete'} color="error" onClick={() => onDelete(item)} size="small" startIcon={<DeleteOutlineRoundedIcon />} variant="outlined">
-                Delete
-              </Button>
-            </Tooltip>
-          </>
-        ) : null}
-        <Chip
-          color={item.coverage.status === 'covered' || item.coverage.status === 'completed' || item.status === 'completed' ? 'success' : 'secondary'}
-          icon={item.quantityRequired === null ? <CampaignRoundedIcon /> : <Inventory2RoundedIcon />}
-          label={stateMeta.statusLabel}
-          sx={{ maxWidth: '100%', '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' } }}
-        />
-      </Stack>
+      {isSmallScreen ? (
+        <Stack spacing={1.25}>
+          <Stack spacing={1}>{actionButtons}</Stack>
+          <Chip
+            color={item.coverage.status === 'covered' || item.coverage.status === 'completed' || item.status === 'completed' ? 'success' : 'secondary'}
+            icon={item.quantityRequired === null ? <CampaignRoundedIcon /> : <Inventory2RoundedIcon />}
+            label={stateMeta.statusLabel}
+            sx={{ alignSelf: 'flex-start', maxWidth: '100%', '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' } }}
+          />
+        </Stack>
+      ) : (
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+          {actionButtons}
+          <Chip
+            color={item.coverage.status === 'covered' || item.coverage.status === 'completed' || item.status === 'completed' ? 'success' : 'secondary'}
+            icon={item.quantityRequired === null ? <CampaignRoundedIcon /> : <Inventory2RoundedIcon />}
+            label={stateMeta.statusLabel}
+            sx={{ maxWidth: '100%', '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' } }}
+          />
+        </Stack>
+      )}
 
       {item.description ? (
         <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere' }} variant="body2">

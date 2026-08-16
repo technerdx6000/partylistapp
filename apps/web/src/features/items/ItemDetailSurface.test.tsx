@@ -1,8 +1,24 @@
 import { fireEvent, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ItemDetailSurface } from './ItemDetailSurface'
 import { renderWithProviders } from '../../../test/renderWithProviders'
+
+function setMatchMedia(matches: boolean): void {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn().mockImplementation((query: string) => ({
+      addEventListener: vi.fn(),
+      addListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+      matches,
+      media: query,
+      onchange: null,
+      removeEventListener: vi.fn(),
+      removeListener: vi.fn(),
+    }))
+  )
+}
 
 function buildItem(overrides: Partial<Parameters<typeof ItemDetailSurface>[0]['item']> = {}) {
   return {
@@ -23,6 +39,10 @@ function buildItem(overrides: Partial<Parameters<typeof ItemDetailSurface>[0]['i
 }
 
 describe('ItemDetailSurface', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it('renders nothing when no item is selected', () => {
     const { container } = renderWithProviders(
       <ItemDetailSurface
@@ -124,5 +144,28 @@ describe('ItemDetailSurface', () => {
     expect(screen.getByText('Jordan added this contribution.')).toBeInTheDocument()
     expect(screen.queryByRole('progressbar', { name: 'Portable speaker coverage progress' })).not.toBeInTheDocument()
     expect(screen.queryByText('Assignments')).not.toBeInTheDocument()
+  })
+
+  it('keeps edit and delete visible in the mobile detail view for organisers', () => {
+    setMatchMedia(true)
+
+    renderWithProviders(
+      <ItemDetailSurface
+        currentIdentity={{ displayName: 'Taylor', participantId: 1 }}
+        isManageMode
+        isOpen
+        item={buildItem()}
+        mode="view"
+        onClose={() => undefined}
+        onDelete={() => undefined}
+        onEdit={() => undefined}
+        onOpenClaim={() => undefined}
+        participants={[{ createdAt: '2026-08-15T00:00:00.000Z', eventId: 1, id: 1, name: 'Taylor' }]}
+      />
+    )
+
+    expect(screen.getByRole('button', { name: 'Claim item' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit item' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Delete item' })).toBeInTheDocument()
   })
 })

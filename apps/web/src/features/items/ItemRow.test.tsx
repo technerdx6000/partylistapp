@@ -1,10 +1,30 @@
 import { fireEvent, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ItemRow } from './ItemRow'
 import { renderWithProviders } from '../../../test/renderWithProviders'
 
+function setMatchMedia(matches: boolean): void {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn().mockImplementation((query: string) => ({
+      addEventListener: vi.fn(),
+      addListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+      matches,
+      media: query,
+      onchange: null,
+      removeEventListener: vi.fn(),
+      removeListener: vi.fn(),
+    }))
+  )
+}
+
 describe('ItemRow', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it('renders a compact contribution row, keeps attacker-controlled text inert, and opens details from the row click target', () => {
     const maliciousName = '<img src=x onerror=alert(1)>'
     const onOpenDetail = vi.fn()
@@ -157,5 +177,39 @@ describe('ItemRow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open Portable speaker details' }))
 
     expect(onOpenDetail).toHaveBeenCalledWith(expect.objectContaining({ id: 7, name: 'Portable speaker' }))
+  })
+
+  it('keeps edit, claim, delete, and status visible on mobile organiser rows', () => {
+    setMatchMedia(true)
+
+    renderWithProviders(
+      <ItemRow
+        isManageMode
+        item={{
+          id: 14,
+          eventId: 1,
+          categoryId: 2,
+          name: 'Camp chairs',
+          description: null,
+          quantityRequired: 4,
+          status: 'open',
+          createdBy: null,
+          createdAt: '2026-08-15T00:00:00.000Z',
+          updatedAt: '2026-08-15T00:00:00.000Z',
+          assignments: [],
+          coverage: { claimed: 0, required: 4, remaining: 4, status: 'open' },
+        }}
+        onClaim={() => undefined}
+        onDeleteItem={() => undefined}
+        onEditItem={() => undefined}
+        onOpenDetail={() => undefined}
+      />
+    )
+
+    expect(screen.getByRole('button', { name: 'Open Camp chairs details' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Edit Camp chairs')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Claim Camp chairs' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Delete Camp chairs')).toBeInTheDocument()
+    expect(screen.getByText('Open · 4 left')).toBeInTheDocument()
   })
 })

@@ -173,6 +173,13 @@ test('regression: organiser page avoids horizontal scrolling with max-length ite
     await page.goto(`${APP_URL}/e/${event.shareToken}/manage#k=${event.adminToken}`)
     await expect(page.getByRole('heading', { name: 'Manage Layout Event' })).toBeVisible()
     await expect(page.getByText('X'.repeat(120))).toBeVisible()
+    await expect(page.getByLabel(`Edit ${'X'.repeat(120)}`)).toBeVisible()
+    await expect(page.getByLabel(`Delete ${'X'.repeat(120)}`)).toBeVisible()
+
+    await page.getByRole('button', { name: `Open ${'X'.repeat(120)} details` }).click()
+    await expect(page.getByRole('button', { name: 'Edit item' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Delete item' })).toBeVisible()
+    await page.getByRole('button', { name: 'Close item details' }).click()
 
     const managePageHasHorizontalScroll = await page.evaluate(
         () => document.documentElement.scrollWidth > document.documentElement.clientWidth
