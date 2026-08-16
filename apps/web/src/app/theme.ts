@@ -1,5 +1,7 @@
 import { createTheme } from '@mui/material/styles'
 
+const focusRing = '0 0 0 3px rgba(32, 64, 96, 0.24)'
+
 export const theme = createTheme({
   palette: {
     mode: 'light',
@@ -100,6 +102,16 @@ export const theme = createTheme({
         },
       },
     },
+    MuiButtonBase: {
+      styleOverrides: {
+        root: {
+          '&.Mui-focusVisible': {
+            boxShadow: focusRing,
+            outline: '2px solid transparent',
+          },
+        },
+      },
+    },
     MuiCard: {
       styleOverrides: {
         root: {
@@ -112,6 +124,26 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
+        },
+      },
+    },
+    MuiLink: {
+      styleOverrides: {
+        root: {
+          '&:focus-visible': {
+            borderRadius: 8,
+            boxShadow: focusRing,
+            outline: '2px solid transparent',
+          },
+        },
+      },
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderWidth: 2,
+          },
         },
       },
     },
