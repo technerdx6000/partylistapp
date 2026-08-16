@@ -7,6 +7,7 @@ import {
   type UpdateItemRequest,
 } from '@listcollab/shared'
 import {
+  Alert,
   Button,
   Dialog,
   DialogActions,
@@ -39,6 +40,10 @@ type ItemFormProps = {
   onUpdate: (itemId: number, payload: UpdateItemRequest) => Promise<void>
 }
 
+type ItemFormFieldName = 'categoryId' | 'description' | 'name' | 'quantityRequired'
+
+type ItemFormErrors = Partial<Record<ItemFormFieldName, string>>
+
 export function ItemForm({
   categories,
   identity,
@@ -54,6 +59,8 @@ export function ItemForm({
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'))
   const [categoryId, setCategoryId] = useState<number | null>(item?.categoryId ?? initialCategoryId)
   const [description, setDescription] = useState(item?.description ?? '')
+  const [fieldErrors, setFieldErrors] = useState<ItemFormErrors>({})
+  const [formError, setFormError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [name, setName] = useState(item?.name ?? '')
   const [quantityRequired, setQuantityRequired] = useState(item?.quantityRequired ?? 1)
@@ -61,16 +68,32 @@ export function ItemForm({
   useEffect(() => {
     setCategoryId(item?.categoryId ?? initialCategoryId)
     setDescription(item?.description ?? '')
+    setFieldErrors({})
+    setFormError(null)
     setName(item?.name ?? '')
     setQuantityRequired(item?.quantityRequired ?? 1)
   }, [initialCategoryId, item])
 
+  function setValidationErrors(issues: ReadonlyArray<{ message: string; path: readonly (string | number)[] }>): void {
+    const nextFieldErrors: ItemFormErrors = {}
+
+    for (const issue of issues) {
+      const fieldName = String(issue.path[0] ?? 'name') as ItemFormFieldName
+
+      nextFieldErrors[fieldName] ??= issue.message
+    }
+
+    setFieldErrors(nextFieldErrors)
+  }
+
   async function handleSubmit(): Promise<void> {
+    setFieldErrors({})
+    setFormError(null)
     setIsSaving(true)
 
     try {
       if (mode === 'guest-create' || mode === 'manage-create') {
-        const payload = CreateItemRequestSchema.parse({
+        const parsedPayload = CreateItemRequestSchema.safeParse({
           categoryId,
           createdBy: mode === 'guest-create' ? identity?.participantId ?? null : null,
           description: description.trim() ? description.trim() : null,
@@ -78,9 +101,14 @@ export function ItemForm({
           quantityRequired: mode === 'guest-create' ? null : quantityRequired,
         })
 
-        await onCreate(payload)
+        if (!parsedPayload.success) {
+          setValidationErrors(parsedPayload.error.issues)
+          return
+        }
+
+        await onCreate(parsedPayload.data)
       } else if (item) {
-        const payload = UpdateItemRequestSchema.parse({
+        const parsedPayload = UpdateItemRequestSchema.safeParse({
           categoryId: mode === 'manage-edit' ? categoryId : undefined,
           description: description.trim() ? description.trim() : null,
           name,
@@ -88,8 +116,15 @@ export function ItemForm({
           quantityRequired: mode === 'manage-edit' ? quantityRequired : undefined,
         })
 
-        await onUpdate(item.id, payload)
+        if (!parsedPayload.success) {
+          setValidationErrors(parsedPayload.error.issues)
+          return
+        }
+
+        await onUpdate(item.id, parsedPayload.data)
       }
+    } catch {
+      setFormError('We could not save that item. Try again.')
     } finally {
       setIsSaving(false)
     }
@@ -105,8 +140,17 @@ export function ItemForm({
       </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>
-          <TextField label="Item name" onChange={(event) => setName(event.target.value)} value={name} />
+          {formError ? <Alert color="error">{formError}</Alert> : null}
           <TextField
+            error={Boolean(fieldErrors.name)}
+            helperText={fieldErrors.name}
+            label="Item name"
+            onChange={(event) => setName(event.target.value)}
+            value={name}
+          />
+          <TextField
+            error={Boolean(fieldErrors.description)}
+            helperText={fieldErrors.description}
             label="Description"
             multiline
             minRows={2}
@@ -130,6 +174,8 @@ export function ItemForm({
           </FormControl>
           {mode !== 'guest-create' && mode !== 'guest-edit' ? (
             <TextField
+              error={Boolean(fieldErrors.quantityRequired)}
+              helperText={fieldErrors.quantityRequired}
               inputProps={{ min: 1, max: 999 }}
               label="Quantity needed"
               onChange={(event) => setQuantityRequired(Math.max(Number(event.target.value) || 1, 1))}

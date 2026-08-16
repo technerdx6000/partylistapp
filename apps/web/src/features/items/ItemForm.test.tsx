@@ -160,4 +160,30 @@ describe('ItemForm', () => {
       })
     })
   })
+
+  it('shows validation feedback instead of throwing when an item name exceeds the schema limit', async () => {
+    const onCreate = vi.fn().mockResolvedValue(undefined)
+
+    renderWithProviders(
+      <ItemForm
+        categories={categories}
+        identity={null}
+        initialCategoryId={null}
+        isOpen
+        item={null}
+        mode="manage-create"
+        onClose={() => undefined}
+        onCreate={onCreate}
+        onUpdate={vi.fn()}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText('Item name'), { target: { value: 'x'.repeat(121) } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('String must contain at most 120 character(s)')).toBeInTheDocument()
+    })
+    expect(onCreate).not.toHaveBeenCalled()
+  })
 })

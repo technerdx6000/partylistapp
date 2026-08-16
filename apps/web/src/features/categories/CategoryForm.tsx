@@ -1,5 +1,6 @@
 import type { EventCategory } from '@listcollab/shared'
 import {
+    Alert,
     Button,
     Dialog,
     DialogActions,
@@ -25,6 +26,7 @@ import {
     renderCategoryIconOption,
     type CategoryIconOption,
 } from './categoryIcons'
+import { ApiClientError } from '../../services/apiClient'
 
 type CategoryFormProps = {
     category: EventCategory | null
@@ -63,11 +65,13 @@ export function CategoryForm({
     const theme = useTheme()
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'))
     const iconOptions = useMemo(() => buildIconOptions(category), [category])
+    const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const [icon, setIcon] = useState(normalizeCategoryIconValue(category?.icon) ?? DEFAULT_CATEGORY_ICON)
     const [isSaving, setIsSaving] = useState(false)
     const [name, setName] = useState(category?.name ?? '')
 
     useEffect(() => {
+        setErrorMessage(null)
         setIcon(normalizeCategoryIconValue(category?.icon) ?? DEFAULT_CATEGORY_ICON)
         setName(category?.name ?? '')
     }, [category])
@@ -79,10 +83,18 @@ export function CategoryForm({
             return
         }
 
+        setErrorMessage(null)
         setIsSaving(true)
 
         try {
             await onSave({ icon, name: trimmedName })
+        } catch (caughtError) {
+            if (caughtError instanceof ApiClientError && caughtError.code === 'CATEGORY_ALREADY_EXISTS') {
+                setErrorMessage('That category name is already in use for this event.')
+                return
+            }
+
+            setErrorMessage('We could not save that category. Try again.')
         } finally {
             setIsSaving(false)
         }
@@ -93,6 +105,7 @@ export function CategoryForm({
             <DialogTitle>{category ? 'Edit category' : 'Add category'}</DialogTitle>
             <DialogContent>
                 <Stack spacing={2} sx={{ pt: 1 }}>
+                    {errorMessage ? <Alert color="error">{errorMessage}</Alert> : null}
                     <TextField label="Category name" onChange={(event) => setName(event.target.value)} value={name} />
                     <FormControl fullWidth>
                         <InputLabel>Icon</InputLabel>

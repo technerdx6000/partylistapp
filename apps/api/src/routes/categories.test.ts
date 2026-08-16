@@ -69,6 +69,19 @@ describe('categories routes', () => {
         })
     })
 
+    it('returns 409 when a category name already exists in the same event', async () => {
+        routeMocks.createCategory.mockRejectedValue({ code: 'ER_DUP_ENTRY' })
+
+        const app = await createTestApp()
+
+        const response = await request(app).post('/api/categories').send({ name: 'Dessert', sortOrder: 0 })
+
+        expect(response.status).toBe(409)
+        expect(response.body).toMatchObject({
+            error: { code: 'CATEGORY_ALREADY_EXISTS' },
+        })
+    })
+
     it('returns 400 when the category id path param is invalid', async () => {
         const app = await createTestApp()
 

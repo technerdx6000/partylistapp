@@ -20,6 +20,15 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 
 const router = express.Router()
 
+function isDuplicateEntryError(caughtError: unknown): caughtError is { code: string } {
+    return Boolean(
+        caughtError &&
+        typeof caughtError === 'object' &&
+        'code' in caughtError &&
+        caughtError.code === 'ER_DUP_ENTRY'
+    )
+}
+
 function parseCategoryId(value: string): number {
     const parsed = PositiveIntIdSchema.safeParse(value)
 
@@ -54,7 +63,20 @@ router.post(
             })
         }
 
-        const category = await createCategory(req.event!.id, parsedBody.data)
+        let category
+
+        try {
+            category = await createCategory(req.event!.id, parsedBody.data)
+        } catch (caughtError) {
+            if (isDuplicateEntryError(caughtError)) {
+                throw new AppError(409, 'CATEGORY_ALREADY_EXISTS', 'Category name already exists in this event', {
+                    fields: ['name'],
+                })
+            }
+
+            throw caughtError
+        }
+
         res.status(201).json(EventCategorySchema.parse(category))
     })
 )
@@ -72,7 +94,19 @@ router.patch(
             })
         }
 
-        const category = await updateCategory(req.event!.id, categoryId, parsedBody.data)
+        let category
+
+        try {
+            category = await updateCategory(req.event!.id, categoryId, parsedBody.data)
+        } catch (caughtError) {
+            if (isDuplicateEntryError(caughtError)) {
+                throw new AppError(409, 'CATEGORY_ALREADY_EXISTS', 'Category name already exists in this event', {
+                    fields: ['name'],
+                })
+            }
+
+            throw caughtError
+        }
 
         if (!category) {
             throw new AppError(404, 'CATEGORY_NOT_IN_EVENT', 'Category not found')

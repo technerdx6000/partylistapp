@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { CategoryForm } from './CategoryForm'
 import { renderWithProviders } from '../../../test/renderWithProviders'
+import { ApiClientError } from '../../services/apiClient'
 
 describe('CategoryForm', () => {
     it('saves a trimmed category name with the selected fixed icon', async () => {
@@ -46,6 +47,21 @@ describe('CategoryForm', () => {
 
         await waitFor(() => {
             expect(onSave).toHaveBeenCalledWith({ icon: 'food', name: 'Meals' })
+        })
+    })
+
+    it('shows an inline error when the category name already exists', async () => {
+        const onSave = vi.fn().mockRejectedValue(new ApiClientError('Duplicate', 'CATEGORY_ALREADY_EXISTS', 'req-1'))
+
+        renderWithProviders(
+            <CategoryForm category={null} isOpen onClose={() => undefined} onSave={onSave} />
+        )
+
+        fireEvent.change(screen.getByLabelText('Category name'), { target: { value: 'Dessert' } })
+        fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+        await waitFor(() => {
+            expect(screen.getByText('That category name is already in use for this event.')).toBeInTheDocument()
         })
     })
 })
