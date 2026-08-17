@@ -11,16 +11,16 @@ Default image names:
 
 Recommended tags:
 
-- release tag: `1.0.13`
-- immutable build tag: `git-bf75421`
+- release tag: `1.0.14`
+- immutable build tag: `git-728e0f7`
 - moving tag: `latest`
 
 Build and publish from the repo root:
 
 ```bash
 DOCKERHUB_NAMESPACE=technerdx6000 \
-IMAGE_TAG=1.0.13 \
-EXTRA_TAG=git-bf75421 \
+IMAGE_TAG=1.0.14 \
+EXTRA_TAG=git-728e0f7 \
 bash scripts/publish-dockerhub.sh
 ```
 
@@ -101,19 +101,20 @@ Important for repeated TrueNAS deploy attempts:
 - Starting with image tag `1.0.11`, inline claim, edit, and delete buttons now open their specific target dialogs directly instead of routing through the generic item detail surface first, and browser back closes the active transient event-page overlay on mobile.
 - Starting with image tag `1.0.12`, event pages add an `Everything / Me` filter so identified participants can switch from the full event list to only items they have claimed, without losing the existing search or mobile category-navigation behavior.
 - Starting with image tag `1.0.13`, the phone-sized `Everything / Me` control moves into a permanently anchored bottom tab bar with safe-area-aware spacing, and mobile snackbars now sit above that bar instead of blocking taps.
+- Starting with image tag `1.0.14`, the anchored mobile `Everything / Me` bar uses a flatter bottom-navigation treatment with readable selected and disabled tab colors, so it matches the screen-edge placement instead of rendering as an oversized rounded pill strip.
 
 Values to edit inline in the TrueNAS compose:
 
 ```bash
-technerdx6000/listcollab-api:1.0.13
-technerdx6000/listcollab-web:1.0.13
+technerdx6000/listcollab-api:1.0.14
+technerdx6000/listcollab-web:1.0.14
 DB_PASSWORD=replace_with_generated_app_password
 DB_ROOT_PASSWORD=replace_with_generated_root_password
 CORS_ORIGIN=https://listcollab.example.com
 WEB_PORT=8080
 ```
 
-The current `git-bf75421` image tag was published from a clean validated commit state.
+The current `git-728e0f7` image tag was published from a clean validated commit state.
 
 If you want immutable deploys on TrueNAS, replace the image tags inline with the current git-tagged images you published from this repo instead of the release tag.
 
