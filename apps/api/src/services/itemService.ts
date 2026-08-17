@@ -18,8 +18,13 @@ export function assertCanCreateItem(input: CreateItemRequest, isAdmin: boolean):
 /**
  * Applies the mixed item-edit permission rules and returns only the persisted item fields.
  */
-export function authorizeItemUpdate(_currentItem: EventItem, input: UpdateItemRequest, _isAdmin: boolean): ItemChanges {
+export function authorizeItemUpdate(currentItem: EventItem, input: UpdateItemRequest, isAdmin: boolean): ItemChanges {
+    void currentItem
+    void isAdmin
+
     const { participantId, ...changes } = input
+
+    void participantId
 
     return changes
 }
