@@ -766,7 +766,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
               },
               '& .MuiTabs-indicator': {
                 backgroundColor: 'primary.main',
-                borderRadius: 999,
+                borderRadius: 0,
                 height: 3,
               },
               '& .MuiTab-root': {
@@ -1008,6 +1008,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
           elevation={8}
           sx={{
             backgroundImage: 'none',
+            borderRadius: 0,
             borderTop: '1px solid',
             borderColor: 'divider',
             borderTopLeftRadius: 0,
