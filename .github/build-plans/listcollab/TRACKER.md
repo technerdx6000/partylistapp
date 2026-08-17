@@ -129,7 +129,8 @@
 | 2026-08-17 | Started the Everything / Me item filter | Post-phase item interaction redesign | Added the event-page visibility mode plan to cut noise for identified users by filtering the list down to only items they have claimed, while preserving the existing search and mobile category-navigation model |
 | 2026-08-17 | Completed the Everything / Me item filter | Post-phase item interaction redesign | Added a two-tab `Everything / Me` event-page filter backed by current assignment ownership, disabled `Me` until identity exists, wired the filter through search and mobile category navigation, added claimed-item empty states, and revalidated with focused EventPage plus collaboration tests, focused mobile Playwright, `npm run --workspace @listcollab/web type-check`, and `npm run --workspace @listcollab/web lint` |
 | 2026-08-17 | Published the Everything / Me item filter | Post-phase item interaction redesign | Bumped the deployment artifacts to `1.0.12`, updated the TrueNAS and deployment references, and published `technerdx6000/listcollab-api:1.0.12` and `technerdx6000/listcollab-web:1.0.12` plus clean immutable `git-bdff054` tags after validating the claimed-item filter with full `npm run test` |
+| 2026-08-17 | Anchored the mobile Everything / Me control to the phone bottom bar | Post-phase item interaction redesign | Replaced the in-flow mobile visibility tabs with a fixed bottom tab bar, added safe-area/content/snackbar spacing so taps stay unobstructed, and revalidated with the focused EventPage test, the focused mobile Playwright filter regression, and `npm run --workspace @listcollab/web type-check` |
 
 ---
 
-*Last updated: 16 August 2026*
+*Last updated: 17 August 2026*

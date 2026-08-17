@@ -267,6 +267,16 @@ describe('EventPage', () => {
     expect(screen.getByText('Identify yourself to unlock Me.')).toBeInTheDocument()
   })
 
+  it('renders the item-visibility tabs in a dedicated mobile bottom bar', () => {
+    setMatchMedia(true)
+
+    renderEventPage()
+
+    expect(screen.getByTestId('mobile-item-visibility-bar')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Everything' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: 'Me' })).toBeDisabled()
+  })
+
   it('filters the list to only claimed items in Me mode', () => {
     window.localStorage.setItem(
       'listcollab:identity:abcdefghij',

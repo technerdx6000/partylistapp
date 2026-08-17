@@ -20,6 +20,7 @@ import {
   ListItem,
   ListItemSecondaryAction,
   ListItemText,
+  Paper,
   Skeleton,
   Snackbar,
   Stack,
@@ -679,6 +680,8 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   }
 
   const coverageSummary = getEventCoverageSummary(data.items)
+  const showItemVisibilityTabs = data.items.length > 0
+  const mobileItemVisibilityBarOffset = showItemVisibilityTabs && isSmallScreen ? 'calc(112px + env(safe-area-inset-bottom, 0px))' : null
   const showMobileCategoryNav = isSmallScreen && groupedItemSections.length > 1 && visibleItems.length > 0
   const visibleGroupKey = isSmallScreen && !isSearchActive ? (activeMobileGroupKey ?? groupedItemSections[0]?.key) : undefined
   const shareUrl = `${window.location.origin}/e/${shareToken}`
@@ -750,8 +753,62 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
     })
   }
 
+  const itemVisibilityTabs = (
+    <Tabs
+      aria-label="Item visibility"
+      onChange={(_event, nextValue: ItemVisibilityMode) => setItemVisibilityMode(nextValue)}
+      sx={{
+        minHeight: 0,
+        ...(isSmallScreen
+          ? {
+              '& .MuiTabs-flexContainer': {
+                gap: 1,
+              },
+              '& .MuiTabs-indicator': {
+                display: 'none',
+              },
+              '& .MuiTab-root': {
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 999,
+                flex: 1,
+                fontSize: '0.95rem',
+                fontWeight: 700,
+                minHeight: 48,
+                minWidth: 0,
+                px: 1,
+                textTransform: 'none',
+              },
+              '& .Mui-selected': {
+                backgroundColor: 'primary.main',
+                borderColor: 'primary.main',
+                color: 'primary.contrastText',
+              },
+            }
+          : {
+              bgcolor: 'background.paper',
+              borderRadius: 3,
+              px: 0.5,
+              '& .MuiTabs-indicator': {
+                borderRadius: 999,
+                height: 3,
+              },
+              '& .MuiTab-root': {
+                minHeight: 44,
+                textTransform: 'none',
+              },
+            }),
+      }}
+      value={itemVisibilityMode}
+      variant="fullWidth"
+    >
+      <Tab label="Everything" value="everything" />
+      <Tab disabled={!identity} label="Me" value="mine" />
+    </Tabs>
+  )
+
   return (
-    <Container maxWidth="sm" sx={{ py: 3.5 }}>
+    <Container maxWidth="sm" sx={{ pb: mobileItemVisibilityBarOffset ?? 3.5, pt: 3.5 }}>
       <Stack spacing={3}>
         <Card>
           <CardContent
@@ -857,31 +914,9 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
           </CardContent>
         </Card>
 
-        {data.items.length > 0 ? (
+        {showItemVisibilityTabs && !isSmallScreen ? (
           <Stack spacing={1}>
-            <Tabs
-              aria-label="Item visibility"
-              onChange={(_event, nextValue: ItemVisibilityMode) => setItemVisibilityMode(nextValue)}
-              sx={{
-                bgcolor: 'background.paper',
-                borderRadius: 3,
-                minHeight: 0,
-                px: 0.5,
-                '& .MuiTabs-indicator': {
-                  borderRadius: 999,
-                  height: 3,
-                },
-                '& .MuiTab-root': {
-                  minHeight: 44,
-                  textTransform: 'none',
-                },
-              }}
-              value={itemVisibilityMode}
-              variant="fullWidth"
-            >
-              <Tab label="Everything" value="everything" />
-              <Tab disabled={!identity} label="Me" value="mine" />
-            </Tabs>
+            {itemVisibilityTabs}
             {!identity ? (
               <Typography color="text.secondary" variant="body2">
                 Identify yourself to unlock Me.
@@ -962,8 +997,41 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
           />
         )}
 
-        <Box sx={{ pb: 2 }} />
+        <Box sx={{ pb: isSmallScreen ? 1 : 2 }} />
       </Stack>
+
+      {showItemVisibilityTabs && isSmallScreen ? (
+        <Paper
+          data-testid="mobile-item-visibility-bar"
+          elevation={8}
+          sx={{
+            backgroundImage: 'none',
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            bottom: 0,
+            left: 0,
+            position: 'fixed',
+            px: 1.5,
+            pt: 1,
+            pb: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
+            right: 0,
+            zIndex: theme.zIndex.appBar,
+          }}
+        >
+          <Container maxWidth="sm" sx={{ px: 0 }}>
+            <Stack spacing={0.75}>
+              {!identity ? (
+                <Typography align="center" color="text.secondary" variant="caption">
+                  Identify yourself to unlock Me.
+                </Typography>
+              ) : null}
+              {itemVisibilityTabs}
+            </Stack>
+          </Container>
+        </Paper>
+      ) : null}
 
       <IdentifyDialog
         existingParticipants={data.participants}
@@ -1047,6 +1115,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
           setFeedback(null)
         }}
         open={Boolean(feedback)}
+        sx={mobileItemVisibilityBarOffset ? { bottom: `${mobileItemVisibilityBarOffset} !important` } : undefined}
       >
         <Alert
           aria-live={feedback?.severity === 'error' ? 'assertive' : 'polite'}

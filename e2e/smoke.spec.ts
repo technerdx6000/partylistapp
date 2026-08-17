@@ -242,6 +242,14 @@ test('regression: Everything and Me filter claimed items on share-link and organ
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto(`${APP_URL}/e/${event.shareToken}`)
 
+    const bottomBar = page.getByTestId('mobile-item-visibility-bar')
+
+    await expect(bottomBar).toBeVisible()
+    const initialBottomBarBox = await bottomBar.boundingBox()
+
+    expect(initialBottomBarBox).not.toBeNull()
+    expect(initialBottomBarBox!.y + initialBottomBarBox!.height).toBeGreaterThanOrEqual(780)
+
     await expect(page.getByRole('tab', { name: 'Me' })).toBeDisabled()
 
     await page.getByRole('button', { name: 'Claim Bread Rolls' }).click()
@@ -257,7 +265,14 @@ test('regression: Everything and Me filter claimed items on share-link and organ
     await expect(page.getByText('Bread Rolls')).toBeVisible()
     await expect(page.getByText('Water bottles')).toHaveCount(0)
 
+    await page.getByLabel('Search items or people').press('End')
+    const scrolledBottomBarBox = await bottomBar.boundingBox()
+
+    expect(scrolledBottomBarBox).not.toBeNull()
+    expect(scrolledBottomBarBox!.y + scrolledBottomBarBox!.height).toBeGreaterThanOrEqual(780)
+
     await page.goto(`${APP_URL}/e/${event.shareToken}/manage#k=${event.adminToken}`)
+    await expect(bottomBar).toBeVisible()
     await expect(page.getByRole('tab', { name: 'Me' })).toBeEnabled()
     await page.getByRole('tab', { name: 'Me' }).click()
     await expect(page.getByText('Bread Rolls')).toBeVisible()
