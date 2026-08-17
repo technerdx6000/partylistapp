@@ -88,16 +88,59 @@ export function EventSummaryTable({ emptyMessage, items, participantsById }: Eve
             <Typography color="text.secondary">{emptyMessage}</Typography>
           ) : (
             <TableContainer>
-              <Table aria-label="Event summary" size="small" sx={{ tableLayout: 'fixed' }}>
+              <Table aria-label="Event summary" size="small" sx={{ tableLayout: 'auto', width: '100%' }}>
+                <colgroup>
+                  <col style={{ width: isSmallScreen ? '36%' : '38%' }} />
+                  <col style={{ width: isSmallScreen ? '28%' : '30%' }} />
+                  <col style={{ width: isSmallScreen ? '10%' : '10%' }} />
+                  <col style={{ width: isSmallScreen ? '26%' : '22%' }} />
+                </colgroup>
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ width: isSmallScreen ? '35%' : '36%' }}>What Item</TableCell>
-                    <TableCell sx={{ width: isSmallScreen ? '31%' : '32%' }}>Who it's assigned to</TableCell>
-                    <TableCell align="right" sx={{ width: '14%' }}>
-                      Quantity
+                    <TableCell
+                      sx={{
+                        fontSize: isSmallScreen ? '0.72rem' : undefined,
+                        overflowWrap: 'break-word',
+                        py: 1,
+                        verticalAlign: 'bottom',
+                        whiteSpace: 'normal',
+                      }}
+                    >
+                      Item
                     </TableCell>
-                    <TableCell align="right" sx={{ width: isSmallScreen ? '20%' : '18%' }}>
-                      Outstanding quantity
+                    <TableCell
+                      sx={{
+                        fontSize: isSmallScreen ? '0.72rem' : undefined,
+                        overflowWrap: 'break-word',
+                        py: 1,
+                        verticalAlign: 'bottom',
+                        whiteSpace: 'normal',
+                      }}
+                    >
+                      Assignee
+                    </TableCell>
+                    <TableCell
+                      align="right"
+                      sx={{
+                        fontSize: isSmallScreen ? '0.72rem' : undefined,
+                        py: 1,
+                        verticalAlign: 'bottom',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Qty
+                    </TableCell>
+                    <TableCell
+                      align="right"
+                      sx={{
+                        fontSize: isSmallScreen ? '0.72rem' : undefined,
+                        overflowWrap: 'break-word',
+                        py: 1,
+                        verticalAlign: 'bottom',
+                        whiteSpace: 'normal',
+                      }}
+                    >
+                      Remaining Qty
                     </TableCell>
                   </TableRow>
                 </TableHead>

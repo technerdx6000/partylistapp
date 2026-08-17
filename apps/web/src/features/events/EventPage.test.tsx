@@ -312,8 +312,10 @@ describe('EventPage', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Summary' }))
 
     expect(screen.getByRole('table', { name: 'Event summary' })).toBeInTheDocument()
-    expect(screen.getByText('What Item')).toBeInTheDocument()
-    expect(screen.getByText("Who it's assigned to")).toBeInTheDocument()
+    expect(screen.getByText('Item')).toBeInTheDocument()
+    expect(screen.getByText('Assignee')).toBeInTheDocument()
+    expect(screen.getByText('Qty')).toBeInTheDocument()
+    expect(screen.getByText('Remaining Qty')).toBeInTheDocument()
     expect(screen.getAllByText('Bread Rolls')).toHaveLength(2)
     expect(screen.getByText('Taylor')).toBeInTheDocument()
     expect(screen.getAllByText('Unassigned')).toHaveLength(2)

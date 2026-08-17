@@ -11,16 +11,16 @@ Default image names:
 
 Recommended tags:
 
-- release tag: `1.0.16`
-- immutable build tag: `git-df8cc84`
+- release tag: `1.0.17`
+- immutable build tag: `git-af046c5`
 - moving tag: `latest`
 
 Build and publish from the repo root:
 
 ```bash
 DOCKERHUB_NAMESPACE=technerdx6000 \
-IMAGE_TAG=1.0.16 \
-EXTRA_TAG=git-df8cc84 \
+IMAGE_TAG=1.0.17 \
+EXTRA_TAG=git-af046c5 \
 bash scripts/publish-dockerhub.sh
 ```
 
@@ -104,19 +104,20 @@ Important for repeated TrueNAS deploy attempts:
 - Starting with image tag `1.0.14`, the anchored mobile `Everything / Me` bar uses a flatter bottom-navigation treatment with readable selected and disabled tab colors, so it matches the screen-edge placement instead of rendering as an oversized rounded pill strip.
 - Starting with image tag `1.0.15`, the mobile bottom bar drops the last remaining rounded corners on both the bar container and the active tab indicator so the navigation sits flush with the screen edge.
 - Starting with image tag `1.0.16`, the phone-sized share, copy, and add-contribution controls are condensed into a smaller inline action row so they no longer dominate the top of the event page on mobile.
+- Starting with image tag `1.0.17`, event pages add a third `Summary` tab that renders a themed assignment table for requirement items, including assignee, quantity, and outstanding quantity rows so event status can be scanned quickly.
 
 Values to edit inline in the TrueNAS compose:
 
 ```bash
-technerdx6000/listcollab-api:1.0.16
-technerdx6000/listcollab-web:1.0.16
+technerdx6000/listcollab-api:1.0.17
+technerdx6000/listcollab-web:1.0.17
 DB_PASSWORD=replace_with_generated_app_password
 DB_ROOT_PASSWORD=replace_with_generated_root_password
 CORS_ORIGIN=https://listcollab.example.com
 WEB_PORT=8080
 ```
 
-The current `git-df8cc84` image tag was published from a clean validated commit state.
+The current `git-af046c5` image tag was published from a clean validated commit state.
 
 If you want immutable deploys on TrueNAS, replace the image tags inline with the current git-tagged images you published from this repo instead of the release tag.
 
