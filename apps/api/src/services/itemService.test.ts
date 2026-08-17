@@ -31,48 +31,26 @@ describe('item service permissions', () => {
         expect(changes).toEqual({ categoryId: 3, quantityRequired: 4, status: 'covered' })
     })
 
-    it('rejects guest structural item changes with ADMIN_REQUIRED', () => {
-        expect(() =>
-            authorizeItemUpdate(buildItem(), { quantityRequired: 4, participantId: 4 }, false)
-        ).toThrowError(new AppError(403, 'ADMIN_REQUIRED', 'Admin token required'))
-    })
-
-    it('rejects guest updates with no editable fields', () => {
-        expect(() => authorizeItemUpdate(buildItem(), { participantId: 4 }, false)).toThrowError(
-            new AppError(
-                400,
-                'VALIDATION_FAILED',
-                'Guest item updates must include a name or description',
-                { fields: ['name', 'description'] }
-            )
-        )
-    })
-
-    it('rejects guest updates without participant identity', () => {
-        expect(() => authorizeItemUpdate(buildItem(), { name: 'Buns' }, false)).toThrowError(
-            new AppError(
-                400,
-                'VALIDATION_FAILED',
-                'Participant id is required for guest item updates',
-                { fields: ['participantId'] }
-            )
-        )
-    })
-
-    it('rejects guest edits for items they did not create', () => {
-        expect(() =>
-            authorizeItemUpdate(buildItem({ createdBy: 9 }), { participantId: 4, name: 'Buns' }, false)
-        ).toThrowError(new AppError(403, 'ITEM_EDIT_FORBIDDEN', 'Only the item creator can edit this item'))
-    })
-
-    it('allows guests to edit their own item name and description only', () => {
+    it('allows share-token viewers to change structural item fields', () => {
         const changes = authorizeItemUpdate(
-            buildItem({ createdBy: 4 }),
-            { participantId: 4, name: 'Buns', description: 'Bring eight' },
+            buildItem(),
+            { categoryId: 3, quantityRequired: 4, status: 'covered' },
             false
         )
 
+        expect(changes).toEqual({ categoryId: 3, quantityRequired: 4, status: 'covered' })
+    })
+
+    it('allows share-token viewers to edit item text without participant identity', () => {
+        const changes = authorizeItemUpdate(buildItem(), { name: 'Buns', description: 'Bring eight' }, false)
+
         expect(changes).toEqual({ name: 'Buns', description: 'Bring eight' })
+    })
+
+    it('ignores participantId when applying item updates', () => {
+        const changes = authorizeItemUpdate(buildItem({ createdBy: 9 }), { participantId: 4, name: 'Buns' }, false)
+
+        expect(changes).toEqual({ name: 'Buns' })
     })
 
     it('requires createdBy for guest item creation', () => {

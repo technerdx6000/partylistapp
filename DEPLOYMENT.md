@@ -11,16 +11,16 @@ Default image names:
 
 Recommended tags:
 
-- release tag: `1.0.10`
-- immutable build tag: `git-2f0baaa-dirty`
+- release tag: `1.0.11`
+- immutable build tag: `git-feed32e-dirty`
 - moving tag: `latest`
 
 Build and publish from the repo root:
 
 ```bash
 DOCKERHUB_NAMESPACE=technerdx6000 \
-IMAGE_TAG=1.0.10 \
-EXTRA_TAG=git-2f0baaa-dirty \
+IMAGE_TAG=1.0.11 \
+EXTRA_TAG=git-feed32e-dirty \
 bash scripts/publish-dockerhub.sh
 ```
 
@@ -98,19 +98,20 @@ Important for repeated TrueNAS deploy attempts:
 - Starting with image tag `1.0.8`, phone-sized organiser item rows and item-detail views keep edit and delete visible again, restoring full mobile organiser functionality after the compact-row redesign.
 - Starting with image tag `1.0.9`, phone-sized organiser rows and mobile item-detail dialogs use the same compact action bar, and the mobile detail view no longer repeats the item title above the action controls.
 - Starting with image tag `1.0.10`, share-link and organiser item rows now expose the same edit and delete actions, share-token item updates and deletes follow that unified UI model, and phone-sized item rows are tightened into a single inline line instead of a stacked mini-card.
+- Starting with image tag `1.0.11`, inline claim, edit, and delete buttons now open their specific target dialogs directly instead of routing through the generic item detail surface first, and browser back closes the active transient event-page overlay on mobile.
 
 Values to edit inline in the TrueNAS compose:
 
 ```bash
-technerdx6000/listcollab-api:1.0.10
-technerdx6000/listcollab-web:1.0.10
+technerdx6000/listcollab-api:1.0.11
+technerdx6000/listcollab-web:1.0.11
 DB_PASSWORD=replace_with_generated_app_password
 DB_ROOT_PASSWORD=replace_with_generated_root_password
 CORS_ORIGIN=https://listcollab.example.com
 WEB_PORT=8080
 ```
 
-The current `git-2f0baaa-dirty` image tag was published from a validated but uncommitted workspace state.
+The current `git-feed32e-dirty` image tag was published from a validated but uncommitted workspace state.
 
 If you want immutable deploys on TrueNAS, replace the image tags inline with the current git-tagged images you published from this repo instead of the release tag.
 
