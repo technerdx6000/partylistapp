@@ -136,6 +136,7 @@
 | 2026-08-17 | Flattened the remaining mobile bottom-bar corners | Post-phase item interaction redesign | Removed the last rounded corners from the anchored phone-sized bottom bar by zeroing the bar container and indicator radii, then revalidated with focused EventPage coverage and `npm run --workspace @listcollab/web type-check` |
 | 2026-08-17 | Published the mobile bottom-bar corner cleanup | Post-phase item interaction redesign | Bumped the deployment artifacts to `1.0.15`, updated the TrueNAS and deployment references, and published `technerdx6000/listcollab-api:1.0.15` and `technerdx6000/listcollab-web:1.0.15` plus clean immutable `git-564747d` tags after validating the fully flat anchored mobile bottom navigation |
 | 2026-08-17 | Compacted the mobile share action row | Post-phase item interaction redesign | Reduced the phone-sized share, copy, and add-contribution controls into a smaller inline action row with shorter visible labels, preserved their existing accessible names, and revalidated with focused EventPage coverage and `npm run --workspace @listcollab/web type-check` |
+| 2026-08-17 | Published the compact mobile action-row follow-up | Post-phase item interaction redesign | Bumped the deployment artifacts to `1.0.16`, updated the TrueNAS and deployment references, and published `technerdx6000/listcollab-api:1.0.16` and `technerdx6000/listcollab-web:1.0.16` plus clean immutable `git-df8cc84` tags after validating the smaller inline mobile share/copy/add action row |
 
 ---
 
