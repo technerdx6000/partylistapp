@@ -762,27 +762,29 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
         ...(isSmallScreen
           ? {
               '& .MuiTabs-flexContainer': {
-                gap: 1,
+                gap: 0,
               },
               '& .MuiTabs-indicator': {
-                display: 'none',
+                backgroundColor: 'primary.main',
+                borderRadius: 999,
+                height: 3,
               },
               '& .MuiTab-root': {
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 999,
+                color: 'text.secondary',
                 flex: 1,
                 fontSize: '0.95rem',
                 fontWeight: 700,
-                minHeight: 48,
+                minHeight: 52,
                 minWidth: 0,
                 px: 1,
                 textTransform: 'none',
               },
-              '& .Mui-selected': {
-                backgroundColor: 'primary.main',
-                borderColor: 'primary.main',
-                color: 'primary.contrastText',
+              '& .MuiTab-root.Mui-selected': {
+                color: 'primary.main',
+              },
+              '& .MuiTab-root.Mui-disabled': {
+                color: 'text.disabled',
+                opacity: 0.72,
               },
             }
           : {
@@ -1008,13 +1010,13 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
             backgroundImage: 'none',
             borderTop: '1px solid',
             borderColor: 'divider',
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
+            borderTopLeftRadius: 0,
+            borderTopRightRadius: 0,
             bottom: 0,
             left: 0,
             position: 'fixed',
             px: 1.5,
-            pt: 1,
+            pt: 0.75,
             pb: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
             right: 0,
             zIndex: theme.zIndex.appBar,
@@ -1023,7 +1025,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
           <Container maxWidth="sm" sx={{ px: 0 }}>
             <Stack spacing={0.75}>
               {!identity ? (
-                <Typography align="center" color="text.secondary" variant="caption">
+                <Typography align="center" color="text.secondary" sx={{ lineHeight: 1.2, px: 1 }} variant="caption">
                   Identify yourself to unlock Me.
                 </Typography>
               ) : null}
