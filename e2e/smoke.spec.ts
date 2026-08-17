@@ -229,6 +229,41 @@ test('regression: share-link page keeps item edit and delete visible inline on m
     expect(guestPageHasHorizontalScroll).toBeFalsy()
 }, 60000)
 
+test('regression: Everything and Me filter claimed items on share-link and organiser mobile routes', async ({ page, request }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile', 'mobile-only viewport assertion')
+
+    await waitForApiReady(request)
+    const event = await createEventFixture(request, 'My Items Event')
+    const drinksCategoryId = await createCategory(request, event, 'Drinks', 1)
+
+    await createRequirement(request, event, event.categoryId, 'Bread Rolls', 3)
+    await createRequirement(request, event, drinksCategoryId, 'Water bottles', 6)
+
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto(`${APP_URL}/e/${event.shareToken}`)
+
+    await expect(page.getByRole('tab', { name: 'Me' })).toBeDisabled()
+
+    await page.getByRole('button', { name: 'Claim Bread Rolls' }).click()
+    await page.getByLabel('Add your name').fill('Taylor')
+    await page.getByRole('button', { name: 'Continue' }).click()
+    await expect(page.getByRole('heading', { name: 'Claim item' })).toBeVisible()
+    await page.getByLabel('Quantity').fill('1')
+    await page.getByRole('button', { name: 'Claim item' }).click()
+    await expect(page.getByText('Claim saved.')).toBeVisible()
+
+    await expect(page.getByRole('tab', { name: 'Me' })).toBeEnabled()
+    await page.getByRole('tab', { name: 'Me' }).click()
+    await expect(page.getByText('Bread Rolls')).toBeVisible()
+    await expect(page.getByText('Water bottles')).toHaveCount(0)
+
+    await page.goto(`${APP_URL}/e/${event.shareToken}/manage#k=${event.adminToken}`)
+    await expect(page.getByRole('tab', { name: 'Me' })).toBeEnabled()
+    await page.getByRole('tab', { name: 'Me' }).click()
+    await expect(page.getByText('Bread Rolls')).toBeVisible()
+    await expect(page.getByText('Water bottles')).toHaveCount(0)
+}, 60000)
+
 test('regression: mobile category navigation shows one category at a time and keeps search global', async ({ page, request }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile', 'mobile-only viewport assertion')
 

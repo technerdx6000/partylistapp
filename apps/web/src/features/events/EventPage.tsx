@@ -23,6 +23,8 @@ import {
   Skeleton,
   Snackbar,
   Stack,
+  Tab,
+  Tabs,
   TextField,
   useMediaQuery,
   Typography,
@@ -30,7 +32,7 @@ import {
   useTheme,
 } from '@mui/material'
 import { useQueryClient } from '@tanstack/react-query'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { getEventCoverageSummary } from './eventCoverage'
@@ -73,6 +75,8 @@ type ItemDetailState = {
   itemId: number
   mode: ItemDetailMode
 } | null
+
+type ItemVisibilityMode = 'everything' | 'mine'
 
 type FeedbackState = {
   message: string
@@ -117,6 +121,18 @@ function filterItems(
 
     return `${item.name} ${participantNames}`.toLowerCase().includes(normalizedTerm)
   })
+}
+
+function filterItemsByMode(
+  items: readonly EventItemWithAssignments[],
+  participantId: number | null,
+  mode: ItemVisibilityMode
+): readonly EventItemWithAssignments[] {
+  if (mode === 'everything' || participantId === null) {
+    return items
+  }
+
+  return items.filter((item) => item.assignments.some((assignment) => assignment.participantId === participantId))
 }
 
 function getFeedbackMessage(feedback: Exclude<FeedbackState, null>): string {
@@ -174,6 +190,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   const { shareToken: routeShareToken } = useParams<{ shareToken: string }>()
   const apiClient = useApiClient(routeShareToken, manageMode)
   const queryClient = useQueryClient()
+  const [itemVisibilityMode, setItemVisibilityMode] = useState<ItemVisibilityMode>('everything')
   const [searchTerm, setSearchTerm] = useState('')
   const [claimDialogState, setClaimDialogState] = useState<ClaimDialogState>(null)
   const [feedback, setFeedback] = useState<FeedbackState>(null)
@@ -192,10 +209,16 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   const { clearIdentity, identity, setIdentity } = useEventIdentity(shareToken)
   const { data, error, isLoading, refetch } = useEvent(shareToken, manageMode)
   const participantNamesById = new Map((data?.participants ?? []).map((participant) => [participant.id, participant.name]))
-  const groupedItemSections = useMemo(
-    () => (data ? groupItemsByCategory(data.categories, data.items) : []),
-    [data]
-  )
+  const isSearchActive = searchTerm.trim().length > 0
+  const modeFilteredItems = filterItemsByMode(data?.items ?? [], identity?.participantId ?? null, itemVisibilityMode)
+  const visibleItems = filterItems(modeFilteredItems, participantNamesById, searchTerm)
+  const visibleCategoryIds = new Set(visibleItems.flatMap((item) => (item.categoryId === null ? [] : [item.categoryId])))
+  const visibleCategories = data
+    ? itemVisibilityMode === 'everything' && !isSearchActive
+      ? data.categories
+      : data.categories.filter((category) => visibleCategoryIds.has(category.id))
+    : []
+  const groupedItemSections = groupItemsByCategory(visibleCategories, visibleItems).filter((group) => group.items.length > 0)
   const pageTitle = !shareToken
     ? 'Event unavailable | ListCollab'
     : isLoading
@@ -215,6 +238,12 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
       recordVisitedEvent(data.event)
     }
   }, [data])
+
+  useEffect(() => {
+    if (!identity && itemVisibilityMode === 'mine') {
+      setItemVisibilityMode('everything')
+    }
+  }, [identity, itemVisibilityMode])
 
   useEffect(() => {
     if (!isSmallScreen) {
@@ -649,10 +678,8 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
     )
   }
 
-  const visibleItems = filterItems(data.items, participantNamesById, searchTerm)
   const coverageSummary = getEventCoverageSummary(data.items)
-  const isSearchActive = searchTerm.trim().length > 0
-  const showMobileCategoryNav = isSmallScreen && groupedItemSections.length > 1 && data.items.length > 0
+  const showMobileCategoryNav = isSmallScreen && groupedItemSections.length > 1 && visibleItems.length > 0
   const visibleGroupKey = isSmallScreen && !isSearchActive ? (activeMobileGroupKey ?? groupedItemSections[0]?.key) : undefined
   const shareUrl = `${window.location.origin}/e/${shareToken}`
   const event = data.event
@@ -830,6 +857,39 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
           </CardContent>
         </Card>
 
+        {data.items.length > 0 ? (
+          <Stack spacing={1}>
+            <Tabs
+              aria-label="Item visibility"
+              onChange={(_event, nextValue: ItemVisibilityMode) => setItemVisibilityMode(nextValue)}
+              sx={{
+                bgcolor: 'background.paper',
+                borderRadius: 3,
+                minHeight: 0,
+                px: 0.5,
+                '& .MuiTabs-indicator': {
+                  borderRadius: 999,
+                  height: 3,
+                },
+                '& .MuiTab-root': {
+                  minHeight: 44,
+                  textTransform: 'none',
+                },
+              }}
+              value={itemVisibilityMode}
+              variant="fullWidth"
+            >
+              <Tab label="Everything" value="everything" />
+              <Tab disabled={!identity} label="Me" value="mine" />
+            </Tabs>
+            {!identity ? (
+              <Typography color="text.secondary" variant="body2">
+                Identify yourself to unlock Me.
+              </Typography>
+            ) : null}
+          </Stack>
+        ) : null}
+
         <TextField
           InputProps={{
             startAdornment: (
@@ -874,12 +934,18 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
         ) : visibleItems.length === 0 ? (
           <Card>
             <CardContent>
-              <Typography color="text.secondary">No items match that search.</Typography>
+              <Typography color="text.secondary">
+                {itemVisibilityMode === 'mine'
+                  ? isSearchActive
+                    ? 'No claimed items match that search.'
+                    : "You haven't claimed anything yet."
+                  : 'No items match that search.'}
+              </Typography>
             </CardContent>
           </Card>
         ) : (
           <ItemList
-            categories={data.categories}
+            categories={visibleCategories}
             isManageMode={manageMode}
             items={visibleItems}
             onAddItem={openContributionForm}

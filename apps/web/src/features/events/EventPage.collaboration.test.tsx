@@ -345,6 +345,93 @@ describe('EventPage collaboration', () => {
     })
   }, 10000)
 
+  it('shows claimed items only in Me mode after the current participant claims one', async () => {
+    window.localStorage.setItem(
+      'listcollab:identity:abcdefghij',
+      JSON.stringify({ displayName: 'Jordan', participantId: 2 })
+    )
+
+    const initialResponse: AggregateEventResponse = {
+      ...buildAggregateResponse(),
+      items: [
+        {
+          id: 1,
+          eventId: 1,
+          categoryId: 1,
+          name: 'Bread Rolls',
+          description: null,
+          quantityRequired: 4,
+          status: 'open',
+          createdBy: 1,
+          createdAt: '2026-08-15T00:00:00.000Z',
+          updatedAt: '2026-08-15T00:00:00.000Z',
+          assignments: [],
+          coverage: { claimed: 0, required: 4, remaining: 4, status: 'open' },
+        },
+        {
+          id: 2,
+          eventId: 1,
+          categoryId: 1,
+          name: 'Napkins',
+          description: null,
+          quantityRequired: 2,
+          status: 'open',
+          createdBy: 1,
+          createdAt: '2026-08-15T00:00:00.000Z',
+          updatedAt: '2026-08-15T00:00:00.000Z',
+          assignments: [{ id: 2, itemId: 2, participantId: 1, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' }],
+          coverage: { claimed: 1, required: 2, remaining: 1, status: 'open' },
+        },
+      ],
+      participants: [
+        { id: 1, eventId: 1, name: 'Taylor', createdAt: '2026-08-15T00:00:00.000Z' },
+        { id: 2, eventId: 1, name: 'Jordan', createdAt: '2026-08-15T00:00:00.000Z' },
+      ],
+    }
+    const refreshedResponse: AggregateEventResponse = {
+      ...initialResponse,
+      items: [
+        {
+          ...initialResponse.items[0]!,
+          assignments: [{ id: 9, itemId: 1, participantId: 2, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' }],
+          coverage: { claimed: 1, required: 4, remaining: 3, status: 'open' },
+        },
+        initialResponse.items[1]!,
+      ],
+    }
+
+    const apiClient = buildApiClient()
+    apiClient.getEvent.mockResolvedValueOnce(initialResponse).mockResolvedValue(refreshedResponse)
+    apiClient.claimItem.mockResolvedValue({
+      id: 9,
+      itemId: 1,
+      participantId: 2,
+      quantity: 1,
+      note: null,
+      createdAt: '2026-08-15T00:00:00.000Z',
+    })
+    useApiClientMock.mockReturnValue(apiClient)
+
+    renderEventPage()
+
+    await screen.findByRole('heading', { name: 'Camp Weekend' })
+    fireEvent.click(screen.getByRole('button', { name: 'Claim Bread Rolls' }))
+    await screen.findByRole('heading', { name: 'Claim item' })
+    fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '1' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Claim item' }))
+
+    await waitFor(() => {
+      expect(apiClient.claimItem).toHaveBeenCalledWith(1, { note: null, participantId: 2, quantity: 1 })
+    })
+
+    fireEvent.click(await screen.findByRole('tab', { name: 'Me' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Bread Rolls')).toBeInTheDocument()
+    })
+    expect(screen.queryByText('Napkins')).not.toBeInTheDocument()
+  }, 10000)
+
   it('lets a participant adjust their own claim', async () => {
     window.localStorage.setItem(
       'listcollab:identity:abcdefghij',

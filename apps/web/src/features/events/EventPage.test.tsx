@@ -259,6 +259,41 @@ describe('EventPage', () => {
     expect(screen.getByText('Link ready to share.')).toBeInTheDocument()
   })
 
+  it('shows Everything and a disabled Me tab until identity exists', () => {
+    renderEventPage()
+
+    expect(screen.getByRole('tab', { name: 'Everything' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: 'Me' })).toBeDisabled()
+    expect(screen.getByText('Identify yourself to unlock Me.')).toBeInTheDocument()
+  })
+
+  it('filters the list to only claimed items in Me mode', () => {
+    window.localStorage.setItem(
+      'listcollab:identity:abcdefghij',
+      JSON.stringify({ displayName: 'Jordan', participantId: 2 })
+    )
+
+    renderEventPage()
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Me' }))
+
+    expect(screen.getByText('Napkins')).toBeInTheDocument()
+    expect(screen.queryByText('Bread Rolls')).not.toBeInTheDocument()
+  })
+
+  it('shows a dedicated empty state when Me has no claimed items', () => {
+    window.localStorage.setItem(
+      'listcollab:identity:abcdefghij',
+      JSON.stringify({ displayName: 'Avery', participantId: 99 })
+    )
+
+    renderEventPage()
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Me' }))
+
+    expect(screen.getByText("You haven't claimed anything yet.")).toBeInTheDocument()
+  })
+
   it('shows a mobile category navigator and switches the visible category panel', () => {
     setMatchMedia(true)
     useEventMock.mockReturnValue(
@@ -360,9 +395,70 @@ describe('EventPage', () => {
     )
 
     renderEventPage()
-    fireEvent.change(screen.getByLabelText('Search items or people'), { target: { value: 'Water' } })
+    fireEvent.change(screen.getByLabelText('Search items or people'), { target: { value: 'o' } })
 
     expect(screen.getByText('Showing matches across all categories while search is active.')).toBeInTheDocument()
+    expect(screen.getByText('Water bottles')).toBeInTheDocument()
+    expect(screen.getByText('Bread Rolls')).toBeInTheDocument()
+  })
+
+  it('keeps mobile category navigation aligned with Me mode', () => {
+    setMatchMedia(true)
+    window.localStorage.setItem(
+      'listcollab:identity:abcdefghij',
+      JSON.stringify({ displayName: 'Jordan', participantId: 2 })
+    )
+    useEventMock.mockReturnValue(
+      buildUseEventResult({
+        data: {
+          ...buildAggregateResponse(),
+          categories: [
+            { id: 1, eventId: 1, name: 'Food', icon: 'food', sortOrder: 0, createdAt: '2026-08-15T00:00:00.000Z' },
+            { id: 2, eventId: 1, name: 'Drinks', icon: 'drinks', sortOrder: 1, createdAt: '2026-08-15T00:00:00.000Z' },
+          ],
+          items: [
+            {
+              id: 1,
+              eventId: 1,
+              categoryId: 1,
+              name: 'Bread Rolls',
+              description: null,
+              quantityRequired: 4,
+              status: 'open',
+              createdBy: 1,
+              createdAt: '2026-08-15T00:00:00.000Z',
+              updatedAt: '2026-08-15T00:00:00.000Z',
+              assignments: [{ id: 1, itemId: 1, participantId: 2, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' }],
+              coverage: { claimed: 1, required: 4, remaining: 3, status: 'open' },
+            },
+            {
+              id: 2,
+              eventId: 1,
+              categoryId: 2,
+              name: 'Water bottles',
+              description: null,
+              quantityRequired: 6,
+              status: 'open',
+              createdBy: 2,
+              createdAt: '2026-08-15T00:00:00.000Z',
+              updatedAt: '2026-08-15T00:00:00.000Z',
+              assignments: [{ id: 2, itemId: 2, participantId: 2, quantity: 2, note: null, createdAt: '2026-08-15T00:00:00.000Z' }],
+              coverage: { claimed: 2, required: 6, remaining: 4, status: 'open' },
+            },
+          ],
+        },
+      })
+    )
+
+    renderEventPage()
+    fireEvent.click(screen.getByRole('tab', { name: 'Me' }))
+
+    expect(screen.getByRole('tablist', { name: 'Category navigation' })).toBeInTheDocument()
+    expect(screen.getByText('Bread Rolls')).toBeInTheDocument()
+    expect(screen.queryByText('Water bottles')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Drinks, 0 of 1 covered' }))
+
     expect(screen.getByText('Water bottles')).toBeInTheDocument()
     expect(screen.queryByText('Bread Rolls')).not.toBeInTheDocument()
   })
