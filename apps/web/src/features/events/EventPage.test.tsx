@@ -259,12 +259,13 @@ describe('EventPage', () => {
     expect(screen.getByText('Link ready to share.')).toBeInTheDocument()
   })
 
-  it('shows Everything and a disabled Me tab until identity exists', () => {
+  it('shows All Items, Summary, and a disabled My Items tab until identity exists', () => {
     renderEventPage()
 
-    expect(screen.getByRole('tab', { name: 'Everything' })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('tab', { name: 'Me' })).toBeDisabled()
-    expect(screen.getByText('Identify yourself to unlock Me.')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'All Items' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: 'My Items' })).toBeDisabled()
+    expect(screen.getByRole('tab', { name: 'Summary' })).toBeInTheDocument()
+    expect(screen.getByText('Identify yourself to unlock My Items.')).toBeInTheDocument()
   })
 
   it('renders the item-visibility tabs in a dedicated mobile bottom bar', () => {
@@ -273,11 +274,12 @@ describe('EventPage', () => {
     renderEventPage()
 
     expect(screen.getByTestId('mobile-item-visibility-bar')).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Everything' })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('tab', { name: 'Me' })).toBeDisabled()
+    expect(screen.getByRole('tab', { name: 'All Items' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: 'My Items' })).toBeDisabled()
+    expect(screen.getByRole('tab', { name: 'Summary' })).toBeInTheDocument()
   })
 
-  it('filters the list to only claimed items in Me mode', () => {
+  it('filters the list to only claimed items in My Items mode', () => {
     window.localStorage.setItem(
       'listcollab:identity:abcdefghij',
       JSON.stringify({ displayName: 'Jordan', participantId: 2 })
@@ -285,13 +287,13 @@ describe('EventPage', () => {
 
     renderEventPage()
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Me' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'My Items' }))
 
     expect(screen.getByText('Napkins')).toBeInTheDocument()
     expect(screen.queryByText('Bread Rolls')).not.toBeInTheDocument()
   })
 
-  it('shows a dedicated empty state when Me has no claimed items', () => {
+  it('shows a dedicated empty state when My Items has no claimed items', () => {
     window.localStorage.setItem(
       'listcollab:identity:abcdefghij',
       JSON.stringify({ displayName: 'Avery', participantId: 99 })
@@ -299,9 +301,22 @@ describe('EventPage', () => {
 
     renderEventPage()
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Me' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'My Items' }))
 
     expect(screen.getByText("You haven't claimed anything yet.")).toBeInTheDocument()
+  })
+
+  it('renders the summary tab with assignment and outstanding quantity rows', () => {
+    renderEventPage()
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Summary' }))
+
+    expect(screen.getByRole('table', { name: 'Event summary' })).toBeInTheDocument()
+    expect(screen.getByText('What Item')).toBeInTheDocument()
+    expect(screen.getByText("Who it's assigned to")).toBeInTheDocument()
+    expect(screen.getAllByText('Bread Rolls')).toHaveLength(2)
+    expect(screen.getByText('Taylor')).toBeInTheDocument()
+    expect(screen.getAllByText('Unassigned')).toHaveLength(2)
   })
 
   it('shows a mobile category navigator and switches the visible category panel', () => {
@@ -412,7 +427,7 @@ describe('EventPage', () => {
     expect(screen.getByText('Bread Rolls')).toBeInTheDocument()
   })
 
-  it('keeps mobile category navigation aligned with Me mode', () => {
+  it('keeps mobile category navigation aligned with My Items mode', () => {
     setMatchMedia(true)
     window.localStorage.setItem(
       'listcollab:identity:abcdefghij',
@@ -461,7 +476,7 @@ describe('EventPage', () => {
     )
 
     renderEventPage()
-    fireEvent.click(screen.getByRole('tab', { name: 'Me' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'My Items' }))
 
     expect(screen.getByRole('tablist', { name: 'Category navigation' })).toBeInTheDocument()
     expect(screen.getByText('Bread Rolls')).toBeInTheDocument()
@@ -471,6 +486,56 @@ describe('EventPage', () => {
 
     expect(screen.getByText('Water bottles')).toBeInTheDocument()
     expect(screen.queryByText('Bread Rolls')).not.toBeInTheDocument()
+  })
+
+  it('hides mobile category navigation while Summary is active', () => {
+    setMatchMedia(true)
+    useEventMock.mockReturnValue(
+      buildUseEventResult({
+        data: {
+          ...buildAggregateResponse(),
+          categories: [
+            { id: 1, eventId: 1, name: 'Food', icon: 'food', sortOrder: 0, createdAt: '2026-08-15T00:00:00.000Z' },
+            { id: 2, eventId: 1, name: 'Drinks', icon: 'drinks', sortOrder: 1, createdAt: '2026-08-15T00:00:00.000Z' },
+          ],
+          items: [
+            {
+              id: 1,
+              eventId: 1,
+              categoryId: 1,
+              name: 'Bread Rolls',
+              description: null,
+              quantityRequired: 4,
+              status: 'open',
+              createdBy: 1,
+              createdAt: '2026-08-15T00:00:00.000Z',
+              updatedAt: '2026-08-15T00:00:00.000Z',
+              assignments: [],
+              coverage: { claimed: 0, required: 4, remaining: 4, status: 'open' },
+            },
+            {
+              id: 2,
+              eventId: 1,
+              categoryId: 2,
+              name: 'Water bottles',
+              description: null,
+              quantityRequired: 6,
+              status: 'open',
+              createdBy: 2,
+              createdAt: '2026-08-15T00:00:00.000Z',
+              updatedAt: '2026-08-15T00:00:00.000Z',
+              assignments: [],
+              coverage: { claimed: 0, required: 6, remaining: 6, status: 'open' },
+            },
+          ],
+        },
+      })
+    )
+
+    renderEventPage()
+    fireEvent.click(screen.getByRole('tab', { name: 'Summary' }))
+
+    expect(screen.queryByRole('tablist', { name: 'Category navigation' })).not.toBeInTheDocument()
   })
 
   it('does not render the mobile category navigator when only one category group exists', () => {

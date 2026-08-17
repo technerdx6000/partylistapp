@@ -229,7 +229,7 @@ test('regression: share-link page keeps item edit and delete visible inline on m
     expect(guestPageHasHorizontalScroll).toBeFalsy()
 }, 60000)
 
-test('regression: Everything and Me filter claimed items on share-link and organiser mobile routes', async ({ page, request }, testInfo) => {
+test('regression: All Items, My Items, and Summary stay usable on share-link and organiser mobile routes', async ({ page, request }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile', 'mobile-only viewport assertion')
 
     await waitForApiReady(request)
@@ -250,7 +250,18 @@ test('regression: Everything and Me filter claimed items on share-link and organ
     expect(initialBottomBarBox).not.toBeNull()
     expect(initialBottomBarBox!.y + initialBottomBarBox!.height).toBeGreaterThanOrEqual(780)
 
-    await expect(page.getByRole('tab', { name: 'Me' })).toBeDisabled()
+    await page.getByRole('tab', { name: 'Summary' }).click()
+    await expect(page.getByRole('table', { name: 'Event summary' })).toBeVisible()
+
+    const summaryHasHorizontalScroll = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth
+    )
+
+    expect(summaryHasHorizontalScroll).toBeFalsy()
+    await expect(page.getByRole('tablist', { name: 'Category navigation' })).toHaveCount(0)
+
+    await page.getByRole('tab', { name: 'All Items' }).click()
+    await expect(page.getByRole('tab', { name: 'My Items' })).toBeDisabled()
 
     await page.getByRole('button', { name: 'Claim Bread Rolls' }).click()
     await page.getByLabel('Add your name').fill('Taylor')
@@ -260,8 +271,8 @@ test('regression: Everything and Me filter claimed items on share-link and organ
     await page.getByRole('button', { name: 'Claim item' }).click()
     await expect(page.getByText('Claim saved.')).toBeVisible()
 
-    await expect(page.getByRole('tab', { name: 'Me' })).toBeEnabled()
-    await page.getByRole('tab', { name: 'Me' }).click()
+    await expect(page.getByRole('tab', { name: 'My Items' })).toBeEnabled()
+    await page.getByRole('tab', { name: 'My Items' }).click()
     await expect(page.getByText('Bread Rolls')).toBeVisible()
     await expect(page.getByText('Water bottles')).toHaveCount(0)
 
@@ -273,8 +284,8 @@ test('regression: Everything and Me filter claimed items on share-link and organ
 
     await page.goto(`${APP_URL}/e/${event.shareToken}/manage#k=${event.adminToken}`)
     await expect(bottomBar).toBeVisible()
-    await expect(page.getByRole('tab', { name: 'Me' })).toBeEnabled()
-    await page.getByRole('tab', { name: 'Me' }).click()
+    await expect(page.getByRole('tab', { name: 'My Items' })).toBeEnabled()
+    await page.getByRole('tab', { name: 'My Items' }).click()
     await expect(page.getByText('Bread Rolls')).toBeVisible()
     await expect(page.getByText('Water bottles')).toHaveCount(0)
 }, 60000)

@@ -424,7 +424,7 @@ describe('EventPage collaboration', () => {
       expect(apiClient.claimItem).toHaveBeenCalledWith(1, { note: null, participantId: 2, quantity: 1 })
     })
 
-    fireEvent.click(await screen.findByRole('tab', { name: 'Me' }))
+    fireEvent.click(await screen.findByRole('tab', { name: 'My Items' }))
 
     await waitFor(() => {
       expect(screen.getByText('Bread Rolls')).toBeInTheDocument()

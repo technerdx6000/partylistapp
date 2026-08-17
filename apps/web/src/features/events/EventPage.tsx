@@ -41,6 +41,7 @@ import { EventHeader } from './EventHeader'
 import { applyOptimisticAssignment, removeOptimisticAssignment } from './eventOptimisticUpdates'
 import { MobileCategoryNav } from './MobileCategoryNav'
 import { MobileOrganiserPanel } from './MobileOrganiserPanel'
+import { EventSummaryTable } from './EventSummaryTable'
 import { recordVisitedEvent } from './visitedEvents'
 import { ConfirmationDialog } from '../../components/ConfirmationDialog'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -77,7 +78,7 @@ type ItemDetailState = {
   mode: ItemDetailMode
 } | null
 
-type ItemVisibilityMode = 'everything' | 'mine'
+type EventPageTab = 'all' | 'mine' | 'summary'
 
 type FeedbackState = {
   message: string
@@ -124,12 +125,12 @@ function filterItems(
   })
 }
 
-function filterItemsByMode(
+function filterItemsByTab(
   items: readonly EventItemWithAssignments[],
   participantId: number | null,
-  mode: ItemVisibilityMode
+  activeTab: EventPageTab
 ): readonly EventItemWithAssignments[] {
-  if (mode === 'everything' || participantId === null) {
+  if (activeTab !== 'mine' || participantId === null) {
     return items
   }
 
@@ -191,7 +192,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   const { shareToken: routeShareToken } = useParams<{ shareToken: string }>()
   const apiClient = useApiClient(routeShareToken, manageMode)
   const queryClient = useQueryClient()
-  const [itemVisibilityMode, setItemVisibilityMode] = useState<ItemVisibilityMode>('everything')
+  const [activeTab, setActiveTab] = useState<EventPageTab>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [claimDialogState, setClaimDialogState] = useState<ClaimDialogState>(null)
   const [feedback, setFeedback] = useState<FeedbackState>(null)
@@ -211,11 +212,11 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   const { data, error, isLoading, refetch } = useEvent(shareToken, manageMode)
   const participantNamesById = new Map((data?.participants ?? []).map((participant) => [participant.id, participant.name]))
   const isSearchActive = searchTerm.trim().length > 0
-  const modeFilteredItems = filterItemsByMode(data?.items ?? [], identity?.participantId ?? null, itemVisibilityMode)
-  const visibleItems = filterItems(modeFilteredItems, participantNamesById, searchTerm)
+  const tabFilteredItems = filterItemsByTab(data?.items ?? [], identity?.participantId ?? null, activeTab)
+  const visibleItems = filterItems(tabFilteredItems, participantNamesById, searchTerm)
   const visibleCategoryIds = new Set(visibleItems.flatMap((item) => (item.categoryId === null ? [] : [item.categoryId])))
   const visibleCategories = data
-    ? itemVisibilityMode === 'everything' && !isSearchActive
+    ? activeTab === 'all' && !isSearchActive
       ? data.categories
       : data.categories.filter((category) => visibleCategoryIds.has(category.id))
     : []
@@ -241,13 +242,13 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   }, [data])
 
   useEffect(() => {
-    if (!identity && itemVisibilityMode === 'mine') {
-      setItemVisibilityMode('everything')
+    if (!identity && activeTab === 'mine') {
+      setActiveTab('all')
     }
-  }, [identity, itemVisibilityMode])
+  }, [activeTab, identity])
 
   useEffect(() => {
-    if (!isSmallScreen) {
+    if (!isSmallScreen || activeTab === 'summary') {
       return
     }
 
@@ -264,7 +265,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
     }
 
     setActiveMobileGroupKey(groupedItemSections[0]?.key ?? null)
-  }, [activeMobileGroupKey, groupedItemSections, isSmallScreen])
+  }, [activeMobileGroupKey, activeTab, groupedItemSections, isSmallScreen])
 
   const hasTransientOverlay = Boolean(
     claimDialogState ||
@@ -682,7 +683,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   const coverageSummary = getEventCoverageSummary(data.items)
   const showItemVisibilityTabs = data.items.length > 0
   const mobileItemVisibilityBarOffset = showItemVisibilityTabs && isSmallScreen ? 'calc(112px + env(safe-area-inset-bottom, 0px))' : null
-  const showMobileCategoryNav = isSmallScreen && groupedItemSections.length > 1 && visibleItems.length > 0
+  const showMobileCategoryNav = activeTab !== 'summary' && isSmallScreen && groupedItemSections.length > 1 && visibleItems.length > 0
   const visibleGroupKey = isSmallScreen && !isSearchActive ? (activeMobileGroupKey ?? groupedItemSections[0]?.key) : undefined
   const shareUrl = `${window.location.origin}/e/${shareToken}`
   const event = data.event
@@ -758,8 +759,8 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
 
   const itemVisibilityTabs = (
     <Tabs
-      aria-label="Item visibility"
-      onChange={(_event, nextValue: ItemVisibilityMode) => setItemVisibilityMode(nextValue)}
+      aria-label="Event view"
+      onChange={(_event, nextValue: EventPageTab) => setActiveTab(nextValue)}
       sx={{
         minHeight: 0,
         ...(isSmallScreen
@@ -804,11 +805,12 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
               },
             }),
       }}
-      value={itemVisibilityMode}
+      value={activeTab}
       variant="fullWidth"
     >
-      <Tab label="Everything" value="everything" />
-      <Tab disabled={!identity} label="Me" value="mine" />
+      <Tab label="All Items" value="all" />
+      <Tab disabled={!identity} label="My Items" value="mine" />
+      <Tab label="Summary" value="summary" />
     </Tabs>
   )
 
@@ -1000,7 +1002,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
             {itemVisibilityTabs}
             {!identity ? (
               <Typography color="text.secondary" variant="body2">
-                Identify yourself to unlock Me.
+                Identify yourself to unlock My Items.
               </Typography>
             ) : null}
           </Stack>
@@ -1047,11 +1049,21 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
               </Stack>
             </CardContent>
           </Card>
+        ) : activeTab === 'summary' ? (
+          <EventSummaryTable
+            emptyMessage={
+              isSearchActive
+                ? 'No summary rows match that search.'
+                : 'No required items are available to summarise yet.'
+            }
+            items={visibleItems}
+            participantsById={participantNamesById}
+          />
         ) : visibleItems.length === 0 ? (
           <Card>
             <CardContent>
               <Typography color="text.secondary">
-                {itemVisibilityMode === 'mine'
+                {activeTab === 'mine'
                   ? isSearchActive
                     ? 'No claimed items match that search.'
                     : "You haven't claimed anything yet."
@@ -1106,7 +1118,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
             <Stack spacing={0.75}>
               {!identity ? (
                 <Typography align="center" color="text.secondary" sx={{ lineHeight: 1.2, px: 1 }} variant="caption">
-                  Identify yourself to unlock Me.
+                  Identify yourself to unlock My Items.
                 </Typography>
               ) : null}
               {itemVisibilityTabs}
