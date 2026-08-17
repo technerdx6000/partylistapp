@@ -686,6 +686,9 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   const visibleGroupKey = isSmallScreen && !isSearchActive ? (activeMobileGroupKey ?? groupedItemSections[0]?.key) : undefined
   const shareUrl = `${window.location.origin}/e/${shareToken}`
   const event = data.event
+  const shareActionLabel = isSmallScreen ? 'Share' : 'Share event'
+  const copyActionLabel = isSmallScreen ? 'Copy link' : 'Copy share link'
+  const contributionActionLabel = isSmallScreen ? 'Add yours' : 'Add your contribution'
   const selectedDetailItem = itemDetailState
     ? data.items.find((candidateItem) => candidateItem.id === itemDetailState.itemId) ?? null
     : null
@@ -847,16 +850,92 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
                   </Button>
                 ) : null}
               </Stack>
-              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-                <Button onClick={() => void handleShare(shareUrl)} startIcon={<ShareRoundedIcon />} variant="contained">
-                  Share event
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  flexWrap: isSmallScreen ? 'nowrap' : 'wrap',
+                  gap: 1,
+                }}
+              >
+                <Button
+                  aria-label="Share event"
+                  onClick={() => void handleShare(shareUrl)}
+                  size={isSmallScreen ? 'small' : 'medium'}
+                  startIcon={<ShareRoundedIcon />}
+                  sx={
+                    isSmallScreen
+                      ? {
+                          '& .MuiButton-startIcon': {
+                            marginLeft: 0,
+                            marginRight: 0.5,
+                          },
+                          borderRadius: 2,
+                          flex: '1 1 0',
+                          fontSize: '0.875rem',
+                          minHeight: 38,
+                          minWidth: 0,
+                          px: 1.25,
+                          whiteSpace: 'nowrap',
+                        }
+                      : undefined
+                  }
+                  variant={isSmallScreen ? 'outlined' : 'contained'}
+                >
+                  {shareActionLabel}
                 </Button>
-                <Button onClick={() => void handleCopy(shareUrl, 'Share link copied.')} startIcon={<ContentCopyRoundedIcon />} variant="outlined">
-                  Copy share link
+                <Button
+                  aria-label="Copy share link"
+                  onClick={() => void handleCopy(shareUrl, 'Share link copied.')}
+                  size={isSmallScreen ? 'small' : 'medium'}
+                  startIcon={<ContentCopyRoundedIcon />}
+                  sx={
+                    isSmallScreen
+                      ? {
+                          '& .MuiButton-startIcon': {
+                            marginLeft: 0,
+                            marginRight: 0.5,
+                          },
+                          borderRadius: 2,
+                          flex: '1 1 0',
+                          fontSize: '0.875rem',
+                          minHeight: 38,
+                          minWidth: 0,
+                          px: 1.25,
+                          whiteSpace: 'nowrap',
+                        }
+                      : undefined
+                  }
+                  variant="outlined"
+                >
+                  {copyActionLabel}
                 </Button>
                 {!manageMode ? (
-                  <Button onClick={() => openContributionForm(null)} startIcon={<PlaylistAddRoundedIcon />} variant="outlined">
-                    Add your contribution
+                  <Button
+                    aria-label="Add your contribution"
+                    onClick={() => openContributionForm(null)}
+                    size={isSmallScreen ? 'small' : 'medium'}
+                    startIcon={<PlaylistAddRoundedIcon />}
+                    sx={
+                      isSmallScreen
+                        ? {
+                            '& .MuiButton-startIcon': {
+                              marginLeft: 0,
+                              marginRight: 0.5,
+                            },
+                            borderRadius: 2,
+                            flex: '1 1 0',
+                            fontSize: '0.875rem',
+                            minHeight: 38,
+                            minWidth: 0,
+                            px: 1.25,
+                            whiteSpace: 'nowrap',
+                          }
+                        : undefined
+                    }
+                    variant="outlined"
+                  >
+                    {contributionActionLabel}
                   </Button>
                 ) : null}
               </Stack>
