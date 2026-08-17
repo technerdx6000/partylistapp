@@ -30,6 +30,7 @@ type ItemFormMode = 'guest-create' | 'manage-create' | 'manage-edit' | 'guest-ed
 
 type ItemFormProps = {
   categories: readonly EventCategory[]
+  guestParticipantId: number | null
   identity: EventIdentity | null
   initialCategoryId: number | null
   isOpen: boolean
@@ -46,6 +47,7 @@ type ItemFormErrors = Partial<Record<ItemFormFieldName, string>>
 
 export function ItemForm({
   categories,
+  guestParticipantId,
   identity,
   initialCategoryId,
   isOpen,
@@ -93,9 +95,16 @@ export function ItemForm({
 
     try {
       if (mode === 'guest-create' || mode === 'manage-create') {
+        const createdBy = mode === 'guest-create' ? (guestParticipantId ?? identity?.participantId ?? null) : null
+
+        if (mode === 'guest-create' && createdBy === null) {
+          setFormError('Choose who you are before adding a contribution.')
+          return
+        }
+
         const parsedPayload = CreateItemRequestSchema.safeParse({
           categoryId,
-          createdBy: mode === 'guest-create' ? identity?.participantId ?? null : null,
+          createdBy,
           description: description.trim() ? description.trim() : null,
           name,
           quantityRequired: mode === 'guest-create' ? null : quantityRequired,

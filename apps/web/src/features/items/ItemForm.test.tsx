@@ -16,6 +16,7 @@ describe('ItemForm', () => {
     renderWithProviders(
       <ItemForm
         categories={categories}
+        guestParticipantId={2}
         identity={{ displayName: 'Jordan', participantId: 2 }}
         initialCategoryId={1}
         isOpen
@@ -48,6 +49,7 @@ describe('ItemForm', () => {
     renderWithProviders(
       <ItemForm
         categories={categories}
+        guestParticipantId={null}
         identity={null}
         initialCategoryId={null}
         isOpen
@@ -80,6 +82,7 @@ describe('ItemForm', () => {
     renderWithProviders(
       <ItemForm
         categories={categories}
+        guestParticipantId={null}
         identity={null}
         initialCategoryId={1}
         isOpen
@@ -125,6 +128,7 @@ describe('ItemForm', () => {
     renderWithProviders(
       <ItemForm
         categories={categories}
+        guestParticipantId={null}
         identity={{ displayName: 'Jordan', participantId: 2 }}
         initialCategoryId={2}
         isOpen
@@ -167,6 +171,7 @@ describe('ItemForm', () => {
     renderWithProviders(
       <ItemForm
         categories={categories}
+        guestParticipantId={null}
         identity={null}
         initialCategoryId={null}
         isOpen
@@ -183,6 +188,33 @@ describe('ItemForm', () => {
 
     await waitFor(() => {
       expect(screen.getByText('String must contain at most 120 character(s)')).toBeInTheDocument()
+    })
+    expect(onCreate).not.toHaveBeenCalled()
+  })
+
+  it('blocks guest contribution creation when no participant id is available', async () => {
+    const onCreate = vi.fn().mockResolvedValue(undefined)
+
+    renderWithProviders(
+      <ItemForm
+        categories={categories}
+        guestParticipantId={null}
+        identity={null}
+        initialCategoryId={1}
+        isOpen
+        item={null}
+        mode="guest-create"
+        onClose={() => undefined}
+        onCreate={onCreate}
+        onUpdate={vi.fn()}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText('Item name'), { target: { value: 'Ice bag' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Choose who you are before adding a contribution.')).toBeInTheDocument()
     })
     expect(onCreate).not.toHaveBeenCalled()
   })

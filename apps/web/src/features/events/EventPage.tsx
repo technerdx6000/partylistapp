@@ -69,6 +69,7 @@ type ClaimDialogState = {
 
 type ItemFormState = {
   categoryId: number | null
+  createdByParticipantId?: number | null
   item: EventItemWithAssignments | null
   mode: 'guest-create' | 'guest-edit' | 'manage-create' | 'manage-edit'
 } | null
@@ -421,13 +422,18 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
 
   function openContributionForm(categoryId: number | null): void {
     if (!manageMode && !identity) {
-      runWithIdentity(() =>
-        setItemFormState({ categoryId, item: null, mode: 'guest-create' })
+      runWithIdentity((eventIdentity) =>
+        setItemFormState({ categoryId, createdByParticipantId: eventIdentity.participantId, item: null, mode: 'guest-create' })
       )
       return
     }
 
-    setItemFormState({ categoryId, item: null, mode: manageMode ? 'manage-create' : 'guest-create' })
+    setItemFormState({
+      categoryId,
+      createdByParticipantId: manageMode ? null : (identity?.participantId ?? null),
+      item: null,
+      mode: manageMode ? 'manage-create' : 'guest-create',
+    })
   }
 
   async function handleShare(shareUrl: string): Promise<void> {
@@ -1174,6 +1180,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
 
       <ItemForm
         categories={data.categories}
+        guestParticipantId={itemFormState?.createdByParticipantId ?? null}
         identity={identity}
         initialCategoryId={itemFormState?.categoryId ?? null}
         isOpen={Boolean(itemFormState)}
