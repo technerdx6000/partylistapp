@@ -375,6 +375,19 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
     setIdentifyDialogOpen(true)
   }
 
+  function bindIdentityToOpenContributionForm(eventIdentity: EventIdentity): void {
+    setItemFormState((currentState) => {
+      if (currentState?.mode !== 'guest-create') {
+        return currentState
+      }
+
+      return {
+        ...currentState,
+        createdByParticipantId: eventIdentity.participantId,
+      }
+    })
+  }
+
   function handleParticipantSelection(participantId: number, displayName: string): void {
     const nextIdentity = { participantId, displayName }
 
@@ -539,6 +552,11 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   }
 
   async function handleCreateItem(input: Parameters<typeof apiClient.createItem>[0]): Promise<void> {
+    if (!manageMode && !input.createdBy) {
+      runWithIdentity(bindIdentityToOpenContributionForm)
+      return
+    }
+
     const createdItem = await apiClient.createItem(input)
 
     if (!manageMode && input.createdBy) {
@@ -1187,7 +1205,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
         mode={itemFormState?.mode ?? 'guest-create'}
         onClose={() => setItemFormState(null)}
         onCreate={handleCreateItem}
-        onRequireIdentity={() => runWithIdentity(() => undefined)}
+        onRequireIdentity={() => runWithIdentity(bindIdentityToOpenContributionForm)}
         onUpdate={handleUpdateItem}
       />
 

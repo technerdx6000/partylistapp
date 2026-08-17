@@ -11,16 +11,16 @@ Default image names:
 
 Recommended tags:
 
-- release tag: `1.0.18`
-- immutable build tag: `git-563b86c`
+- release tag: `1.0.20`
+- immutable build tag: `git-ef2b910-dirty-20260817a`
 - moving tag: `latest`
 
 Build and publish from the repo root:
 
 ```bash
 DOCKERHUB_NAMESPACE=technerdx6000 \
-IMAGE_TAG=1.0.18 \
-EXTRA_TAG=git-563b86c \
+IMAGE_TAG=1.0.20 \
+EXTRA_TAG=git-ef2b910-dirty-20260817a \
 bash scripts/publish-dockerhub.sh
 ```
 
@@ -106,19 +106,21 @@ Important for repeated TrueNAS deploy attempts:
 - Starting with image tag `1.0.16`, the phone-sized share, copy, and add-contribution controls are condensed into a smaller inline action row so they no longer dominate the top of the event page on mobile.
 - Starting with image tag `1.0.17`, event pages add a third `Summary` tab that renders a themed assignment table for requirement items, including assignee, quantity, and outstanding quantity rows so event status can be scanned quickly.
 - Starting with image tag `1.0.18`, the Summary table uses shorter mobile-friendly headings and flexible, non-equal column widths so headers do not collide and text-heavy item names can wrap cleanly without forcing numeric columns wide.
+- Starting with image tag `1.0.19`, guest contribution submits that reach the form without an active participant now reopen the existing identity prompt instead of ending in a local dead-end validation error, so the user can select or create themselves and continue.
+- Starting with image tag `1.0.20`, the event-page create handler also blocks any guest contribution request that still reaches the page without `createdBy`, reopens the identity prompt, and binds the chosen participant back onto the open draft before the API can be called.
 
 Values to edit inline in the TrueNAS compose:
 
 ```bash
-technerdx6000/listcollab-api:1.0.18
-technerdx6000/listcollab-web:1.0.18
+technerdx6000/listcollab-api:1.0.20
+technerdx6000/listcollab-web:1.0.20
 DB_PASSWORD=replace_with_generated_app_password
 DB_ROOT_PASSWORD=replace_with_generated_root_password
 CORS_ORIGIN=https://listcollab.example.com
 WEB_PORT=8080
 ```
 
-The current `git-563b86c` image tag was published from a clean validated commit state.
+The current `git-ef2b910-dirty-20260817a` image tag was published from this validated uncommitted workspace state.
 
 If you want immutable deploys on TrueNAS, replace the image tags inline with the current git-tagged images you published from this repo instead of the release tag.
 
