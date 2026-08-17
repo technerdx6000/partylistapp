@@ -38,6 +38,7 @@ type ItemFormProps = {
   mode: ItemFormMode
   onClose: () => void
   onCreate: (payload: CreateItemRequest) => Promise<void>
+  onRequireIdentity?: () => void
   onUpdate: (itemId: number, payload: UpdateItemRequest) => Promise<void>
 }
 
@@ -55,6 +56,7 @@ export function ItemForm({
   mode,
   onClose,
   onCreate,
+  onRequireIdentity,
   onUpdate,
 }: ItemFormProps): React.JSX.Element {
   const theme = useTheme()
@@ -98,7 +100,12 @@ export function ItemForm({
         const createdBy = mode === 'guest-create' ? (guestParticipantId ?? identity?.participantId ?? null) : null
 
         if (mode === 'guest-create' && createdBy === null) {
-          setFormError('Choose who you are before adding a contribution.')
+          onRequireIdentity?.()
+
+          if (!onRequireIdentity) {
+            setFormError('Choose who you are before adding a contribution.')
+          }
+
           return
         }
 

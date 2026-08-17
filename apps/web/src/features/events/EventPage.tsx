@@ -286,6 +286,12 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
       return
     }
 
+    if (identifyDialogOpen) {
+      setIdentifyDialogOpen(false)
+      setPendingIdentityAction(null)
+      return
+    }
+
     if (itemFormState) {
       setItemFormState(null)
       return
@@ -300,13 +306,6 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
       setItemDetailState(null)
       return
     }
-
-    if (identifyDialogOpen) {
-      setIdentifyDialogOpen(false)
-      setPendingIdentityAction(null)
-      return
-    }
-
     if (categoryFormState) {
       setCategoryFormState(null)
       return
@@ -1188,6 +1187,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
         mode={itemFormState?.mode ?? 'guest-create'}
         onClose={() => setItemFormState(null)}
         onCreate={handleCreateItem}
+        onRequireIdentity={() => runWithIdentity(() => undefined)}
         onUpdate={handleUpdateItem}
       />
 

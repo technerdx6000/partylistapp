@@ -218,4 +218,34 @@ describe('ItemForm', () => {
     })
     expect(onCreate).not.toHaveBeenCalled()
   })
+
+  it('requests identity selection instead of showing a local error when a guest contribution has no participant id', async () => {
+    const onCreate = vi.fn().mockResolvedValue(undefined)
+    const onRequireIdentity = vi.fn()
+
+    renderWithProviders(
+      <ItemForm
+        categories={categories}
+        guestParticipantId={null}
+        identity={null}
+        initialCategoryId={1}
+        isOpen
+        item={null}
+        mode="guest-create"
+        onClose={() => undefined}
+        onCreate={onCreate}
+        onRequireIdentity={onRequireIdentity}
+        onUpdate={vi.fn()}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText('Item name'), { target: { value: 'Ice bag' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => {
+      expect(onRequireIdentity).toHaveBeenCalledTimes(1)
+    })
+    expect(screen.queryByText('Choose who you are before adding a contribution.')).not.toBeInTheDocument()
+    expect(onCreate).not.toHaveBeenCalled()
+  })
 })
