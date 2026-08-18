@@ -5,6 +5,20 @@ import { useAdminTokenFromFragment, useEventToken, useStoredAdminToken } from '.
 import { renderWithProviders } from '../../test/renderWithProviders'
 import { EventTokenProvider } from '../app/EventTokenContext'
 
+function ImmediateTokenProbe(): React.JSX.Element {
+  const adminToken = useStoredAdminToken('abcdefghij')
+  const shareToken = useEventToken('abcdefghij', false)
+  const preferredToken = useEventToken('abcdefghij', true)
+
+  return (
+    <div>
+      <span data-testid="admin-token">{adminToken ?? 'none'}</span>
+      <span data-testid="share-token">{shareToken}</span>
+      <span data-testid="preferred-token">{preferredToken}</span>
+    </div>
+  )
+}
+
 function TokenProbe(): React.JSX.Element {
   useAdminTokenFromFragment('abcdefghij')
   const adminToken = useStoredAdminToken('abcdefghij')
@@ -25,6 +39,22 @@ describe('useEventToken hooks', () => {
     window.localStorage.clear()
     window.sessionStorage.clear()
     window.history.replaceState(null, document.title, '/')
+  })
+
+  it('regression: prefers the organiser token from the URL fragment on the first render', () => {
+    window.history.replaceState(null, document.title, '/e/abcdefghij/manage#k=' + 'a'.repeat(64))
+
+    renderWithProviders(
+      <EventTokenProvider>
+        <ImmediateTokenProbe />
+      </EventTokenProvider>
+    )
+
+    expect(screen.getByTestId('admin-token')).toHaveTextContent('a'.repeat(64))
+    expect(screen.getByTestId('share-token')).toHaveTextContent('abcdefghij')
+    expect(screen.getByTestId('preferred-token')).toHaveTextContent('a'.repeat(64))
+    expect(window.location.hash).toBe('#k=' + 'a'.repeat(64))
+    expect(window.sessionStorage.length).toBe(0)
   })
 
   it('stores the admin token for the session, strips the fragment, and never writes it to localStorage', () => {
