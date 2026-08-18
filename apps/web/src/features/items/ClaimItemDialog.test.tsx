@@ -85,6 +85,54 @@ describe('ClaimItemDialog', () => {
     })
   })
 
+  it('regression: allows blank quantity edits while blocking submit until a valid value is re-entered', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    const user = userEvent.setup()
+
+    renderWithProviders(
+      <ClaimItemDialog
+        identity={{ displayName: 'Jordan', participantId: 2 }}
+        isManageMode={false}
+        isOpen
+        item={{
+          id: 4,
+          eventId: 1,
+          categoryId: 1,
+          name: 'Bread Rolls',
+          description: null,
+          quantityRequired: 4,
+          status: 'open',
+          createdBy: 1,
+          createdAt: '2026-08-15T00:00:00.000Z',
+          updatedAt: '2026-08-15T00:00:00.000Z',
+          assignments: [],
+          coverage: { claimed: 0, required: 4, remaining: 4, status: 'open' },
+        }}
+        onClose={() => undefined}
+        onDeleteAssignment={vi.fn()}
+        onSave={onSave}
+        participants={[{ id: 2, eventId: 1, name: 'Jordan', createdAt: '2026-08-15T00:00:00.000Z' }]}
+      />
+    )
+
+    const quantityInput = screen.getByLabelText('Quantity')
+    const saveButton = screen.getByRole('button', { name: 'Claim item' })
+
+    await user.clear(quantityInput)
+
+    expect(quantityInput).toHaveDisplayValue('')
+    expect(quantityInput).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByText('Quantity is required')).toBeInTheDocument()
+    expect(saveButton).toBeDisabled()
+
+    await user.type(quantityInput, '4')
+    await user.click(saveButton)
+
+    await waitFor(() => {
+      expect(onSave).toHaveBeenCalledWith({ note: null, participantId: 2, quantity: 4 })
+    })
+  })
+
   it('opens a confirmation dialog before removing an existing claim', async () => {
     const onDeleteAssignment = vi.fn().mockResolvedValue(undefined)
 

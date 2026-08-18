@@ -46,6 +46,21 @@ type ItemFormFieldName = 'categoryId' | 'description' | 'name' | 'quantityRequir
 
 type ItemFormErrors = Partial<Record<ItemFormFieldName, string>>
 
+function getQuantityValidationMessage(quantityInput: string): string | null {
+  if (quantityInput === '') {
+    return 'Quantity is required'
+  }
+
+  const quantity = Number(quantityInput)
+
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 999) {
+    return 'Enter a whole number between 1 and 999'
+  }
+
+  return null
+}
+
+/** Collects item create and edit payloads for guest and organiser item flows. */
 export function ItemForm({
   categories,
   guestParticipantId,
@@ -67,7 +82,9 @@ export function ItemForm({
   const [formError, setFormError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [name, setName] = useState(item?.name ?? '')
-  const [quantityRequired, setQuantityRequired] = useState(item?.quantityRequired ?? 1)
+  const [quantityRequiredInput, setQuantityRequiredInput] = useState(String(item?.quantityRequired ?? 1))
+  const isQuantityFieldVisible = mode === 'manage-create' || (item?.quantityRequired ?? null) !== null
+  const quantityValidationMessage = isQuantityFieldVisible ? getQuantityValidationMessage(quantityRequiredInput) : null
 
   useEffect(() => {
     setCategoryId(item?.categoryId ?? initialCategoryId)
@@ -75,7 +92,7 @@ export function ItemForm({
     setFieldErrors({})
     setFormError(null)
     setName(item?.name ?? '')
-    setQuantityRequired(item?.quantityRequired ?? 1)
+    setQuantityRequiredInput(String(item?.quantityRequired ?? 1))
   }, [initialCategoryId, item])
 
   function setValidationErrors(issues: ReadonlyArray<{ message: string; path: readonly (string | number)[] }>): void {
@@ -96,6 +113,15 @@ export function ItemForm({
     setIsSaving(true)
 
     try {
+      const parsedQuantityRequired = isQuantityFieldVisible ? Number(quantityRequiredInput) : null
+
+      if (
+        quantityValidationMessage ||
+        (isQuantityFieldVisible && !Number.isInteger(parsedQuantityRequired))
+      ) {
+        return
+      }
+
       if (mode === 'guest-create' || mode === 'manage-create') {
         const createdBy = mode === 'guest-create' ? (guestParticipantId ?? identity?.participantId ?? null) : null
 
@@ -114,7 +140,7 @@ export function ItemForm({
           createdBy,
           description: description.trim() ? description.trim() : null,
           name,
-          quantityRequired: mode === 'guest-create' ? null : quantityRequired,
+          quantityRequired: mode === 'guest-create' ? null : parsedQuantityRequired,
         })
 
         if (!parsedPayload.success) {
@@ -128,7 +154,7 @@ export function ItemForm({
           categoryId,
           description: description.trim() ? description.trim() : null,
           name,
-          quantityRequired: item.quantityRequired !== null ? quantityRequired : undefined,
+          quantityRequired: item.quantityRequired !== null ? parsedQuantityRequired : undefined,
         })
 
         if (!parsedPayload.success) {
@@ -186,22 +212,22 @@ export function ItemForm({
               ))}
             </Select>
           </FormControl>
-          {mode === 'manage-create' || (item?.quantityRequired ?? null) !== null ? (
+          {isQuantityFieldVisible ? (
             <TextField
-              error={Boolean(fieldErrors.quantityRequired)}
-              helperText={fieldErrors.quantityRequired}
+              error={Boolean(quantityValidationMessage ?? fieldErrors.quantityRequired)}
+              helperText={quantityValidationMessage ?? fieldErrors.quantityRequired}
               inputProps={{ min: 1, max: 999 }}
               label="Quantity needed"
-              onChange={(event) => setQuantityRequired(Math.max(Number(event.target.value) || 1, 1))}
+              onChange={(event) => setQuantityRequiredInput(event.target.value)}
               type="number"
-              value={quantityRequired ?? 1}
+              value={quantityRequiredInput}
             />
           ) : null}
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button disabled={isSaving || !name.trim()} onClick={() => void handleSubmit()} variant="contained">
+        <Button disabled={isSaving || !name.trim() || Boolean(quantityValidationMessage)} onClick={() => void handleSubmit()} variant="contained">
           {isSaving ? 'Saving…' : 'Save'}
         </Button>
       </DialogActions>

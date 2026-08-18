@@ -188,11 +188,10 @@ describe('apiClient', () => {
 
     const client = createApiClient('abcdefghij')
 
-    await expect(client.createEvent({ name: 'Camp Weekend' })).resolves.toEqual(
-      expect.objectContaining({
-        event: expect.objectContaining({ shareToken: 'abcdefghij', adminToken: 'b'.repeat(64) }),
-      })
-    )
+    const createdEvent = await client.createEvent({ name: 'Camp Weekend' })
+
+    expect(createdEvent.event.shareToken).toBe('abcdefghij')
+    expect(createdEvent.event.adminToken).toBe('b'.repeat(64))
     await expect(client.createParticipant({ name: 'Taylor' })).resolves.toEqual(participantResponse)
     await expect(client.updateParticipant(1, { name: 'Taylor' })).resolves.toEqual(participantResponse)
     await expect(client.deleteParticipant(1)).resolves.toBeUndefined()

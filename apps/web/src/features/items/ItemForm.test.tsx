@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { ItemForm } from './ItemForm'
@@ -76,6 +77,51 @@ describe('ItemForm', () => {
     })
   })
 
+  it('regression: allows a blank quantity draft for organiser create while blocking save until it is refilled', async () => {
+    const onCreate = vi.fn().mockResolvedValue(undefined)
+    const user = userEvent.setup()
+
+    renderWithProviders(
+      <ItemForm
+        categories={categories}
+        guestParticipantId={null}
+        identity={null}
+        initialCategoryId={null}
+        isOpen
+        item={null}
+        mode="manage-create"
+        onClose={() => undefined}
+        onCreate={onCreate}
+        onUpdate={vi.fn()}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText('Item name'), { target: { value: 'Napkins' } })
+
+    const quantityInput = screen.getByLabelText('Quantity needed')
+    const saveButton = screen.getByRole('button', { name: 'Save' })
+
+    await user.clear(quantityInput)
+
+    expect(quantityInput).toHaveDisplayValue('')
+    expect(quantityInput).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByText('Quantity is required')).toBeInTheDocument()
+    expect(saveButton).toBeDisabled()
+
+    await user.type(quantityInput, '6')
+    fireEvent.click(saveButton)
+
+    await waitFor(() => {
+      expect(onCreate).toHaveBeenCalledWith({
+        categoryId: null,
+        createdBy: null,
+        description: null,
+        name: 'Napkins',
+        quantityRequired: 6,
+      })
+    })
+  })
+
   it('updates organiser-managed fields when editing a requirement', async () => {
     const onUpdate = vi.fn().mockResolvedValue(undefined)
 
@@ -117,6 +163,61 @@ describe('ItemForm', () => {
         categoryId: 1,
         description: 'Wholemeal',
         name: 'Bread rolls',
+        quantityRequired: 5,
+      })
+    })
+  })
+
+  it('regression: keeps requirement quantity blank during edits and blocks save until it is refilled', async () => {
+    const onUpdate = vi.fn().mockResolvedValue(undefined)
+    const user = userEvent.setup()
+
+    renderWithProviders(
+      <ItemForm
+        categories={categories}
+        guestParticipantId={null}
+        identity={null}
+        initialCategoryId={1}
+        isOpen
+        item={{
+          id: 8,
+          eventId: 1,
+          categoryId: 1,
+          name: 'Bread Rolls',
+          description: 'Fresh',
+          quantityRequired: 4,
+          status: 'open',
+          createdBy: null,
+          createdAt: '2026-08-15T00:00:00.000Z',
+          updatedAt: '2026-08-15T00:00:00.000Z',
+          assignments: [],
+          coverage: { claimed: 0, required: 4, remaining: 4, status: 'open' },
+        }}
+        mode="manage-edit"
+        onClose={() => undefined}
+        onCreate={vi.fn()}
+        onUpdate={onUpdate}
+      />
+    )
+
+    const quantityInput = screen.getByLabelText('Quantity needed')
+    const saveButton = screen.getByRole('button', { name: 'Save' })
+
+    await user.clear(quantityInput)
+
+    expect(quantityInput).toHaveDisplayValue('')
+    expect(quantityInput).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByText('Quantity is required')).toBeInTheDocument()
+    expect(saveButton).toBeDisabled()
+
+    await user.type(quantityInput, '5')
+    fireEvent.click(saveButton)
+
+    await waitFor(() => {
+      expect(onUpdate).toHaveBeenCalledWith(8, {
+        categoryId: 1,
+        description: 'Fresh',
+        name: 'Bread Rolls',
         quantityRequired: 5,
       })
     })

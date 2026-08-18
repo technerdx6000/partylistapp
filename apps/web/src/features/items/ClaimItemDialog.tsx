@@ -53,6 +53,21 @@ function getDefaultQuantity(item: EventItemWithAssignments | null, assignmentId?
   return Math.max(item.coverage.remaining, 1)
 }
 
+function getQuantityValidationMessage(quantityInput: string): string | null {
+  if (quantityInput === '') {
+    return 'Quantity is required'
+  }
+
+  const quantity = Number(quantityInput)
+
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 999) {
+    return 'Enter a whole number between 1 and 999'
+  }
+
+  return null
+}
+
+/** Collects a participant claim payload for the selected item. */
 export function ClaimItemDialog({
   assignment,
   identity,
@@ -72,17 +87,24 @@ export function ClaimItemDialog({
   const [isSaving, setIsSaving] = useState(false)
   const [note, setNote] = useState(existingAssignment?.note ?? '')
   const [participantId, setParticipantId] = useState<number | ''>(identity?.participantId ?? '')
-  const [quantity, setQuantity] = useState(getDefaultQuantity(item, existingAssignment?.id))
+  const [quantityInput, setQuantityInput] = useState(String(getDefaultQuantity(item, existingAssignment?.id)))
+  const quantityValidationMessage = getQuantityValidationMessage(quantityInput)
 
   useEffect(() => {
     setErrorMessage(null)
     setNote(existingAssignment?.note ?? '')
     setParticipantId(existingAssignment?.participantId ?? identity?.participantId ?? '')
-    setQuantity(getDefaultQuantity(item, existingAssignment?.id))
+    setQuantityInput(String(getDefaultQuantity(item, existingAssignment?.id)))
   }, [existingAssignment?.id, existingAssignment?.note, existingAssignment?.participantId, identity?.participantId, item])
 
   async function handleSave(): Promise<void> {
     if (!participantId) {
+      return
+    }
+
+    const quantity = Number(quantityInput)
+
+    if (quantityValidationMessage || !Number.isInteger(quantity)) {
       return
     }
 
@@ -149,11 +171,13 @@ export function ClaimItemDialog({
             </FormControl>
 
             <TextField
+              error={Boolean(quantityValidationMessage)}
+              helperText={quantityValidationMessage}
               inputProps={{ min: 1, max: item?.coverage.remaining ?? undefined }}
               label="Quantity"
-              onChange={(event) => setQuantity(Math.max(Number(event.target.value) || 1, 1))}
+              onChange={(event) => setQuantityInput(event.target.value)}
               type="number"
-              value={quantity}
+              value={quantityInput}
             />
 
             <TextField
@@ -172,7 +196,7 @@ export function ClaimItemDialog({
             </Button>
           ) : null}
           <Button onClick={onClose}>Cancel</Button>
-          <Button disabled={isSaving || !participantId} onClick={() => void handleSave()} variant="contained">
+          <Button disabled={isSaving || !participantId || Boolean(quantityValidationMessage)} onClick={() => void handleSave()} variant="contained">
             {isSaving ? 'Saving…' : existingAssignment ? 'Update claim' : 'Claim item'}
           </Button>
         </DialogActions>
