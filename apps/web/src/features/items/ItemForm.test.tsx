@@ -36,6 +36,7 @@ describe('ItemForm', () => {
     await waitFor(() => {
       expect(onCreate).toHaveBeenCalledWith({
         categoryId: 1,
+        claimQuantity: 1,
         createdBy: 2,
         description: 'Two big bags',
         name: 'Ice bag',
@@ -106,7 +107,10 @@ describe('ItemForm', () => {
     expect(quantityInput).toHaveDisplayValue('')
     expect(quantityInput).toHaveAttribute('aria-invalid', 'true')
     expect(screen.getByText('Quantity is required')).toBeInTheDocument()
-    expect(saveButton).toBeDisabled()
+
+    fireEvent.click(saveButton)
+
+    expect(onCreate).not.toHaveBeenCalled()
 
     await user.type(quantityInput, '6')
     fireEvent.click(saveButton)
@@ -208,7 +212,10 @@ describe('ItemForm', () => {
     expect(quantityInput).toHaveDisplayValue('')
     expect(quantityInput).toHaveAttribute('aria-invalid', 'true')
     expect(screen.getByText('Quantity is required')).toBeInTheDocument()
-    expect(saveButton).toBeDisabled()
+
+    fireEvent.click(saveButton)
+
+    expect(onUpdate).not.toHaveBeenCalled()
 
     await user.type(quantityInput, '5')
     fireEvent.click(saveButton)
@@ -219,6 +226,40 @@ describe('ItemForm', () => {
         description: 'Fresh',
         name: 'Bread Rolls',
         quantityRequired: 5,
+      })
+    })
+  })
+
+  it('shows a quantity field for guest contributions and passes the chosen quantity through the create payload', async () => {
+    const onCreate = vi.fn().mockResolvedValue(undefined)
+
+    renderWithProviders(
+      <ItemForm
+        categories={categories}
+        guestParticipantId={2}
+        identity={{ displayName: 'Jordan', participantId: 2 }}
+        initialCategoryId={1}
+        isOpen
+        item={null}
+        mode="guest-create"
+        onClose={() => undefined}
+        onCreate={onCreate}
+        onUpdate={vi.fn()}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText('Item name'), { target: { value: 'Ice bag' } })
+    fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '4' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => {
+      expect(onCreate).toHaveBeenCalledWith({
+        categoryId: 1,
+        claimQuantity: 4,
+        createdBy: 2,
+        description: null,
+        name: 'Ice bag',
+        quantityRequired: null,
       })
     })
   })

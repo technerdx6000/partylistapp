@@ -123,7 +123,10 @@ describe('ClaimItemDialog', () => {
     expect(quantityInput).toHaveDisplayValue('')
     expect(quantityInput).toHaveAttribute('aria-invalid', 'true')
     expect(screen.getByText('Quantity is required')).toBeInTheDocument()
-    expect(saveButton).toBeDisabled()
+
+    await user.click(saveButton)
+
+    expect(onSave).not.toHaveBeenCalled()
 
     await user.type(quantityInput, '4')
     await user.click(saveButton)

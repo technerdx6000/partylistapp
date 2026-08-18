@@ -196,7 +196,7 @@ export function ClaimItemDialog({
             </Button>
           ) : null}
           <Button onClick={onClose}>Cancel</Button>
-          <Button disabled={isSaving || !participantId || Boolean(quantityValidationMessage)} onClick={() => void handleSave()} variant="contained">
+          <Button disabled={isSaving || !participantId} onClick={() => void handleSave()} variant="contained">
             {isSaving ? 'Saving…' : existingAssignment ? 'Update claim' : 'Claim item'}
           </Button>
         </DialogActions>

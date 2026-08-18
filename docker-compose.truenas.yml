@@ -14,8 +14,8 @@
 # that db directory before redeploying a fresh install.
 
 x-editable-values:
-  api-image: &api-image technerdx6000/listcollab-api:1.0.21
-  web-image: &web-image technerdx6000/listcollab-web:1.0.21
+  api-image: &api-image technerdx6000/listcollab-api:1.0.22
+  web-image: &web-image technerdx6000/listcollab-web:1.0.22
   db-password: &db-password replace_with_generated_app_password
   db-root-password: &db-root-password replace_with_generated_root_password
   cors-origin: &cors-origin https://listcollab.example.com

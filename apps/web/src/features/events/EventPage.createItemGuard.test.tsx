@@ -1,4 +1,4 @@
-import type { AggregateEventResponse, CreateItemRequest } from '@listcollab/shared'
+import type { AggregateEventResponse } from '@listcollab/shared'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -9,6 +9,7 @@ import { useEvent } from '../../hooks/useEvent'
 import { useEventIdentity } from '../../hooks/useEventIdentity'
 import { useStoredAdminToken } from '../../hooks/useEventToken'
 import { useApiClient } from '../../services/apiClient'
+import type { ItemFormCreatePayload } from '../items/ItemForm'
 
 vi.mock('../../services/apiClient', async () => {
   const actual = await vi.importActual<typeof import('../../services/apiClient')>('../../services/apiClient')
@@ -47,7 +48,7 @@ vi.mock('../../hooks/useEvent', async () => {
 })
 
 vi.mock('../items/ItemForm', () => ({
-  ItemForm: ({ isOpen, onCreate }: { isOpen: boolean; onCreate: (payload: CreateItemRequest) => Promise<void> }) =>
+  ItemForm: ({ isOpen, onCreate }: { isOpen: boolean; onCreate: (payload: ItemFormCreatePayload) => Promise<void> }) =>
     isOpen ? (
       <div>
         <button onClick={() => void onCreate({ categoryId: null, createdBy: null, description: null, name: 'Ice bag', quantityRequired: null })} type="button">

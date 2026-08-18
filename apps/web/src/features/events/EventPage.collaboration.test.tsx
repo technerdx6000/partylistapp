@@ -326,6 +326,7 @@ describe('EventPage collaboration', () => {
 
     await screen.findByRole('heading', { name: 'Add your contribution' })
     fireEvent.change(screen.getByLabelText('Item name'), { target: { value: 'Ice bag' } })
+    fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '4' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => {
@@ -341,7 +342,7 @@ describe('EventPage collaboration', () => {
       })
     })
     await waitFor(() => {
-      expect(apiClient.claimItem).toHaveBeenCalledWith(9, { participantId: 5, quantity: 1 })
+      expect(apiClient.claimItem).toHaveBeenCalledWith(9, { participantId: 5, quantity: 4 })
     })
   }, 10000)
 

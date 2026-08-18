@@ -28,6 +28,10 @@ import type { EventIdentity } from '../../hooks/useEventIdentity'
 
 type ItemFormMode = 'guest-create' | 'manage-create' | 'manage-edit' | 'guest-edit'
 
+export type ItemFormCreatePayload = CreateItemRequest & {
+  claimQuantity?: number
+}
+
 type ItemFormProps = {
   categories: readonly EventCategory[]
   guestParticipantId: number | null
@@ -37,7 +41,7 @@ type ItemFormProps = {
   item: EventItemWithAssignments | null
   mode: ItemFormMode
   onClose: () => void
-  onCreate: (payload: CreateItemRequest) => Promise<void>
+  onCreate: (payload: ItemFormCreatePayload) => Promise<void>
   onRequireIdentity?: () => void
   onUpdate: (itemId: number, payload: UpdateItemRequest) => Promise<void>
 }
@@ -82,9 +86,9 @@ export function ItemForm({
   const [formError, setFormError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [name, setName] = useState(item?.name ?? '')
-  const [quantityRequiredInput, setQuantityRequiredInput] = useState(String(item?.quantityRequired ?? 1))
-  const isQuantityFieldVisible = mode === 'manage-create' || (item?.quantityRequired ?? null) !== null
-  const quantityValidationMessage = isQuantityFieldVisible ? getQuantityValidationMessage(quantityRequiredInput) : null
+  const [quantityInput, setQuantityInput] = useState(String(item?.quantityRequired ?? 1))
+  const isQuantityFieldVisible = mode === 'guest-create' || mode === 'manage-create' || (item?.quantityRequired ?? null) !== null
+  const quantityValidationMessage = isQuantityFieldVisible ? getQuantityValidationMessage(quantityInput) : null
 
   useEffect(() => {
     setCategoryId(item?.categoryId ?? initialCategoryId)
@@ -92,7 +96,7 @@ export function ItemForm({
     setFieldErrors({})
     setFormError(null)
     setName(item?.name ?? '')
-    setQuantityRequiredInput(String(item?.quantityRequired ?? 1))
+    setQuantityInput(String(item?.quantityRequired ?? 1))
   }, [initialCategoryId, item])
 
   function setValidationErrors(issues: ReadonlyArray<{ message: string; path: readonly (string | number)[] }>): void {
@@ -113,11 +117,11 @@ export function ItemForm({
     setIsSaving(true)
 
     try {
-      const parsedQuantityRequired = isQuantityFieldVisible ? Number(quantityRequiredInput) : null
+      const parsedQuantity = isQuantityFieldVisible ? Number(quantityInput) : null
 
       if (
         quantityValidationMessage ||
-        (isQuantityFieldVisible && !Number.isInteger(parsedQuantityRequired))
+        (isQuantityFieldVisible && !Number.isInteger(parsedQuantity))
       ) {
         return
       }
@@ -140,7 +144,7 @@ export function ItemForm({
           createdBy,
           description: description.trim() ? description.trim() : null,
           name,
-          quantityRequired: mode === 'guest-create' ? null : parsedQuantityRequired,
+          quantityRequired: mode === 'guest-create' ? null : parsedQuantity,
         })
 
         if (!parsedPayload.success) {
@@ -148,13 +152,13 @@ export function ItemForm({
           return
         }
 
-        await onCreate(parsedPayload.data)
+        await onCreate(mode === 'guest-create' ? { ...parsedPayload.data, claimQuantity: parsedQuantity ?? 1 } : parsedPayload.data)
       } else if (item) {
         const parsedPayload = UpdateItemRequestSchema.safeParse({
           categoryId,
           description: description.trim() ? description.trim() : null,
           name,
-          quantityRequired: item.quantityRequired !== null ? parsedQuantityRequired : undefined,
+          quantityRequired: item.quantityRequired !== null ? parsedQuantity : undefined,
         })
 
         if (!parsedPayload.success) {
@@ -217,17 +221,17 @@ export function ItemForm({
               error={Boolean(quantityValidationMessage ?? fieldErrors.quantityRequired)}
               helperText={quantityValidationMessage ?? fieldErrors.quantityRequired}
               inputProps={{ min: 1, max: 999 }}
-              label="Quantity needed"
-              onChange={(event) => setQuantityRequiredInput(event.target.value)}
+              label={mode === 'guest-create' ? 'Quantity' : 'Quantity needed'}
+              onChange={(event) => setQuantityInput(event.target.value)}
               type="number"
-              value={quantityRequiredInput}
+              value={quantityInput}
             />
           ) : null}
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button disabled={isSaving || !name.trim() || Boolean(quantityValidationMessage)} onClick={() => void handleSubmit()} variant="contained">
+        <Button disabled={isSaving || !name.trim()} onClick={() => void handleSubmit()} variant="contained">
           {isSaving ? 'Saving…' : 'Save'}
         </Button>
       </DialogActions>

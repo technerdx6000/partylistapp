@@ -53,7 +53,7 @@ import { CategoryForm } from '../categories/CategoryForm'
 import { ClaimItemDialog } from '../items/ClaimItemDialog'
 import { groupItemsByCategory } from '../items/groupItemsByCategory'
 import { ItemDetailSurface, type ItemDetailMode } from '../items/ItemDetailSurface'
-import { ItemForm } from '../items/ItemForm'
+import { ItemForm, type ItemFormCreatePayload } from '../items/ItemForm'
 import { ItemList } from '../items/ItemList'
 import { IdentifyDialog } from '../participants/IdentifyDialog'
 import { ParticipantManagerDialog } from '../participants/ParticipantManagerDialog'
@@ -551,16 +551,18 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
     }
   }
 
-  async function handleCreateItem(input: Parameters<typeof apiClient.createItem>[0]): Promise<void> {
-    if (!manageMode && !input.createdBy) {
+  async function handleCreateItem(input: ItemFormCreatePayload): Promise<void> {
+    const { claimQuantity, ...createInput } = input
+
+    if (!manageMode && !createInput.createdBy) {
       runWithIdentity(bindIdentityToOpenContributionForm)
       return
     }
 
-    const createdItem = await apiClient.createItem(input)
+    const createdItem = await apiClient.createItem(createInput)
 
-    if (!manageMode && input.createdBy) {
-      await apiClient.claimItem(createdItem.id, { participantId: input.createdBy, quantity: 1 })
+    if (!manageMode && createInput.createdBy) {
+      await apiClient.claimItem(createdItem.id, { participantId: createInput.createdBy, quantity: claimQuantity ?? 1 })
     }
 
     setItemFormState(null)
