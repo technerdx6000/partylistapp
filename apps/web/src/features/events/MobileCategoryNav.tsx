@@ -2,7 +2,6 @@ import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import FolderOpenRoundedIcon from '@mui/icons-material/FolderOpenRounded'
 import { Box, Stack, Tab, Tabs, Typography } from '@mui/material'
 
-import { getCategoryCoverageSummary } from './eventCoverage'
 import { renderCategoryIcon } from '../categories/categoryIcons'
 import type { GroupedItemsByCategory } from '../items/groupItemsByCategory'
 
@@ -12,32 +11,14 @@ type MobileCategoryNavProps = {
   onChange: (groupKey: string) => void
 }
 
-function getCoverageLabel(group: GroupedItemsByCategory): string {
-  const coverageSummary = getCategoryCoverageSummary(group.items)
+function getItemCountLabel(group: GroupedItemsByCategory): string {
+  const itemCount = group.items.length
 
-  if (coverageSummary.totalItems > 0) {
-    return `${coverageSummary.coveredItems} of ${coverageSummary.totalItems} covered`
-  }
-
-  if (coverageSummary.completedContributions > 0) {
-    return `${coverageSummary.completedContributions} extra${coverageSummary.completedContributions === 1 ? '' : 's'} ready`
-  }
-
-  return 'No requirements'
+  return `${itemCount} item${itemCount === 1 ? '' : 's'}`
 }
 
-function getCompactCoverageLabel(group: GroupedItemsByCategory): string {
-  const coverageSummary = getCategoryCoverageSummary(group.items)
-
-  if (coverageSummary.totalItems > 0) {
-    return `${coverageSummary.coveredItems}/${coverageSummary.totalItems}`
-  }
-
-  if (coverageSummary.completedContributions > 0) {
-    return `${coverageSummary.completedContributions} extra${coverageSummary.completedContributions === 1 ? '' : 's'}`
-  }
-
-  return 'None'
+function getCompactItemCountLabel(group: GroupedItemsByCategory): string {
+  return String(group.items.length)
 }
 
 /**
@@ -77,11 +58,11 @@ export function MobileCategoryNav({ activeGroupKey, groups, onChange }: MobileCa
       >
         {groups.map((group) => {
           const label = group.category?.name ?? 'Uncategorised'
-          const coverageLabel = getCoverageLabel(group)
+          const itemCountLabel = getItemCountLabel(group)
 
           return (
             <Tab
-              aria-label={`${label}, ${coverageLabel}`}
+              aria-label={`${label}, ${itemCountLabel}`}
               key={group.key}
               label={
                 <Stack spacing={0.5} sx={{ alignItems: 'flex-start', minWidth: 0 }}>
@@ -97,7 +78,7 @@ export function MobileCategoryNav({ activeGroupKey, groups, onChange }: MobileCa
                     <CheckCircleRoundedIcon fontSize="inherit" />
                     <Box component="span" sx={{ bgcolor: 'action.hover', borderRadius: 999, px: 0.75, py: 0.125 }}>
                       <Typography color="text.secondary" variant="caption">
-                        {getCompactCoverageLabel(group)}
+                        {getCompactItemCountLabel(group)}
                       </Typography>
                     </Box>
                   </Stack>

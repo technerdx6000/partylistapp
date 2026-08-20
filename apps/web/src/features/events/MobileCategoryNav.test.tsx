@@ -5,7 +5,7 @@ import { MobileCategoryNav } from './MobileCategoryNav'
 import { renderWithProviders } from '../../../test/renderWithProviders'
 
 describe('MobileCategoryNav', () => {
-  it('renders requirement coverage summaries and switches categories', () => {
+  it('renders visible item counts and switches categories', () => {
     const onChange = vi.fn()
 
     renderWithProviders(
@@ -71,14 +71,14 @@ describe('MobileCategoryNav', () => {
       />
     )
 
-    expect(screen.getAllByText('0/1')).toHaveLength(2)
-    expect(screen.getByRole('tab', { name: 'Food, 0 of 1 covered' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('tab', { name: 'Drinks, 0 of 1 covered' }))
+    expect(screen.getAllByText('1')).toHaveLength(2)
+    expect(screen.getByRole('tab', { name: 'Food, 1 item' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('tab', { name: 'Drinks, 1 item' }))
 
     expect(onChange).toHaveBeenCalledWith('2')
   })
 
-  it('renders the completed-contribution label for uncategorised extras', () => {
+  it('renders visible item counts for uncategorised groups', () => {
     renderWithProviders(
       <MobileCategoryNav
         activeGroupKey="uncategorised"
@@ -108,11 +108,11 @@ describe('MobileCategoryNav', () => {
       />
     )
 
-    expect(screen.getByText('1 extra')).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Uncategorised, 1 extra ready' })).toBeInTheDocument()
+    expect(screen.getByText('1')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Uncategorised, 1 item' })).toBeInTheDocument()
   })
 
-  it('renders plural contribution labels for multiple extras', () => {
+  it('renders plural item counts for multiple items', () => {
     renderWithProviders(
       <MobileCategoryNav
         activeGroupKey="uncategorised"
@@ -159,11 +159,11 @@ describe('MobileCategoryNav', () => {
       />
     )
 
-    expect(screen.getByText('2 extras')).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Uncategorised, 2 extras ready' })).toBeInTheDocument()
+    expect(screen.getByText('2')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Uncategorised, 2 items' })).toBeInTheDocument()
   })
 
-  it('renders the no-requirements label for an empty category', () => {
+  it('renders zero for an empty category', () => {
     renderWithProviders(
       <MobileCategoryNav
         activeGroupKey="1"
@@ -185,7 +185,7 @@ describe('MobileCategoryNav', () => {
       />
     )
 
-    expect(screen.getByText('None')).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Food, No requirements' })).toBeInTheDocument()
+    expect(screen.getByText('0')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Food, 0 items' })).toBeInTheDocument()
   })
 })

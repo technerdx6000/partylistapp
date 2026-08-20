@@ -371,7 +371,7 @@ describe('EventPage', () => {
     expect(screen.getByText('Bread Rolls')).toBeInTheDocument()
     expect(screen.queryByText('Water bottles')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Drinks, 0 of 1 covered' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'Drinks, 1 item' }))
 
     expect(screen.getByText('Water bottles')).toBeInTheDocument()
     expect(screen.queryByText('Bread Rolls')).not.toBeInTheDocument()
@@ -484,7 +484,7 @@ describe('EventPage', () => {
     expect(screen.getByText('Bread Rolls')).toBeInTheDocument()
     expect(screen.queryByText('Water bottles')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Drinks, 0 of 1 covered' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'Drinks, 1 item' }))
 
     expect(screen.getByText('Water bottles')).toBeInTheDocument()
     expect(screen.queryByText('Bread Rolls')).not.toBeInTheDocument()
