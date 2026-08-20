@@ -52,6 +52,17 @@ type NullabilityRow = RowDataPacket & {
     is_nullable: 'YES' | 'NO'
 }
 
+type EventItemNameRow = RowDataPacket & {
+    id: number
+    name: string
+}
+
+type AssignmentItemRow = RowDataPacket & {
+    item_id: number
+    participant_id: number
+    quantity: number
+}
+
 function applyTestEnvironment(): void {
     process.env.NODE_ENV = 'test'
     process.env.PORT = '3002'
@@ -195,6 +206,7 @@ describe('migration runner', () => {
             '003_event_items_assignments',
             '004_migrate_legacy_party',
             '005_drop_legacy_tables',
+            '006_item_name_uniqueness',
         ])
 
         expect(await getTableNames()).toEqual([
@@ -219,6 +231,7 @@ describe('migration runner', () => {
             expect(await getMigrationNames()).toEqual([
                 '001_initial_schema',
                 '002_events_categories_participants',
+                '003_event_items_assignments',
             ])
 
             await migrator.up()
@@ -232,6 +245,7 @@ describe('migration runner', () => {
             '003_event_items_assignments',
             '004_migrate_legacy_party',
             '005_drop_legacy_tables',
+            '006_item_name_uniqueness',
         ])
     })
 
@@ -441,6 +455,63 @@ describe('migration runner', () => {
             }
         } finally {
             await connection.end()
+        }
+    })
+
+    it('deduplicates existing item names case-insensitively before enforcing per-event uniqueness', async () => {
+        const { migrator, close } = await createMigrator()
+
+        try {
+            await migrator.up({ to: '005_drop_legacy_tables' })
+        } finally {
+            await close()
+        }
+
+        const connection = await createAppConnection()
+
+        try {
+            await connection.query(`
+        INSERT INTO events (name, share_token, admin_token) VALUES ('Camp', 'token-1234', 'admin-token');
+        INSERT INTO event_participants (event_id, name) VALUES (1, 'Dean'), (1, 'Aaron');
+        INSERT INTO event_items (event_id, name, quantity_required, status, created_by) VALUES
+          (1, 'Torch', NULL, 'open', 1),
+          (1, 'torch', NULL, 'open', 2);
+        INSERT INTO event_item_assignments (item_id, participant_id, quantity) VALUES
+          (1, 1, 1);
+      `)
+        } finally {
+            await connection.end()
+        }
+
+        const { migrator: dedupeMigrator, close: closeDedupeMigrator } = await createMigrator()
+
+        try {
+            await dedupeMigrator.up({ to: '006_item_name_uniqueness' })
+        } finally {
+            await closeDedupeMigrator()
+        }
+
+        const verificationConnection = await createAppConnection()
+
+        try {
+            const [items] = await verificationConnection.query<EventItemNameRow[]>(
+                'SELECT id, name FROM event_items WHERE event_id = 1 ORDER BY id'
+            )
+            const [assignments] = await verificationConnection.query<AssignmentItemRow[]>(
+                'SELECT item_id, participant_id, quantity FROM event_item_assignments ORDER BY id'
+            )
+
+            expect(items).toEqual([{ id: 1, name: 'Torch' }])
+            expect(assignments).toEqual([{ item_id: 1, participant_id: 1, quantity: 1 }])
+
+            await expect(
+                verificationConnection.execute(
+                    'INSERT INTO event_items (event_id, name, status) VALUES (?, ?, ?)',
+                    [1, 'TORCH', 'open']
+                )
+            ).rejects.toThrow()
+        } finally {
+            await verificationConnection.end()
         }
     })
 

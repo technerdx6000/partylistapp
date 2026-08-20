@@ -198,7 +198,7 @@ describe('items routes', () => {
     })
 
     it('returns 409 when the create item name already exists in the event with different casing', async () => {
-        routeMocks.listItemsByEventId.mockResolvedValue([buildItem({ id: 8, name: 'Torch' })])
+        routeMocks.createItem.mockRejectedValue({ code: 'ER_DUP_ENTRY' })
 
         const app = await createTestApp()
         const response = await request(app).post('/api/items').send({
@@ -208,7 +208,7 @@ describe('items routes', () => {
 
         expect(response.status).toBe(409)
         expect(response.body).toMatchObject({ error: { code: 'ITEM_ALREADY_EXISTS' } })
-        expect(routeMocks.createItem).not.toHaveBeenCalled()
+        expect(routeMocks.createItem).toHaveBeenCalledWith(1, expect.objectContaining({ name: 'torch' }))
     })
 
     it('returns 400 when the item id path param is invalid', async () => {
@@ -283,18 +283,15 @@ describe('items routes', () => {
 
     it('returns 409 when the updated item name already exists elsewhere in the event with different casing', async () => {
         routeMocks.findItemById.mockResolvedValue(buildItem({ id: 1, name: 'Bread Rolls' }))
-        routeMocks.listItemsByEventId.mockResolvedValue([
-            buildItem({ id: 1, name: 'Bread Rolls' }),
-            buildItem({ id: 2, name: 'Torch' }),
-        ])
         routeMocks.authorizeItemUpdate.mockReturnValue({ name: 'torch' })
+        routeMocks.updateItem.mockRejectedValue({ code: 'ER_DUP_ENTRY' })
 
         const app = await createTestApp()
         const response = await request(app).patch('/api/items/1').send({ name: 'torch' })
 
         expect(response.status).toBe(409)
         expect(response.body).toMatchObject({ error: { code: 'ITEM_ALREADY_EXISTS' } })
-        expect(routeMocks.updateItem).not.toHaveBeenCalled()
+        expect(routeMocks.updateItem).toHaveBeenCalledWith(1, 1, expect.objectContaining({ name: 'torch' }))
     })
 
     it('returns 404 when the item update cannot be persisted', async () => {

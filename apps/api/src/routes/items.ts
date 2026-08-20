@@ -26,8 +26,13 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 
 const router = express.Router()
 
-function normalizeItemName(name: string): string {
-    return name.trim().toLocaleLowerCase()
+function isDuplicateEntryError(caughtError: unknown): caughtError is { code: string } {
+    return Boolean(
+        caughtError &&
+        typeof caughtError === 'object' &&
+        'code' in caughtError &&
+        caughtError.code === 'ER_DUP_ENTRY'
+    )
 }
 
 function parseItemId(value: string): number {
@@ -63,24 +68,6 @@ async function assertParticipantInEvent(eventId: number, participantId: number |
 
     if (!participant) {
         throw new AppError(404, 'PARTICIPANT_NOT_IN_EVENT', 'Participant not found')
-    }
-}
-
-async function assertUniqueItemNameInEvent(eventId: number, name: string, itemIdToIgnore?: number): Promise<void> {
-    const existingItems = await listItemsByEventId(eventId)
-    const normalizedName = normalizeItemName(name)
-    const duplicateItem = existingItems.find((item) => {
-        if (itemIdToIgnore !== undefined && item.id === itemIdToIgnore) {
-            return false
-        }
-
-        return normalizeItemName(item.name) === normalizedName
-    })
-
-    if (duplicateItem) {
-        throw new AppError(409, 'ITEM_ALREADY_EXISTS', 'Item name already exists in this event', {
-            fields: ['name'],
-        })
     }
 }
 
@@ -152,11 +139,23 @@ router.post(
         }
 
         assertCanCreateItem(parsedBody.data, req.event!.isAdmin)
-    await assertUniqueItemNameInEvent(req.event!.id, parsedBody.data.name)
         await assertCategoryInEvent(req.event!.id, parsedBody.data.categoryId)
         await assertParticipantInEvent(req.event!.id, parsedBody.data.createdBy)
 
-        const item = await createItem(req.event!.id, parsedBody.data)
+        let item
+
+        try {
+            item = await createItem(req.event!.id, parsedBody.data)
+        } catch (caughtError) {
+            if (isDuplicateEntryError(caughtError)) {
+                throw new AppError(409, 'ITEM_ALREADY_EXISTS', 'Item name already exists in this event', {
+                    fields: ['name'],
+                })
+            }
+
+            throw caughtError
+        }
+
         res.status(201).json(await buildEventItemResponse(req.event!.id, item))
     })
 )
@@ -181,10 +180,21 @@ router.patch(
 
         await assertParticipantInEvent(req.event!.id, parsedBody.data.participantId)
         const authorizedUpdate = authorizeItemUpdate(currentItem, parsedBody.data, req.event!.isAdmin)
-    await assertUniqueItemNameInEvent(req.event!.id, authorizedUpdate.name ?? currentItem.name, currentItem.id)
         await assertCategoryInEvent(req.event!.id, authorizedUpdate.categoryId)
 
-        const item = await updateItem(req.event!.id, itemId, authorizedUpdate)
+        let item
+
+        try {
+            item = await updateItem(req.event!.id, itemId, authorizedUpdate)
+        } catch (caughtError) {
+            if (isDuplicateEntryError(caughtError)) {
+                throw new AppError(409, 'ITEM_ALREADY_EXISTS', 'Item name already exists in this event', {
+                    fields: ['name'],
+                })
+            }
+
+            throw caughtError
+        }
 
         if (!item) {
             throw new AppError(404, 'ITEM_NOT_IN_EVENT', 'Item not found')
