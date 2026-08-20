@@ -124,10 +124,10 @@ test('completes the collaborative MVP flow and avoids horizontal scrolling at mo
     await expect(secondPage.getByRole('heading', { name: 'Collaboration Flow Event' })).toBeVisible()
 
     await createParticipantAndClaim(secondPage, 'Jordan', 2)
-    await expect(secondPage.getByText('Closed · 0 left')).toBeVisible()
+    await expect(secondPage.getByText('Closed')).toBeVisible()
 
     await page.reload()
-    await expect(page.getByText('Closed · 0 left')).toBeVisible()
+    await expect(page.getByText('Closed')).toBeVisible()
 
     await secondPage.getByRole('button', { name: 'Add your contribution' }).click()
     await expect(secondPage.getByRole('heading', { name: 'Add your contribution' })).toBeVisible()
@@ -311,9 +311,13 @@ test('regression: mobile category navigation shows one category at a time and ke
     await expect(page.getByText('Water bottles')).toBeVisible()
     await expect(page.getByText('Bread Rolls')).toHaveCount(0)
 
+    await page.getByRole('tab', { name: 'Food' }).click()
+    await expect(page.getByText('Bread Rolls')).toBeVisible()
+    await expect(page.getByText('Water bottles')).toHaveCount(0)
+
     await page.getByLabel('Search items or people').fill('Water')
-    await expect(page.getByText('Showing matches across all categories while search is active.')).toBeVisible()
     await expect(page.getByText('Water bottles')).toBeVisible()
+    await expect(page.getByText('Bread Rolls')).toHaveCount(0)
 }, 60000)
 
 test('keeps the claim dialog submittable in a half-height mobile viewport', async ({ page, request }, testInfo) => {

@@ -4,6 +4,8 @@ import path from 'node:path'
 import dotenv from 'dotenv'
 
 const repoRoot = path.resolve(import.meta.dirname, '..')
+const testComposeFile = path.resolve(repoRoot, 'docker-compose.test.yml')
+const testDbService = 'test-db'
 
 dotenv.config({ path: path.resolve(repoRoot, '.env') })
 dotenv.config({ path: path.resolve(repoRoot, 'apps/api/.env') })
@@ -13,15 +15,17 @@ const sharedEnv = {
     E2E_TEST: 'true',
     NODE_ENV: 'production',
     PORT: process.env.LISTCOLLAB_E2E_API_PORT ?? '4302',
-    DB_HOST: process.env.DB_HOST ?? '127.0.0.1',
-    DB_PORT: process.env.DB_PORT ?? '3306',
-    DB_NAME: process.env.DB_NAME ?? 'listcollab',
-    DB_USER: process.env.DB_USER ?? 'listcollab_user',
-    DB_PASSWORD: process.env.DB_PASSWORD ?? 'replace_with_generated_app_password',
+    DB_HOST: process.env.LISTCOLLAB_E2E_DB_HOST ?? '127.0.0.1',
+    DB_PORT: process.env.LISTCOLLAB_E2E_DB_PORT ?? '3307',
+    DB_NAME: process.env.LISTCOLLAB_E2E_DB_NAME ?? 'listcollab_test',
+    DB_USER: process.env.LISTCOLLAB_E2E_DB_USER ?? 'listcollab_test_user',
+    DB_PASSWORD: process.env.LISTCOLLAB_E2E_DB_PASSWORD ?? 'listcollab_test_password_only',
     CORS_ORIGIN: process.env.LISTCOLLAB_E2E_APP_URL ?? 'http://127.0.0.1:4274',
     LISTCOLLAB_WEB_PROXY_TARGET: process.env.LISTCOLLAB_E2E_API_URL ?? 'http://127.0.0.1:4302',
     LOG_LEVEL: process.env.LOG_LEVEL ?? 'info',
 }
+
+const testComposeArgs = ['compose', '-f', testComposeFile]
 
 function runOrExit(command, args, options = {}) {
     const result = spawnSync(command, args, {
@@ -40,11 +44,31 @@ async function wait(ms) {
     await new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+function getTestDbContainerId() {
+    const composeResult = spawnSync('docker', [...testComposeArgs, 'ps', '-q', testDbService], {
+        cwd: repoRoot,
+        encoding: 'utf8',
+    })
+
+    if (composeResult.status !== 0) {
+        return ''
+    }
+
+    return composeResult.stdout.trim()
+}
+
 async function waitForDatabaseHealth() {
     for (let attempt = 0; attempt < 90; attempt += 1) {
+        const testDbContainerId = getTestDbContainerId()
+
+        if (testDbContainerId.length === 0) {
+            await wait(1000)
+            continue
+        }
+
         const inspectResult = spawnSync(
             'docker',
-            ['inspect', '-f', '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}', 'partylist-db'],
+            ['inspect', '-f', '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}', testDbContainerId],
             { cwd: repoRoot, encoding: 'utf8' }
         )
 
@@ -66,8 +90,17 @@ function spawnPersistent(command, args) {
     })
 }
 
+function teardownTestDatabase() {
+    spawnSync('docker', [...testComposeArgs, 'down', '-v', '--remove-orphans'], {
+        cwd: repoRoot,
+        stdio: 'inherit',
+        env: sharedEnv,
+    })
+}
+
 async function main() {
-    runOrExit('docker', ['compose', 'up', '-d', 'db'])
+    teardownTestDatabase()
+    runOrExit('docker', [...testComposeArgs, 'up', '-d', testDbService])
     await waitForDatabaseHealth()
     runOrExit('npm', ['run', 'build'])
     runOrExit('npm', ['run', '--workspace', '@listcollab/api', 'db:migrate:prod'])
@@ -102,6 +135,8 @@ async function main() {
         if (!apiProcess.killed) {
             apiProcess.kill('SIGTERM')
         }
+
+        teardownTestDatabase()
 
         process.exit(code ?? 0)
     }
