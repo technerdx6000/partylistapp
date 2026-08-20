@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { ItemForm } from './ItemForm'
 import { renderWithProviders } from '../../../test/renderWithProviders'
+import { ApiClientError } from '../../services/apiClient'
 
 const categories = [
   { id: 1, eventId: 1, name: 'Food', icon: '🍽️', sortOrder: 0, createdAt: '2026-08-15T00:00:00.000Z' },
@@ -389,5 +390,75 @@ describe('ItemForm', () => {
     })
     expect(screen.queryByText('Choose who you are before adding a contribution.')).not.toBeInTheDocument()
     expect(onCreate).not.toHaveBeenCalled()
+  })
+
+  it('shows an inline error and prevents submit when the new item name already exists in the event with different casing', async () => {
+    const onCreate = vi.fn().mockResolvedValue(undefined)
+
+    renderWithProviders(
+      <ItemForm
+        categories={categories}
+        existingItems={[
+          {
+            id: 77,
+            eventId: 1,
+            categoryId: 1,
+            name: 'Torch',
+            description: null,
+            quantityRequired: 1,
+            status: 'open',
+            createdBy: null,
+            createdAt: '2026-08-15T00:00:00.000Z',
+            updatedAt: '2026-08-15T00:00:00.000Z',
+            assignments: [],
+            coverage: { claimed: 0, required: 1, remaining: 1, status: 'open' },
+          },
+        ]}
+        guestParticipantId={null}
+        identity={null}
+        initialCategoryId={null}
+        isOpen
+        item={null}
+        mode="manage-create"
+        onClose={() => undefined}
+        onCreate={onCreate}
+        onUpdate={vi.fn()}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText('Item name'), { target: { value: 'torch' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('That item name is already in use for this event.')).toBeInTheDocument()
+    })
+    expect(onCreate).not.toHaveBeenCalled()
+  })
+
+  it('surfaces the duplicate item API error inline when the server rejects a duplicate name', async () => {
+    const onCreate = vi.fn().mockRejectedValue(new ApiClientError('Duplicate', 'ITEM_ALREADY_EXISTS', 'req-1'))
+
+    renderWithProviders(
+      <ItemForm
+        categories={categories}
+        existingItems={[]}
+        guestParticipantId={null}
+        identity={null}
+        initialCategoryId={null}
+        isOpen
+        item={null}
+        mode="manage-create"
+        onClose={() => undefined}
+        onCreate={onCreate}
+        onUpdate={vi.fn()}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText('Item name'), { target: { value: 'Torch' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('That item name is already in use for this event.')).toBeInTheDocument()
+    })
   })
 })

@@ -25,6 +25,7 @@ import {
 import { useEffect, useState } from 'react'
 
 import type { EventIdentity } from '../../hooks/useEventIdentity'
+import { ApiClientError } from '../../services/apiClient'
 
 type ItemFormMode = 'guest-create' | 'manage-create' | 'manage-edit' | 'guest-edit'
 
@@ -34,6 +35,7 @@ export type ItemFormCreatePayload = CreateItemRequest & {
 
 type ItemFormProps = {
   categories: readonly EventCategory[]
+  existingItems?: readonly EventItemWithAssignments[]
   guestParticipantId: number | null
   identity: EventIdentity | null
   initialCategoryId: number | null
@@ -64,9 +66,14 @@ function getQuantityValidationMessage(quantityInput: string): string | null {
   return null
 }
 
+function normalizeItemName(name: string): string {
+  return name.trim().toLocaleLowerCase()
+}
+
 /** Collects item create and edit payloads for guest and organiser item flows. */
 export function ItemForm({
   categories,
+  existingItems = [],
   guestParticipantId,
   identity,
   initialCategoryId,
@@ -111,13 +118,33 @@ export function ItemForm({
     setFieldErrors(nextFieldErrors)
   }
 
+  function getDuplicateNameMessage(trimmedName: string): string | null {
+    const normalizedName = normalizeItemName(trimmedName)
+    const duplicateItem = existingItems.find((existingItem) => {
+      if (item && existingItem.id === item.id) {
+        return false
+      }
+
+      return normalizeItemName(existingItem.name) === normalizedName
+    })
+
+    return duplicateItem ? 'That item name is already in use for this event.' : null
+  }
+
   async function handleSubmit(): Promise<void> {
     setFieldErrors({})
     setFormError(null)
     setIsSaving(true)
 
     try {
+      const trimmedName = name.trim()
       const parsedQuantity = isQuantityFieldVisible ? Number(quantityInput) : null
+      const duplicateNameMessage = trimmedName ? getDuplicateNameMessage(trimmedName) : null
+
+      if (duplicateNameMessage) {
+        setFieldErrors({ name: duplicateNameMessage })
+        return
+      }
 
       if (
         quantityValidationMessage ||
@@ -143,7 +170,7 @@ export function ItemForm({
           categoryId,
           createdBy,
           description: description.trim() ? description.trim() : null,
-          name,
+          name: trimmedName,
           quantityRequired: mode === 'guest-create' ? null : parsedQuantity,
         })
 
@@ -157,7 +184,7 @@ export function ItemForm({
         const parsedPayload = UpdateItemRequestSchema.safeParse({
           categoryId,
           description: description.trim() ? description.trim() : null,
-          name,
+          name: trimmedName,
           quantityRequired: item.quantityRequired !== null ? parsedQuantity : undefined,
         })
 
@@ -168,7 +195,12 @@ export function ItemForm({
 
         await onUpdate(item.id, parsedPayload.data)
       }
-    } catch {
+    } catch (caughtError) {
+      if (caughtError instanceof ApiClientError && caughtError.code === 'ITEM_ALREADY_EXISTS') {
+        setFieldErrors({ name: 'That item name is already in use for this event.' })
+        return
+      }
+
       setFormError('We could not save that item. Try again.')
     } finally {
       setIsSaving(false)

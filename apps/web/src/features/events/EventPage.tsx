@@ -1199,6 +1199,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
 
       <ItemForm
         categories={data.categories}
+        existingItems={data.items}
         guestParticipantId={itemFormState?.createdByParticipantId ?? null}
         identity={identity}
         initialCategoryId={itemFormState?.categoryId ?? null}

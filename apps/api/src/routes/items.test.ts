@@ -197,6 +197,20 @@ describe('items routes', () => {
         expect(response.body).toMatchObject({ error: { code: 'PARTICIPANT_NOT_IN_EVENT' } })
     })
 
+    it('returns 409 when the create item name already exists in the event with different casing', async () => {
+        routeMocks.listItemsByEventId.mockResolvedValue([buildItem({ id: 8, name: 'Torch' })])
+
+        const app = await createTestApp()
+        const response = await request(app).post('/api/items').send({
+            name: 'torch',
+            createdBy: 4,
+        })
+
+        expect(response.status).toBe(409)
+        expect(response.body).toMatchObject({ error: { code: 'ITEM_ALREADY_EXISTS' } })
+        expect(routeMocks.createItem).not.toHaveBeenCalled()
+    })
+
     it('returns 400 when the item id path param is invalid', async () => {
         const app = await createTestApp()
         const response = await request(app).patch('/api/items/not-a-number').send({ name: 'Updated Item' })
@@ -265,6 +279,22 @@ describe('items routes', () => {
 
         expect(response.status).toBe(404)
         expect(response.body).toMatchObject({ error: { code: 'CATEGORY_NOT_IN_EVENT' } })
+    })
+
+    it('returns 409 when the updated item name already exists elsewhere in the event with different casing', async () => {
+        routeMocks.findItemById.mockResolvedValue(buildItem({ id: 1, name: 'Bread Rolls' }))
+        routeMocks.listItemsByEventId.mockResolvedValue([
+            buildItem({ id: 1, name: 'Bread Rolls' }),
+            buildItem({ id: 2, name: 'Torch' }),
+        ])
+        routeMocks.authorizeItemUpdate.mockReturnValue({ name: 'torch' })
+
+        const app = await createTestApp()
+        const response = await request(app).patch('/api/items/1').send({ name: 'torch' })
+
+        expect(response.status).toBe(409)
+        expect(response.body).toMatchObject({ error: { code: 'ITEM_ALREADY_EXISTS' } })
+        expect(routeMocks.updateItem).not.toHaveBeenCalled()
     })
 
     it('returns 404 when the item update cannot be persisted', async () => {
