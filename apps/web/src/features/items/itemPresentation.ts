@@ -121,11 +121,11 @@ export function getItemStateMeta(item: EventItemWithAssignments): ItemStateMeta 
  */
 export function getCompactItemStatusLabel(item: EventItemWithAssignments): string {
   if (item.quantityRequired === null) {
-    return item.coverage.claimed === 0 ? 'Open contribution' : 'Closed contribution'
+    return item.coverage.claimed === 0 ? 'Open contribution' : 'Closed'
   }
 
   if (item.status === 'completed' || item.coverage.remaining === 0) {
-    return 'Closed · 0 left'
+    return 'Closed'
   }
 
   return `Open · ${item.coverage.remaining} left`

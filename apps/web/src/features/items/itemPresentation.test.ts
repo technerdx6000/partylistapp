@@ -295,7 +295,7 @@ describe('itemPresentation', () => {
         status: 'open',
         updatedAt: '2026-08-15T00:00:00.000Z',
       })
-    ).toBe('Closed contribution')
+    ).toBe('Closed')
 
     expect(
       getCompactItemStatusLabel({
@@ -312,7 +312,7 @@ describe('itemPresentation', () => {
         status: 'open',
         updatedAt: '2026-08-15T00:00:00.000Z',
       })
-    ).toBe('Closed · 0 left')
+    ).toBe('Closed')
 
     expect(
       getCompactItemStatusLabel({

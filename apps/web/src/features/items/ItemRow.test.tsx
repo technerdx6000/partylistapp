@@ -172,7 +172,7 @@ describe('ItemRow', () => {
     expect(screen.getByLabelText('Edit Portable speaker')).toBeInTheDocument()
     expect(screen.getByLabelText('Delete Portable speaker')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Claim Portable speaker' })).toBeInTheDocument()
-    expect(screen.getByText('Closed contribution')).toBeInTheDocument()
+    expect(screen.getByText('Closed')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Open Portable speaker details' }))
 
