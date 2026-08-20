@@ -67,7 +67,7 @@ function buildSummaryRows(
       quantity: assignment.quantity,
     }))
 
-    if ((item.coverage.remaining ?? 0) === 0) {
+    if (assignmentRows.length > 0 || (item.coverage.remaining ?? 0) === 0) {
       return assignmentRows
     }
 

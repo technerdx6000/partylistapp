@@ -17,7 +17,7 @@ function renderSummaryTable(items: readonly EventItemWithAssignments[], emptyMes
 }
 
 describe('EventSummaryTable', () => {
-  it('renders one row per assignment and an unassigned remainder row when work is still outstanding', () => {
+  it('renders one row per assignment without adding an unassigned row when the item is already partially assigned', () => {
     renderSummaryTable([
       {
         id: 1,
@@ -39,12 +39,12 @@ describe('EventSummaryTable', () => {
     ])
 
     expect(screen.getByRole('table', { name: 'Event summary' })).toBeInTheDocument()
-    expect(screen.getAllByText('Bread Rolls')).toHaveLength(3)
+    expect(screen.getAllByText('Bread Rolls')).toHaveLength(2)
     expect(screen.getByText('Taylor')).toBeInTheDocument()
     expect(screen.getByText('Jordan')).toBeInTheDocument()
-    expect(screen.getByText('Unassigned')).toBeInTheDocument()
+    expect(screen.queryByText('Unassigned')).not.toBeInTheDocument()
     expect(screen.getAllByText('2')).toHaveLength(1)
-    expect(screen.getAllByText('1')).toHaveLength(4)
+    expect(screen.getAllByText('1')).toHaveLength(3)
   })
 
   it('includes ad-hoc contribution items in the summary', () => {

@@ -316,9 +316,9 @@ describe('EventPage', () => {
     expect(screen.getByText('Assignee')).toBeInTheDocument()
     expect(screen.getByText('Qty')).toBeInTheDocument()
     expect(screen.getByText('Remaining Qty')).toBeInTheDocument()
-    expect(screen.getAllByText('Bread Rolls')).toHaveLength(2)
+    expect(screen.getAllByText('Bread Rolls')).toHaveLength(1)
     expect(screen.getByText('Taylor')).toBeInTheDocument()
-    expect(screen.getAllByText('Unassigned')).toHaveLength(2)
+    expect(screen.queryByText('Unassigned')).not.toBeInTheDocument()
   })
 
   it('shows a mobile category navigator and switches the visible category panel', () => {
