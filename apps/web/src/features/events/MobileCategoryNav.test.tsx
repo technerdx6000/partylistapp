@@ -71,9 +71,9 @@ describe('MobileCategoryNav', () => {
       />
     )
 
-    expect(screen.getAllByText('1')).toHaveLength(2)
-    expect(screen.getByRole('tab', { name: 'Food, 1 item' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('tab', { name: 'Drinks, 1 item' }))
+    expect(screen.getAllByText('0/1')).toHaveLength(2)
+    expect(screen.getByRole('tab', { name: 'Food, 0 of 1 items ready' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('tab', { name: 'Drinks, 0 of 1 items ready' }))
 
     expect(onChange).toHaveBeenCalledWith('2')
   })
@@ -108,8 +108,8 @@ describe('MobileCategoryNav', () => {
       />
     )
 
-    expect(screen.getByText('1')).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Uncategorised, 1 item' })).toBeInTheDocument()
+    expect(screen.getByText('1/1')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Uncategorised, 1 of 1 items ready' })).toBeInTheDocument()
   })
 
   it('renders plural item counts for multiple items', () => {
@@ -159,8 +159,8 @@ describe('MobileCategoryNav', () => {
       />
     )
 
-    expect(screen.getByText('2')).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Uncategorised, 2 items' })).toBeInTheDocument()
+    expect(screen.getByText('2/2')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Uncategorised, 2 of 2 items ready' })).toBeInTheDocument()
   })
 
   it('renders zero for an empty category', () => {
@@ -185,7 +185,7 @@ describe('MobileCategoryNav', () => {
       />
     )
 
-    expect(screen.getByText('0')).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Food, 0 items' })).toBeInTheDocument()
+    expect(screen.getByText('0/0')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Food, 0 of 0 items ready' })).toBeInTheDocument()
   })
 })

@@ -41,7 +41,7 @@ describe('CategorySection', () => {
     )
 
     expect(screen.getByText('Drinks')).toBeInTheDocument()
-    expect(screen.getByText('0 / 1 covered')).toBeInTheDocument()
+    expect(screen.getByText('0 / 1 items ready')).toBeInTheDocument()
     expect(screen.getByText('Soda cans')).toBeInTheDocument()
   })
 

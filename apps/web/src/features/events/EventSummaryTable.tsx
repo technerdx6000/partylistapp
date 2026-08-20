@@ -22,9 +22,10 @@ type EventSummaryTableProps = {
 
 type EventSummaryRow = {
   assigneeName: string
+  isContribution: boolean
   itemName: string
   key: string
-  outstandingQuantity: number
+  outstandingQuantity: number | null
   quantity: number
 }
 
@@ -32,13 +33,34 @@ function buildSummaryRows(
   items: readonly EventItemWithAssignments[],
   participantsById: Map<number, string>
 ): EventSummaryRow[] {
-  return items.flatMap((item) => {
+  return items.flatMap<EventSummaryRow>((item) => {
     if (item.quantityRequired === null) {
-      return []
+      if (item.assignments.length === 0) {
+        return [
+          {
+            assigneeName: 'Unassigned',
+            isContribution: true,
+            itemName: item.name,
+            key: `${item.id}-contribution-unassigned`,
+            outstandingQuantity: null,
+            quantity: 0,
+          },
+        ]
+      }
+
+      return item.assignments.map((assignment) => ({
+        assigneeName: participantsById.get(assignment.participantId) ?? 'Someone',
+        isContribution: true,
+        itemName: item.name,
+        key: `${item.id}-contribution-${assignment.id}`,
+        outstandingQuantity: null,
+        quantity: assignment.quantity,
+      }))
     }
 
-    const assignmentRows = item.assignments.map((assignment) => ({
+    const assignmentRows: EventSummaryRow[] = item.assignments.map((assignment) => ({
       assigneeName: participantsById.get(assignment.participantId) ?? 'Someone',
+      isContribution: false,
       itemName: item.name,
       key: `${item.id}-assignment-${assignment.id}`,
       outstandingQuantity: item.coverage.remaining ?? 0,
@@ -53,6 +75,7 @@ function buildSummaryRows(
       ...assignmentRows,
       {
         assigneeName: 'Unassigned',
+        isContribution: false,
         itemName: item.name,
         key: `${item.id}-unassigned`,
         outstandingQuantity: item.coverage.remaining ?? 0,
@@ -80,7 +103,7 @@ export function EventSummaryTable({ emptyMessage, items, participantsById }: Eve
           <Stack spacing={0.5}>
             <Typography variant="h3">Summary</Typography>
             <Typography color="text.secondary" variant="body2">
-              Quick event-wide coverage by item, assignee, and remaining quantity.
+              Quick event-wide status by item, assignee, quantity, and remaining quantity.
             </Typography>
           </Stack>
 
@@ -161,7 +184,9 @@ export function EventSummaryTable({ emptyMessage, items, participantsById }: Eve
                         <Typography variant="body2">{row.quantity}</Typography>
                       </TableCell>
                       <TableCell align="right" sx={{ py: 1.25, verticalAlign: 'top' }}>
-                        <Typography variant="body2">{row.outstandingQuantity}</Typography>
+                        <Typography color={row.isContribution ? 'text.secondary' : 'text.primary'} variant="body2">
+                          {row.outstandingQuantity === null ? '—' : row.outstandingQuantity}
+                        </Typography>
                       </TableCell>
                     </TableRow>
                   ))}

@@ -48,12 +48,7 @@ export function CategorySection({
 }: CategorySectionProps): React.JSX.Element {
   const name = category?.name ?? 'Uncategorised'
   const coverageSummary = getCategoryCoverageSummary(items)
-  const coverageLabel =
-    coverageSummary.totalItems > 0
-      ? `${coverageSummary.coveredItems} / ${coverageSummary.totalItems} covered`
-      : coverageSummary.completedContributions > 0
-        ? `${coverageSummary.completedContributions} extras ready`
-        : 'No requirements'
+  const coverageLabel = `${coverageSummary.readyItems} / ${coverageSummary.totalItems} items ready`
 
   return (
     <Stack spacing={1.5}>

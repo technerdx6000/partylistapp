@@ -1,10 +1,12 @@
-import type { CoverageSummary, Event } from '@listcollab/shared'
+import type { Event } from '@listcollab/shared'
 import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded'
 import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded'
 import LinkRoundedIcon from '@mui/icons-material/LinkRounded'
 import PlaceRoundedIcon from '@mui/icons-material/PlaceRounded'
 import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded'
 import { Alert, Chip, Divider, IconButton, InputAdornment, Stack, TextField, Typography } from '@mui/material'
+
+import type { ItemProgressSummary } from './eventCoverage'
 
 type EventHeaderProps = {
   adminLink: string | null
@@ -13,7 +15,7 @@ type EventHeaderProps = {
   isManageMode: boolean
   onCopyAdminLink?: (() => void) | undefined
   participantsCount: number
-  coverageSummary: CoverageSummary
+  coverageSummary: ItemProgressSummary
 }
 
 /**
@@ -64,12 +66,8 @@ export function EventHeader({
       <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
         <Chip color="primary" label={`${participantsCount} people`} />
         <Chip
-          color={coverageSummary.status === 'covered' ? 'success' : 'secondary'}
-          label={
-            coverageSummary.required === null
-              ? `${coverageSummary.claimed} claimed`
-              : `${coverageSummary.claimed} / ${coverageSummary.required} items covered`
-          }
+          color={coverageSummary.readyItems === coverageSummary.totalItems && coverageSummary.totalItems > 0 ? 'success' : 'secondary'}
+          label={`${coverageSummary.readyItems} / ${coverageSummary.totalItems} items ready`}
         />
         {isManageMode ? <Chip icon={<ShieldRoundedIcon />} label="Organiser mode" variant="outlined" /> : null}
       </Stack>

@@ -35,10 +35,10 @@ describe('eventCoverage', () => {
       },
     ])
 
-    expect(summary).toEqual({ claimed: 2, required: 4, remaining: 2, status: 'open' })
+    expect(summary).toEqual({ readyItems: 1, totalItems: 2 })
   })
 
-  it('counts only required items toward category coverage totals', () => {
+  it('counts ready and total items across both requirements and contributions', () => {
     const summary = getCategoryCoverageSummary([
       {
         id: 1,
@@ -84,6 +84,6 @@ describe('eventCoverage', () => {
       },
     ])
 
-    expect(summary).toEqual({ completedContributions: 1, coveredItems: 1, totalItems: 2 })
+    expect(summary).toEqual({ readyItems: 2, totalItems: 3 })
   })
 })

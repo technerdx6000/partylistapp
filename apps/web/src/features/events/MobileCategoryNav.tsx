@@ -2,6 +2,7 @@ import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import FolderOpenRoundedIcon from '@mui/icons-material/FolderOpenRounded'
 import { Box, Stack, Tab, Tabs, Typography } from '@mui/material'
 
+import { getCategoryCoverageSummary } from './eventCoverage'
 import { renderCategoryIcon } from '../categories/categoryIcons'
 import type { GroupedItemsByCategory } from '../items/groupItemsByCategory'
 
@@ -12,13 +13,15 @@ type MobileCategoryNavProps = {
 }
 
 function getItemCountLabel(group: GroupedItemsByCategory): string {
-  const itemCount = group.items.length
+  const coverageSummary = getCategoryCoverageSummary(group.items)
 
-  return `${itemCount} item${itemCount === 1 ? '' : 's'}`
+  return `${coverageSummary.readyItems} of ${coverageSummary.totalItems} items ready`
 }
 
 function getCompactItemCountLabel(group: GroupedItemsByCategory): string {
-  return String(group.items.length)
+  const coverageSummary = getCategoryCoverageSummary(group.items)
+
+  return `${coverageSummary.readyItems}/${coverageSummary.totalItems}`
 }
 
 /**

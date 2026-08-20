@@ -47,7 +47,7 @@ describe('EventSummaryTable', () => {
     expect(screen.getAllByText('1')).toHaveLength(4)
   })
 
-  it('excludes ad-hoc contribution items from the summary', () => {
+  it('includes ad-hoc contribution items in the summary', () => {
     renderSummaryTable([
       {
         id: 2,
@@ -65,8 +65,9 @@ describe('EventSummaryTable', () => {
       },
     ])
 
-    expect(screen.getByText('Nothing to summarise.')).toBeInTheDocument()
-    expect(screen.queryByText('Ice bag')).not.toBeInTheDocument()
+    expect(screen.getByText('Ice bag')).toBeInTheDocument()
+    expect(screen.getByText('Taylor')).toBeInTheDocument()
+    expect(screen.getByText('—')).toBeInTheDocument()
   })
 
   it('renders an unassigned row when nobody has claimed a required item yet', () => {

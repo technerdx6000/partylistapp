@@ -1,51 +1,40 @@
-import { calculateCoverage, type EventItemWithAssignments } from '@listcollab/shared'
+import type { EventItemWithAssignments } from '@listcollab/shared'
 
-export type CategoryCoverageSummary = {
-  coveredItems: number
-  completedContributions: number
+export type ItemProgressSummary = {
+  readyItems: number
   totalItems: number
 }
 
-/**
- * Summarises event-level coverage while excluding ad-hoc contributions from the denominator.
- */
-export function getEventCoverageSummary(items: readonly EventItemWithAssignments[]) {
-  const totals = items.reduce(
-    (summary, item) => {
-      if (item.quantityRequired === null) {
-        return summary
-      }
+function isReadyItem(item: EventItemWithAssignments): boolean {
+  if (item.quantityRequired === null) {
+    return item.coverage.claimed > 0
+  }
 
-      return {
-        claimed: summary.claimed + item.coverage.claimed,
-        required: summary.required + item.quantityRequired,
-      }
-    },
-    { claimed: 0, required: 0 }
-  )
-
-  return calculateCoverage(totals.required, [totals.claimed])
+  return (item.coverage.remaining ?? 0) === 0 || item.coverage.status === 'covered' || item.coverage.status === 'completed'
 }
 
 /**
- * Summarises category-level completion counts while excluding ad-hoc contributions from required totals.
+ * Summarises event-level progress using overall item counts rather than quantity totals.
  */
-export function getCategoryCoverageSummary(items: readonly EventItemWithAssignments[]): CategoryCoverageSummary {
+export function getEventCoverageSummary(items: readonly EventItemWithAssignments[]): ItemProgressSummary {
   return items.reduce(
-    (summary, item) => {
-      if (item.quantityRequired === null) {
-        return {
-          ...summary,
-          completedContributions: summary.completedContributions + (item.coverage.claimed > 0 ? 1 : 0),
-        }
-      }
+    (summary, item) => ({
+      readyItems: summary.readyItems + (isReadyItem(item) ? 1 : 0),
+      totalItems: summary.totalItems + 1,
+    }),
+    { readyItems: 0, totalItems: 0 }
+  )
+}
 
-      return {
-        ...summary,
-        coveredItems: summary.coveredItems + (item.coverage.status === 'covered' ? 1 : 0),
-        totalItems: summary.totalItems + 1,
-      }
-    },
-    { completedContributions: 0, coveredItems: 0, totalItems: 0 }
+/**
+ * Summarises category-level progress using overall item counts rather than quantity totals.
+ */
+export function getCategoryCoverageSummary(items: readonly EventItemWithAssignments[]): ItemProgressSummary {
+  return items.reduce(
+    (summary, item) => ({
+      readyItems: summary.readyItems + (isReadyItem(item) ? 1 : 0),
+      totalItems: summary.totalItems + 1,
+    }),
+    { readyItems: 0, totalItems: 0 }
   )
 }

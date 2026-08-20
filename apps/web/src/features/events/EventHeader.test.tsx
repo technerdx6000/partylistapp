@@ -11,7 +11,7 @@ describe('EventHeader', () => {
     renderWithProviders(
       <EventHeader
         adminLink="https://example.com/e/share/manage#k=abc"
-        coverageSummary={{ claimed: 6, required: 8, remaining: 2, status: 'open' }}
+        coverageSummary={{ readyItems: 6, totalItems: 8 }}
         event={{
           id: 1,
           name: 'Camp Weekend',
@@ -30,7 +30,7 @@ describe('EventHeader', () => {
 
     expect(screen.getByRole('heading', { name: 'Camp Weekend' })).toBeInTheDocument()
     expect(screen.getByText('12 people')).toBeInTheDocument()
-    expect(screen.getByText('6 / 8 items covered')).toBeInTheDocument()
+    expect(screen.getByText('6 / 8 items ready')).toBeInTheDocument()
     expect(screen.getByDisplayValue('https://example.com/e/share/manage#k=abc')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Copy organiser link' })).toBeInTheDocument()
   })
@@ -41,7 +41,7 @@ describe('EventHeader', () => {
     renderWithProviders(
       <EventHeader
         adminLink="https://example.com/e/share/manage#k=abc"
-        coverageSummary={{ claimed: 6, required: 8, remaining: 2, status: 'open' }}
+        coverageSummary={{ readyItems: 6, totalItems: 8 }}
         event={{
           id: 1,
           name: 'Camp Weekend',
@@ -67,7 +67,7 @@ describe('EventHeader', () => {
     renderWithProviders(
       <EventHeader
         adminLink={null}
-        coverageSummary={{ claimed: 1, required: null, remaining: null, status: 'completed' }}
+        coverageSummary={{ readyItems: 1, totalItems: 1 }}
         event={{
           id: 1,
           name: 'Contribution Only',
@@ -83,7 +83,7 @@ describe('EventHeader', () => {
       />
     )
 
-    expect(screen.getByText('1 claimed')).toBeInTheDocument()
+    expect(screen.getByText('1 / 1 items ready')).toBeInTheDocument()
     expect(screen.queryByLabelText('Organiser link')).not.toBeInTheDocument()
     expect(screen.queryByText('Organiser mode')).not.toBeInTheDocument()
   })
@@ -92,7 +92,7 @@ describe('EventHeader', () => {
     renderWithProviders(
       <EventHeader
         adminLink="https://example.com/e/share/manage#k=abc"
-        coverageSummary={{ claimed: 6, required: 8, remaining: 2, status: 'open' }}
+        coverageSummary={{ readyItems: 6, totalItems: 8 }}
         event={{
           id: 1,
           name: 'Camp Weekend',
