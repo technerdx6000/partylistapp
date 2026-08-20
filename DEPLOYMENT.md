@@ -11,16 +11,16 @@ Default image names:
 
 Recommended tags:
 
-- release tag: `1.0.24`
-- immutable build tag: `git-eae2e78-dirty-20260820a`
+- release tag: `1.0.25`
+- immutable build tag: `git-6a67383-dirty-20260820b`
 - moving tag: `latest`
 
 Build and publish from the repo root:
 
 ```bash
 DOCKERHUB_NAMESPACE=technerdx6000 \
-IMAGE_TAG=1.0.24 \
-EXTRA_TAG=git-eae2e78-dirty-20260820a \
+IMAGE_TAG=1.0.25 \
+EXTRA_TAG=git-6a67383-dirty-20260820b \
 bash scripts/publish-dockerhub.sh
 ```
 
@@ -112,19 +112,20 @@ Important for repeated TrueNAS deploy attempts:
 - Starting with image tag `1.0.22`, claim and requirement quantity inputs can be temporarily cleared during editing without snapping back to `1`, while blank quantities now show field-local validation and stay blocked from submission until a valid number is re-entered.
 - Starting with image tag `1.0.23`, the share-link `Add your contribution` flow restores its quantity field, carries that quantity through the guest auto-claim path, and the non-managed claim/create dialogs now keep invalid blank quantities field-local instead of hiding the quantity flow behind the organiser-only path.
 - Starting with image tag `1.0.24`, the mobile category bar now shows the actual visible item count for each category group so its number matches the list in both `All Items` and `My Items`.
+- Starting with image tag `1.0.25`, the event header, category section labels, mobile category bar, and summary table all use the same item-based `ready / total` model, and contribution items now appear in the summary instead of being silently excluded.
 
 Values to edit inline in the TrueNAS compose:
 
 ```bash
-technerdx6000/listcollab-api:1.0.24
-technerdx6000/listcollab-web:1.0.24
+technerdx6000/listcollab-api:1.0.25
+technerdx6000/listcollab-web:1.0.25
 DB_PASSWORD=replace_with_generated_app_password
 DB_ROOT_PASSWORD=replace_with_generated_root_password
 CORS_ORIGIN=https://listcollab.example.com
 WEB_PORT=8080
 ```
 
-The current `git-eae2e78-dirty-20260820a` image tag was published from this validated uncommitted workspace state.
+The current `git-6a67383-dirty-20260820b` image tag was published from this validated uncommitted workspace state.
 
 If you want immutable deploys on TrueNAS, replace the image tags inline with the current git-tagged images you published from this repo instead of the release tag.
 
