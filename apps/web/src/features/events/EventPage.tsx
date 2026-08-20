@@ -270,12 +270,12 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
 
   const hasTransientOverlay = Boolean(
     claimDialogState ||
-      confirmationDialogState ||
-      categoryFormState ||
-      identifyDialogOpen ||
-      itemDetailState ||
-      itemFormState ||
-      isParticipantManagerOpen
+    confirmationDialogState ||
+    categoryFormState ||
+    identifyDialogOpen ||
+    itemDetailState ||
+    itemFormState ||
+    isParticipantManagerOpen
   )
 
   const closeTopTransientOverlay = useCallback((): void => {
@@ -790,45 +790,45 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
         minHeight: 0,
         ...(isSmallScreen
           ? {
-              '& .MuiTabs-flexContainer': {
-                gap: 0,
-              },
-              '& .MuiTabs-indicator': {
-                backgroundColor: 'primary.main',
-                borderRadius: 0,
-                height: 3,
-              },
-              '& .MuiTab-root': {
-                color: 'text.secondary',
-                flex: 1,
-                fontSize: '0.95rem',
-                fontWeight: 700,
-                minHeight: 52,
-                minWidth: 0,
-                px: 1,
-                textTransform: 'none',
-              },
-              '& .MuiTab-root.Mui-selected': {
-                color: 'primary.main',
-              },
-              '& .MuiTab-root.Mui-disabled': {
-                color: 'text.disabled',
-                opacity: 0.72,
-              },
-            }
+            '& .MuiTabs-flexContainer': {
+              gap: 0,
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: 'primary.main',
+              borderRadius: 0,
+              height: 3,
+            },
+            '& .MuiTab-root': {
+              color: 'text.secondary',
+              flex: 1,
+              fontSize: '0.95rem',
+              fontWeight: 700,
+              minHeight: 52,
+              minWidth: 0,
+              px: 1,
+              textTransform: 'none',
+            },
+            '& .MuiTab-root.Mui-selected': {
+              color: 'primary.main',
+            },
+            '& .MuiTab-root.Mui-disabled': {
+              color: 'text.disabled',
+              opacity: 0.72,
+            },
+          }
           : {
-              bgcolor: 'background.paper',
-              borderRadius: 3,
-              px: 0.5,
-              '& .MuiTabs-indicator': {
-                borderRadius: 999,
-                height: 3,
-              },
-              '& .MuiTab-root': {
-                minHeight: 44,
-                textTransform: 'none',
-              },
-            }),
+            bgcolor: 'background.paper',
+            borderRadius: 3,
+            px: 0.5,
+            '& .MuiTabs-indicator': {
+              borderRadius: 999,
+              height: 3,
+            },
+            '& .MuiTab-root': {
+              minHeight: 44,
+              textTransform: 'none',
+            },
+          }),
       }}
       value={activeTab}
       variant="fullWidth"
@@ -893,18 +893,18 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
                   sx={
                     isSmallScreen
                       ? {
-                          '& .MuiButton-startIcon': {
-                            marginLeft: 0,
-                            marginRight: 0.5,
-                          },
-                          borderRadius: 2,
-                          flex: '1 1 0',
-                          fontSize: '0.875rem',
-                          minHeight: 38,
-                          minWidth: 0,
-                          px: 1.25,
-                          whiteSpace: 'nowrap',
-                        }
+                        '& .MuiButton-startIcon': {
+                          marginLeft: 0,
+                          marginRight: 0.5,
+                        },
+                        borderRadius: 2,
+                        flex: '1 1 0',
+                        fontSize: '0.875rem',
+                        minHeight: 38,
+                        minWidth: 0,
+                        px: 1.25,
+                        whiteSpace: 'nowrap',
+                      }
                       : undefined
                   }
                   variant={isSmallScreen ? 'outlined' : 'contained'}
@@ -919,18 +919,18 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
                   sx={
                     isSmallScreen
                       ? {
-                          '& .MuiButton-startIcon': {
-                            marginLeft: 0,
-                            marginRight: 0.5,
-                          },
-                          borderRadius: 2,
-                          flex: '1 1 0',
-                          fontSize: '0.875rem',
-                          minHeight: 38,
-                          minWidth: 0,
-                          px: 1.25,
-                          whiteSpace: 'nowrap',
-                        }
+                        '& .MuiButton-startIcon': {
+                          marginLeft: 0,
+                          marginRight: 0.5,
+                        },
+                        borderRadius: 2,
+                        flex: '1 1 0',
+                        fontSize: '0.875rem',
+                        minHeight: 38,
+                        minWidth: 0,
+                        px: 1.25,
+                        whiteSpace: 'nowrap',
+                      }
                       : undefined
                   }
                   variant="outlined"
@@ -946,18 +946,18 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
                     sx={
                       isSmallScreen
                         ? {
-                            '& .MuiButton-startIcon': {
-                              marginLeft: 0,
-                              marginRight: 0.5,
-                            },
-                            borderRadius: 2,
-                            flex: '1 1 0',
-                            fontSize: '0.875rem',
-                            minHeight: 38,
-                            minWidth: 0,
-                            px: 1.25,
-                            whiteSpace: 'nowrap',
-                          }
+                          '& .MuiButton-startIcon': {
+                            marginLeft: 0,
+                            marginRight: 0.5,
+                          },
+                          borderRadius: 2,
+                          flex: '1 1 0',
+                          fontSize: '0.875rem',
+                          minHeight: 38,
+                          minWidth: 0,
+                          px: 1.25,
+                          whiteSpace: 'nowrap',
+                        }
                         : undefined
                     }
                     variant="outlined"
