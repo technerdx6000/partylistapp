@@ -35,7 +35,7 @@ describe('CategorySection', () => {
         isManageMode={false}
         onAddItem={() => undefined}
         onClaim={() => undefined}
-          onOpenItemDetail={() => undefined}
+        onOpenItemDetail={() => undefined}
         participants={[]}
       />
     )
@@ -60,7 +60,7 @@ describe('CategorySection', () => {
         isManageMode={true}
         onAddItem={() => undefined}
         onClaim={() => undefined}
-          onOpenItemDetail={() => undefined}
+        onOpenItemDetail={() => undefined}
         participants={[]}
       />
     )
@@ -90,7 +90,7 @@ describe('CategorySection', () => {
         onClaim={() => undefined}
         onMoveCategoryDown={onMoveCategoryDown}
         onMoveCategoryUp={onMoveCategoryUp}
-          onOpenItemDetail={() => undefined}
+        onOpenItemDetail={() => undefined}
         participants={[]}
       />
     )
