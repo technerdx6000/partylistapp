@@ -7,6 +7,8 @@ export type ItemStateMeta = {
   statusLabel: string
 }
 
+const itemNameCollator = new Intl.Collator(undefined, { sensitivity: 'base' })
+
 /**
  * Formats a compact participant-by-quantity summary for an item's assignments.
  *
@@ -43,6 +45,54 @@ export function getContributionSummary(item: EventItemWithAssignments, participa
   }
 
   return formatAssignmentSummary(item, participantsById)
+}
+
+/**
+ * Determines whether an item should be treated as closed for display ordering.
+ *
+ * @param {EventItemWithAssignments} item - The item being evaluated.
+ * @returns {boolean} True when the item is closed for display purposes.
+ */
+export function isItemClosedForDisplay(item: EventItemWithAssignments): boolean {
+  if (item.quantityRequired === null) {
+    return item.coverage.claimed > 0
+  }
+
+  return item.status === 'completed' || item.coverage.remaining === 0
+}
+
+/**
+ * Sorts items so non-closed entries appear before closed ones, with case-insensitive
+ * alphabetical ordering by item name inside each group.
+ *
+ * @param {EventItemWithAssignments} leftItem - The left item to compare.
+ * @param {EventItemWithAssignments} rightItem - The right item to compare.
+ * @returns {number} A negative number when the left item should sort first.
+ */
+export function compareItemsForDisplayOrder(
+  leftItem: EventItemWithAssignments,
+  rightItem: EventItemWithAssignments
+): number {
+  const leftIsClosed = isItemClosedForDisplay(leftItem)
+  const rightIsClosed = isItemClosedForDisplay(rightItem)
+
+  if (leftIsClosed !== rightIsClosed) {
+    return leftIsClosed ? 1 : -1
+  }
+
+  const nameComparison = itemNameCollator.compare(leftItem.name, rightItem.name)
+
+  if (nameComparison !== 0) {
+    return nameComparison
+  }
+
+  const exactNameComparison = leftItem.name.localeCompare(rightItem.name)
+
+  if (exactNameComparison !== 0) {
+    return exactNameComparison
+  }
+
+  return leftItem.id - rightItem.id
 }
 
 /**
@@ -121,10 +171,10 @@ export function getItemStateMeta(item: EventItemWithAssignments): ItemStateMeta 
  */
 export function getCompactItemStatusLabel(item: EventItemWithAssignments): string {
   if (item.quantityRequired === null) {
-    return item.coverage.claimed === 0 ? 'Open contribution' : 'Closed'
+    return isItemClosedForDisplay(item) ? 'Closed' : 'Open contribution'
   }
 
-  if (item.status === 'completed' || item.coverage.remaining === 0) {
+  if (isItemClosedForDisplay(item)) {
     return 'Closed'
   }
 

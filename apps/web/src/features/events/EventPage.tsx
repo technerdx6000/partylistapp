@@ -55,6 +55,7 @@ import { groupItemsByCategory } from '../items/groupItemsByCategory'
 import { ItemDetailSurface, type ItemDetailMode } from '../items/ItemDetailSurface'
 import { ItemForm, type ItemFormCreatePayload } from '../items/ItemForm'
 import { ItemList } from '../items/ItemList'
+import { compareItemsForDisplayOrder } from '../items/itemPresentation'
 import { IdentifyDialog } from '../participants/IdentifyDialog'
 import { ParticipantManagerDialog } from '../participants/ParticipantManagerDialog'
 
@@ -215,13 +216,14 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
   const isSearchActive = searchTerm.trim().length > 0
   const tabFilteredItems = filterItemsByTab(data?.items ?? [], identity?.participantId ?? null, activeTab)
   const visibleItems = filterItems(tabFilteredItems, participantNamesById, searchTerm)
-  const visibleCategoryIds = new Set(visibleItems.flatMap((item) => (item.categoryId === null ? [] : [item.categoryId])))
+  const orderedVisibleItems = visibleItems.slice().sort(compareItemsForDisplayOrder)
+  const visibleCategoryIds = new Set(orderedVisibleItems.flatMap((item) => (item.categoryId === null ? [] : [item.categoryId])))
   const visibleCategories = data
     ? activeTab === 'all' && !isSearchActive
       ? data.categories
       : data.categories.filter((category) => visibleCategoryIds.has(category.id))
     : []
-  const groupedItemSections = groupItemsByCategory(visibleCategories, visibleItems).filter((group) => group.items.length > 0)
+  const groupedItemSections = groupItemsByCategory(visibleCategories, orderedVisibleItems).filter((group) => group.items.length > 0)
   const pageTitle = !shareToken
     ? 'Event unavailable | ListCollab'
     : isLoading
@@ -1081,10 +1083,10 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
                 ? 'No summary rows match that search.'
                 : 'No required items are available to summarise yet.'
             }
-            items={visibleItems}
+            items={orderedVisibleItems}
             participantsById={participantNamesById}
           />
-        ) : visibleItems.length === 0 ? (
+        ) : orderedVisibleItems.length === 0 ? (
           <Card>
             <CardContent>
               <Typography color="text.secondary">
@@ -1100,7 +1102,7 @@ export default function EventPage({ manageMode }: EventPageProps): React.JSX.Ele
           <ItemList
             categories={visibleCategories}
             isManageMode={manageMode}
-            items={visibleItems}
+            items={orderedVisibleItems}
             onAddItem={openContributionForm}
             onClaim={openClaimDialog}
             onDeleteCategory={(category) => openDeleteCategoryDialog(category.id, category.name)}

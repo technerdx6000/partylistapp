@@ -128,6 +128,12 @@ function renderEventPage(route = '/e/abcdefghij', manageMode = false) {
   )
 }
 
+function getVisibleItemNamesInOrder(): string[] {
+  return screen
+    .getAllByRole('button', { name: /Open .* details/ })
+    .map((button) => button.getAttribute('aria-label')?.replace(/^Open /, '').replace(/ details$/, '') ?? '')
+}
+
 describe('EventPage', () => {
   beforeEach(() => {
     setMatchMedia(false)
@@ -291,6 +297,151 @@ describe('EventPage', () => {
 
     expect(screen.getByText('Napkins')).toBeInTheDocument()
     expect(screen.queryByText('Bread Rolls')).not.toBeInTheDocument()
+  })
+
+  it('orders all-items view with non-closed entries first and alphabetically within each status group', () => {
+    useEventMock.mockReturnValue(buildUseEventResult({
+      data: {
+        ...buildAggregateResponse(),
+        items: [
+          {
+            id: 1,
+            eventId: 1,
+            categoryId: 1,
+            name: 'Zebra Tent',
+            description: null,
+            quantityRequired: 1,
+            status: 'open',
+            createdBy: 1,
+            createdAt: '2026-08-15T00:00:00.000Z',
+            updatedAt: '2026-08-15T00:00:00.000Z',
+            assignments: [{ id: 11, itemId: 1, participantId: 1, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' }],
+            coverage: { claimed: 1, required: 1, remaining: 0, status: 'covered' },
+          },
+          {
+            id: 2,
+            eventId: 1,
+            categoryId: 1,
+            name: 'banana Bread',
+            description: null,
+            quantityRequired: null,
+            status: 'open',
+            createdBy: 2,
+            createdAt: '2026-08-15T00:00:00.000Z',
+            updatedAt: '2026-08-15T00:00:00.000Z',
+            assignments: [{ id: 12, itemId: 2, participantId: 2, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' }],
+            coverage: { claimed: 1, required: null, remaining: null, status: 'completed' },
+          },
+          {
+            id: 3,
+            eventId: 1,
+            categoryId: 1,
+            name: 'apple Juice',
+            description: null,
+            quantityRequired: null,
+            status: 'open',
+            createdBy: 1,
+            createdAt: '2026-08-15T00:00:00.000Z',
+            updatedAt: '2026-08-15T00:00:00.000Z',
+            assignments: [],
+            coverage: { claimed: 0, required: null, remaining: null, status: 'open' },
+          },
+          {
+            id: 4,
+            eventId: 1,
+            categoryId: 1,
+            name: 'Apricot Jam',
+            description: null,
+            quantityRequired: 3,
+            status: 'open',
+            createdBy: 2,
+            createdAt: '2026-08-15T00:00:00.000Z',
+            updatedAt: '2026-08-15T00:00:00.000Z',
+            assignments: [{ id: 13, itemId: 4, participantId: 2, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' }],
+            coverage: { claimed: 1, required: 3, remaining: 2, status: 'open' },
+          },
+        ],
+      },
+    }))
+
+    renderEventPage()
+
+    expect(getVisibleItemNamesInOrder()).toEqual(['apple Juice', 'Apricot Jam', 'banana Bread', 'Zebra Tent'])
+  })
+
+  it('orders my-items view with non-closed claimed entries first and alphabetically within each status group', () => {
+    window.localStorage.setItem(
+      'listcollab:identity:abcdefghij',
+      JSON.stringify({ displayName: 'Jordan', participantId: 2 })
+    )
+    useEventMock.mockReturnValue(buildUseEventResult({
+      data: {
+        ...buildAggregateResponse(),
+        items: [
+          {
+            id: 1,
+            eventId: 1,
+            categoryId: 1,
+            name: 'Zebra Tent',
+            description: null,
+            quantityRequired: 1,
+            status: 'open',
+            createdBy: 1,
+            createdAt: '2026-08-15T00:00:00.000Z',
+            updatedAt: '2026-08-15T00:00:00.000Z',
+            assignments: [{ id: 21, itemId: 1, participantId: 2, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' }],
+            coverage: { claimed: 1, required: 1, remaining: 0, status: 'covered' },
+          },
+          {
+            id: 2,
+            eventId: 1,
+            categoryId: 1,
+            name: 'banana Bread',
+            description: null,
+            quantityRequired: null,
+            status: 'open',
+            createdBy: 2,
+            createdAt: '2026-08-15T00:00:00.000Z',
+            updatedAt: '2026-08-15T00:00:00.000Z',
+            assignments: [{ id: 22, itemId: 2, participantId: 2, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' }],
+            coverage: { claimed: 1, required: null, remaining: null, status: 'completed' },
+          },
+          {
+            id: 3,
+            eventId: 1,
+            categoryId: 1,
+            name: 'apple Sauce',
+            description: null,
+            quantityRequired: 4,
+            status: 'open',
+            createdBy: 1,
+            createdAt: '2026-08-15T00:00:00.000Z',
+            updatedAt: '2026-08-15T00:00:00.000Z',
+            assignments: [{ id: 23, itemId: 3, participantId: 2, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' }],
+            coverage: { claimed: 1, required: 4, remaining: 3, status: 'open' },
+          },
+          {
+            id: 4,
+            eventId: 1,
+            categoryId: 1,
+            name: 'Apricot Jam',
+            description: null,
+            quantityRequired: 2,
+            status: 'open',
+            createdBy: 2,
+            createdAt: '2026-08-15T00:00:00.000Z',
+            updatedAt: '2026-08-15T00:00:00.000Z',
+            assignments: [{ id: 24, itemId: 4, participantId: 2, quantity: 1, note: null, createdAt: '2026-08-15T00:00:00.000Z' }],
+            coverage: { claimed: 1, required: 2, remaining: 1, status: 'open' },
+          },
+        ],
+      },
+    }))
+
+    renderEventPage()
+    fireEvent.click(screen.getByRole('tab', { name: 'My Items' }))
+
+    expect(getVisibleItemNamesInOrder()).toEqual(['apple Sauce', 'Apricot Jam', 'banana Bread', 'Zebra Tent'])
   })
 
   it('shows a dedicated empty state when My Items has no claimed items', () => {

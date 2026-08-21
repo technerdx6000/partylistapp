@@ -14,6 +14,8 @@ import {
   useTheme,
 } from '@mui/material'
 
+import { compareItemsForDisplayOrder } from '../items/itemPresentation'
+
 type EventSummaryTableProps = {
   emptyMessage: string
   items: readonly EventItemWithAssignments[]
@@ -94,7 +96,7 @@ function buildSummaryRows(
 export function EventSummaryTable({ emptyMessage, items, participantsById }: EventSummaryTableProps): React.JSX.Element {
   const theme = useTheme()
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'))
-  const summaryRows = buildSummaryRows(items, participantsById)
+  const summaryRows = buildSummaryRows(items.slice().sort(compareItemsForDisplayOrder), participantsById)
 
   return (
     <Card>
